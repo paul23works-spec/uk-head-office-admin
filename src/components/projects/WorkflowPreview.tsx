@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
-import { ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
+import { ShieldAlert, ExternalLink, Lock, CheckCircle2, Clock } from 'lucide-react';
 import { Project, WorkflowStageDefinition, WorkflowStageStatus } from '@/types';
 import { WORKFLOW_STAGES } from '@/lib/constants';
+import { useProjects } from '@/lib/project-context';
 import { DemoTag } from '../common/Badge';
 
 interface WorkflowPreviewProps {
@@ -11,74 +13,185 @@ interface WorkflowPreviewProps {
 }
 
 export function WorkflowPreview({ project }: WorkflowPreviewProps) {
-  const getStageStatus = (stageId: string): WorkflowStageStatus => {
-    const stageState = project.workflow?.find((w) => w.stageId === stageId);
-    if (stageState) return stageState.status;
+  const {
+    getTenderByProjectId,
+    getLoiLoaByProjectId,
+    getAcceptanceByProjectId,
+    getCpgByProjectId,
+    getAgreementByProjectId,
+  } = useProjects();
 
-    // Fallback based on currentStageId
-    const currentNum = parseInt(project.currentStageId, 10);
-    const stageNum = parseInt(stageId, 10);
-    if (stageNum < currentNum) return 'Completed';
-    if (stageNum === currentNum) return 'In Progress';
-    return 'Not Started';
+  const tender = getTenderByProjectId(project.id);
+  const loiLoa = getLoiLoaByProjectId(project.id);
+  const acceptance = getAcceptanceByProjectId(project.id);
+  const cpg = getCpgByProjectId(project.id);
+  const agreement = getAgreementByProjectId(project.id);
+
+  const getStageRoute = (stageId: string): string | null => {
+    switch (stageId) {
+      case '01':
+        return '/tenders';
+      case '02':
+        return '/loi-loa';
+      case '03':
+        return '/acceptance';
+      case '04':
+        return '/cpg-agreement';
+      default:
+        return null;
+    }
+  };
+
+  const getStageStatus = (stageId: string): { status: WorkflowStageStatus; detail?: string } => {
+    switch (stageId) {
+      case '01':
+        if (tender) {
+          return {
+            status: tender.status === 'Awarded' ? 'Completed' : 'In Progress',
+            detail: tender.tenderNumber,
+          };
+        }
+        return { status: 'Not Started' };
+
+      case '02':
+        if (loiLoa) {
+          return {
+            status: loiLoa.status === 'Accepted' || loiLoa.status === 'Received' ? 'Completed' : 'In Progress',
+            detail: loiLoa.loiNumber,
+          };
+        }
+        return { status: 'Not Started' };
+
+      case '03':
+        if (acceptance) {
+          return {
+            status: acceptance.status === 'Accepted' ? 'Completed' : 'In Progress',
+            detail: acceptance.acceptanceRef,
+          };
+        }
+        return { status: 'Not Started' };
+
+      case '04':
+        if (cpg && agreement && cpg.status === 'Valid' && agreement.status === 'Executed') {
+          return {
+            status: 'Completed',
+            detail: `${cpg.cpgRef} / ${agreement.agreementRef}`,
+          };
+        }
+        if (cpg || agreement) {
+          return {
+            status: 'In Progress',
+            detail: cpg ? cpg.cpgRef : agreement?.agreementRef,
+          };
+        }
+        return { status: 'Not Started' };
+
+      default: {
+        const stageState = project.workflow?.find((w) => w.stageId === stageId);
+        if (stageState) return { status: stageState.status };
+
+        const currentNum = parseInt(project.currentStageId, 10);
+        const stageNum = parseInt(stageId, 10);
+        if (stageNum < currentNum) return { status: 'Completed' };
+        if (stageNum === currentNum) return { status: 'In Progress' };
+        return { status: 'Not Started' };
+      }
+    }
   };
 
   const renderStageItem = (stage: WorkflowStageDefinition) => {
-    const status = getStageStatus(stage.id);
+    const isLiveStage = ['01', '02', '03', '04'].includes(stage.id);
+    const route = getStageRoute(stage.id);
+    const { status, detail } = getStageStatus(stage.id);
 
     return (
       <div
         key={stage.id}
-        className={`p-3.5 rounded-lg border transition-all ${
-          status === 'Completed'
-            ? 'bg-emerald-50/50 border-emerald-200'
-            : status === 'In Progress'
-            ? 'bg-blue-50/70 border-blue-300 ring-1 ring-blue-400/30'
-            : 'bg-slate-50/50 border-slate-200 opacity-70'
+        className={`p-3.5 rounded-lg border transition-all relative flex flex-col justify-between ${
+          isLiveStage
+            ? status === 'Completed'
+              ? 'bg-emerald-50/60 border-emerald-300 shadow-xs'
+              : status === 'In Progress'
+              ? 'bg-blue-50/80 border-blue-300 ring-1 ring-blue-400/30'
+              : 'bg-white border-slate-200'
+            : 'bg-slate-50/60 border-slate-200 opacity-75'
         }`}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-6 h-6 rounded-md flex items-center justify-center font-mono text-[11px] font-bold ${
-                status === 'Completed'
-                  ? 'bg-emerald-600 text-white'
-                  : status === 'In Progress'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-200 text-slate-600'
-              }`}
-            >
-              {stage.id}
-            </span>
-            <h4
-              className={`text-xs font-bold ${
-                status === 'In Progress' ? 'text-blue-900' : 'text-slate-900'
-              }`}
-            >
-              {stage.name}
-            </h4>
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-6 h-6 rounded-md flex items-center justify-center font-mono text-[11px] font-bold ${
+                  isLiveStage
+                    ? status === 'Completed'
+                      ? 'bg-emerald-600 text-white'
+                      : status === 'In Progress'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-200 text-slate-700'
+                    : 'bg-slate-200 text-slate-400'
+                }`}
+              >
+                {stage.id}
+              </span>
+              <h4
+                className={`text-xs font-bold ${
+                  status === 'In Progress' ? 'text-blue-900' : 'text-slate-900'
+                }`}
+              >
+                {stage.name}
+              </h4>
+            </div>
+
+            {isLiveStage ? (
+              <span
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  status === 'Completed'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : status === 'In Progress'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {status === 'Completed' ? (
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                ) : status === 'In Progress' ? (
+                  <Clock className="w-3 h-3 text-blue-600" />
+                ) : null}
+                {status}
+              </span>
+            ) : (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 flex items-center gap-1">
+                <Lock className="w-2.5 h-2.5 text-slate-400" />
+                Locked
+              </span>
+            )}
           </div>
 
-          <span
-            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-              status === 'Completed'
-                ? 'bg-emerald-100 text-emerald-800'
-                : status === 'In Progress'
-                ? 'bg-blue-100 text-blue-800 animate-pulse'
-                : 'bg-slate-200 text-slate-600'
-            }`}
-          >
-            {status}
-          </span>
+          <p className="text-[11px] text-slate-500 mt-2 line-clamp-2">
+            {stage.description}
+          </p>
+
+          {detail && (
+            <div className="mt-2 text-[10px] font-mono text-slate-700 bg-slate-100/80 px-2 py-1 rounded truncate">
+              Ref: {detail}
+            </div>
+          )}
         </div>
 
-        <p className="text-[11px] text-slate-500 mt-2 line-clamp-2">
-          {stage.description}
-        </p>
+        <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+          <span className="text-slate-400 font-mono">Stage {stage.id}/13</span>
 
-        <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
-          <span>Stage {stage.id} of 13</span>
-          <span className="font-semibold text-slate-500">Preview Only</span>
+          {isLiveStage && route ? (
+            <Link
+              href={route}
+              className="font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 transition-colors"
+            >
+              <span>Manage Stage</span>
+              <ExternalLink className="w-2.5 h-2.5" />
+            </Link>
+          ) : (
+            <span className="font-semibold text-slate-400">Future Phase</span>
+          )}
         </div>
       </div>
     );
@@ -92,24 +205,24 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900 font-editorial">
-                Project Workflow Preview
+                Project Workflow Pipeline
               </h3>
               <DemoTag />
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Authoritative 13-stage turnkey project administration pipeline (01 Tender to 13 Final Bill)
+              Continuous 13-stage turnkey project administration pipeline (01 Tender to 13 Final Bill).
             </p>
           </div>
           <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 shrink-0">
-            Current: {project.currentStageName}
+            Current Stage: {project.currentStageName}
           </span>
         </div>
 
-        {/* Phase 1 Preview Notice */}
-        <div className="mt-3 p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2.5 text-xs text-slate-600">
-          <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+        {/* Phase 2 Architecture Notice */}
+        <div className="mt-3 p-3 rounded-lg bg-blue-50/70 border border-blue-200 flex items-center gap-2.5 text-xs text-blue-900">
+          <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
           <span>
-            <strong className="text-slate-800">Phase 1 Specification:</strong> Individual module execution engines are scheduled for subsequent phases. This view illustrates continuous stage progression and demo status.
+            <strong className="text-blue-950">Phase 2 Active Modules:</strong> Stages 01 Tender, 02 LOI / LOA, 03 Acceptance, and 04 CPG + Agreement are live and synchronized with the project record. Stages 05 through 13 remain locked preview for upcoming phases.
           </span>
         </div>
       </div>
@@ -118,10 +231,10 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <span className="font-bold text-xs uppercase tracking-wider text-slate-800 font-editorial">
-            Project Workflow Stages
+            Workflow Progression (Stages 01 – 13)
           </span>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-            13 Total Stages
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+            Stages 01–04 Active
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

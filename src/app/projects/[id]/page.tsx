@@ -10,6 +10,8 @@ import {
   Activity as ActivityIcon,
   ShieldAlert,
   ChevronRight,
+  ExternalLink,
+  Lock,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { StatusBadge, DemoTag, EnvironmentBadge } from '@/components/common/Badge';
@@ -22,7 +24,17 @@ type TabKey = 'overview' | 'progress' | 'documents' | 'activity';
 
 export default function ProjectDetailPage() {
   const params = useParams();
-  const { getProject, updateProjectStatus, activities } = useProjects();
+  const {
+    getProject,
+    updateProjectStatus,
+    activities,
+    getStageAProgress,
+    getTenderByProjectId,
+    getLoiLoaByProjectId,
+    getAcceptanceByProjectId,
+    getCpgByProjectId,
+    getAgreementByProjectId,
+  } = useProjects();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
   const projectId = params?.id ? String(params.id) : '';
@@ -56,6 +68,13 @@ export default function ProjectDetailPage() {
       `Status updated to ${newStatus} via project control console.`
     );
   };
+
+  const stageA = getStageAProgress(project.id);
+  const tender = getTenderByProjectId(project.id);
+  const loiLoa = getLoiLoaByProjectId(project.id);
+  const acceptance = getAcceptanceByProjectId(project.id);
+  const cpg = getCpgByProjectId(project.id);
+  const agreement = getAgreementByProjectId(project.id);
 
   return (
     <div className="space-y-6">
@@ -191,7 +210,7 @@ export default function ProjectDetailPage() {
             }`}
           >
             <Layers className="w-4 h-4" />
-            <span>Administrative Progress (Workflow Preview)</span>
+            <span>Workflow Pipeline (Stages 01–13)</span>
           </button>
 
           <button
@@ -203,7 +222,7 @@ export default function ProjectDetailPage() {
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>Documents (Placeholder)</span>
+            <span>Project Documents</span>
           </button>
 
           <button
@@ -224,8 +243,205 @@ export default function ProjectDetailPage() {
       <div>
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column: Contract & Technical Details */}
+            {/* Left Column: Contract Details & Phase 2 Admin Foundation */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Phase 2 Administrative Foundation Module Status */}
+              <div className="enterprise-card rounded-xl p-6 border border-slate-200 bg-white space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded border border-blue-200">
+                        PHASE 2
+                      </span>
+                      <h3 className="text-base font-bold text-slate-900 font-editorial">
+                        Administrative Foundation (Stages 01–04)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Direct tracking of Tender, LOI/LOA, Acceptance, and CPG + Agreement for this project.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-slate-900 font-mono">
+                        {stageA.completedCount} of {stageA.totalCount} Complete
+                      </span>
+                      <div className="text-[10px] text-slate-400 font-medium">
+                        {stageA.percentage}% Progression
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-full border-4 border-slate-100 flex items-center justify-center font-bold text-xs font-mono text-blue-700 bg-blue-50/50">
+                      {stageA.percentage}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${stageA.percentage}%` }}
+                  />
+                </div>
+
+                {/* 4 Active Module Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                  {/* Stage 01 Tender */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          01 Tender
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            tender
+                              ? tender.status === 'Awarded'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-blue-100 text-blue-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {tender ? tender.status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {tender ? tender.tenderNumber : 'No Tender Record'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {tender ? `NIT Ref • ${tender.client}` : 'Tender submission record'}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/tenders"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{tender ? 'View in Register' : '+ Register Tender'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 02 LOI / LOA */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          02 LOI / LOA
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            loiLoa
+                              ? loiLoa.status === 'Accepted' || loiLoa.status === 'Received'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-blue-100 text-blue-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {loiLoa ? loiLoa.status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {loiLoa ? loiLoa.loiNumber : 'No LOI / LOA Record'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {loiLoa ? `${loiLoa.contractValue} • Issued ${loiLoa.date}` : 'Contract Award Letter'}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/loi-loa"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{loiLoa ? 'View in Register' : '+ Log LOI / LOA'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 03 Acceptance */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          03 Acceptance
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            acceptance
+                              ? acceptance.status === 'Accepted'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-blue-100 text-blue-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {acceptance ? acceptance.status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {acceptance ? acceptance.acceptanceRef : 'No Acceptance Filed'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {acceptance ? `Filed ${acceptance.acceptanceDate}` : 'Unconditional acceptance letter'}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/acceptance"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{acceptance ? 'View Acceptance' : '+ File Acceptance'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 04 CPG + Agreement */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          04 CPG + Agreement
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            cpg && agreement
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : cpg || agreement
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {cpg && agreement ? 'Complete' : cpg || agreement ? 'In Progress' : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {cpg ? `BG: ${cpg.cpgRef}` : 'CPG: Not Lodged'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 font-mono truncate">
+                        {agreement ? `Agr: ${agreement.agreementRef}` : 'Agr: Pending Execution'}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/cpg-agreement"
+                        className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1"
+                      >
+                        <span>Manage Stage 04</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contract & Administrative Parameters */}
               <div className="enterprise-card rounded-xl p-6 border border-slate-200 bg-white space-y-4">
                 <h3 className="text-base font-bold text-slate-900 font-editorial border-b border-slate-100 pb-3">
                   Contract &amp; Administrative Parameters
@@ -294,7 +510,9 @@ export default function ProjectDetailPage() {
                     {project.currentStageName}
                   </h4>
                   <p className="text-xs text-slate-600">
-                    Active administrative tracking in progress. Detailed modules will connect in Phase 2.
+                    {parseInt(project.currentStageId, 10) <= 4
+                      ? 'Live Phase 2 administrative module connected and active.'
+                      : 'Future operational stage. Stage preview mode.'}
                   </p>
                 </div>
 
@@ -303,21 +521,33 @@ export default function ProjectDetailPage() {
                     onClick={() => setActiveTab('progress')}
                     className="w-full py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
-                    <span>View Full 13-Stage Workflow</span>
+                    <span>View Full 13-Stage Pipeline</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              {/* Phase 1 Notice Box */}
-              <div className="rounded-xl p-5 bg-amber-50/70 border border-amber-200 text-xs text-amber-900 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-amber-800">
-                  <ShieldAlert className="w-4 h-4 text-amber-700" />
-                  <span>Phase 1 Scope Reminder</span>
+              {/* Locked Subsequent Stages Panel */}
+              <div className="rounded-xl p-5 bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-3">
+                <div className="flex items-center gap-2 font-bold text-slate-800">
+                  <Lock className="w-4 h-4 text-slate-500" />
+                  <span>Subsequent Stages (05 – 13)</span>
                 </div>
-                <p className="text-[11px] text-amber-800/90 leading-relaxed">
-                  Tender, LOI, PO, Inspection, and Billing functional engines are intentionally deferred to future development phases.
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Stages 05 GTP through 13 Final Bill are reserved for upcoming development phases and remain locked in Phase 2.
                 </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {['05 GTP', '06 PO', '07 Insp Call', '08 Insp Order', '09 JIR', '10 DI', '11 MICC', '12 Prog Bill', '13 Final Bill'].map(
+                    (s) => (
+                      <span
+                        key={s}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-200/80 text-slate-600 font-mono font-medium"
+                      >
+                        {s}
+                      </span>
+                    )
+                  )}
+                </div>
               </div>
             </div>
           </div>

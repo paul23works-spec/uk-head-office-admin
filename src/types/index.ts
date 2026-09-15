@@ -114,3 +114,156 @@ export interface NotificationItem {
   type: 'alert' | 'update' | 'info';
   link?: string;
 }
+
+// ==========================================
+// PHASE 2: A ADMIN WORKFLOW TYPES (01 - 04)
+// ==========================================
+
+export interface DocumentMetadata {
+  id: string;
+  name: string;
+  type: string;
+  uploadedDate: string;
+  fileSize?: string;
+  remarks?: string;
+}
+
+// 01 — Tender
+export type TenderStatus =
+  | 'Draft'
+  | 'Published'
+  | 'Submitted'
+  | 'Under Evaluation'
+  | 'L1'
+  | 'Awarded'
+  | 'Not Awarded'
+  | 'Cancelled';
+
+export type TenderL1Status = 'Not Determined' | 'L1' | 'Not L1';
+
+export interface TenderRecord {
+  id: string; // TND-2024-001
+  tenderNumber: string; // e.g. NIT/APDCL/MED-COLL/2023/14
+  tenderDate: string;
+  tenderRef: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  client: string;
+  department: string;
+  location: string;
+  tenderValue: string; // e.g. ₹ 28.40 Cr
+  estimatedValue?: string;
+  openingDate: string;
+  closingDate: string;
+  status: TenderStatus;
+  l1Status: TenderL1Status;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 02 — LOI / LOA
+export type LoiLoaStatus =
+  | 'Draft'
+  | 'Received'
+  | 'Under Review'
+  | 'Accepted'
+  | 'Closed';
+
+export interface LoiLoaRecord {
+  id: string; // LOI-2024-001
+  loiNumber: string; // e.g. LOA/APDCL/CGM(PP&D)/2023/889
+  date: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  tenderId: string;
+  tenderNumber: string;
+  client: string;
+  contractValue: string; // e.g. ₹ 28.40 Cr
+  referenceDetails: string;
+  remarks: string;
+  status: LoiLoaStatus;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 03 — Acceptance
+export type AcceptanceStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'Accepted'
+  | 'Returned'
+  | 'Closed';
+
+export interface AcceptanceRecord {
+  id: string; // ACC-2024-001
+  acceptanceRef: string; // e.g. UK/HO/ACC/2023/104
+  acceptanceDate: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  loiLoaId: string;
+  loiLoaNumber: string;
+  client: string;
+  remarks: string;
+  status: AcceptanceStatus;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 04 — CPG & Agreement
+export type CpgStatus =
+  | 'Pending'
+  | 'Submitted'
+  | 'Under Verification'
+  | 'Valid'
+  | 'Expired'
+  | 'Released';
+
+export interface CpgRecord {
+  id: string; // CPG-2024-001
+  cpgRef: string; // e.g. BG/SBI/2024/771
+  cpgDate: string;
+  cpgAmount: string; // e.g. ₹ 2.84 Cr
+  submissionDate: string;
+  validityDate: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  loiLoaId: string;
+  loiLoaNumber: string;
+  bankName?: string;
+  status: CpgStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AgreementStatus =
+  | 'Draft'
+  | 'Under Preparation'
+  | 'Executed'
+  | 'Closed';
+
+export interface AgreementRecord {
+  id: string; // AGR-2024-001
+  agreementRef: string; // e.g. AGR/APDCL/2024/019
+  agreementDate: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  loiLoaId: string;
+  loiLoaNumber: string;
+  status: AgreementStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+

@@ -8,16 +8,28 @@ import {
   AlertTriangle,
   CheckCircle2,
   ShieldAlert,
+  FileSpreadsheet,
+  FileCheck,
+  FileSignature,
+  ShieldCheck,
+  ChevronRight,
+  Layers,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { KpiCard } from '@/components/dashboard/KpiCard';
 import { StatusDistribution } from '@/components/dashboard/StatusDistribution';
 import { PendingActionsTable } from '@/components/dashboard/PendingActionsTable';
 import { RecentProjectsTable } from '@/components/dashboard/RecentProjectsTable';
-import { EnvironmentBadge } from '@/components/common/Badge';
+import { EnvironmentBadge, DemoTag } from '@/components/common/Badge';
 
 export default function DashboardPage() {
-  const { stats } = useProjects();
+  const { stats, tenders, loiLoas, acceptances, cpgs, agreements } = useProjects();
+
+  const tendersUnderEval = tenders.filter((t) => t.status === 'Under Evaluation' || t.status === 'Submitted').length;
+  const loiActive = loiLoas.filter((l) => l.status === 'Received' || l.status === 'Accepted').length;
+  const accAccepted = acceptances.filter((a) => a.status === 'Accepted').length;
+  const validCpgs = cpgs.filter((c) => c.status === 'Valid').length;
+  const executedAgreements = agreements.filter((a) => a.status === 'Executed').length;
 
   return (
     <div className="space-y-8">
@@ -29,6 +41,7 @@ export default function DashboardPage() {
               UK HEAD OFFICE
             </h1>
             <EnvironmentBadge />
+            <DemoTag />
           </div>
           <p className="text-sm font-medium text-slate-600 mt-1">
             Office Administration &amp; Project Control
@@ -50,14 +63,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Demo Environment Notice Banner */}
-      <div className="rounded-lg bg-amber-50/90 border border-amber-200/80 p-3.5 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-        <div className="text-xs text-amber-900">
-          <span className="font-bold uppercase tracking-wider text-[11px] text-amber-800 mr-2">
-            Phase 1 Foundation:
+      <div className="rounded-lg bg-blue-50/80 border border-blue-200/80 p-3.5 flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+        <div className="text-xs text-blue-900">
+          <span className="font-bold uppercase tracking-wider text-[11px] text-blue-800 mr-2">
+            Phase 2 Administrative Foundation Active:
           </span>
-          All records, figures, and stage progressions displayed on this dashboard are purely fictional demonstration data.
-          No production database or external administrative engine is connected in this phase.
+          Stages 01 Tender, 02 LOI / LOA, 03 Acceptance, and 04 CPG + Agreement are fully active with synchronized local demo persistence. Stages 05 through 13 remain locked preview.
         </div>
       </div>
 
@@ -96,6 +108,111 @@ export default function DashboardPage() {
           trend="4 Finalized Contracts"
         />
       </div>
+
+      {/* Phase 2: Active Administrative Foundation (Stages 01–04) */}
+      <section aria-labelledby="stage-a-heading" className="space-y-3">
+        <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-blue-600" />
+            <h2 id="stage-a-heading" className="font-bold text-sm uppercase tracking-wider text-slate-900 font-editorial">
+              Phase 2 Active Workflow Modules (Stages 01 – 04)
+            </h2>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+            Live Modules Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Stage 01 Tender */}
+          <Link
+            href="/tenders"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                01 Tender
+              </span>
+              <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <FileSpreadsheet className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {tenders.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>{tendersUnderEval} in bidding / evaluation</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Stage 02 LOI / LOA */}
+          <Link
+            href="/loi-loa"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                02 LOI / LOA
+              </span>
+              <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <FileCheck className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {loiLoas.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>{loiActive} active award letters</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Stage 03 Acceptance */}
+          <Link
+            href="/acceptance"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                03 Acceptance
+              </span>
+              <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <FileSignature className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {acceptances.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>{accAccepted} formally accepted</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Stage 04 CPG + Agreement */}
+          <Link
+            href="/cpg-agreement"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                04 CPG + Agreement
+              </span>
+              <div className="p-1.5 rounded-md bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {cpgs.length} / {agreements.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>{validCpgs} BGs • {executedAgreements} Aggr.</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+        </div>
+      </section>
 
       {/* Project Status Distribution Section */}
       <section aria-labelledby="status-dist-heading">

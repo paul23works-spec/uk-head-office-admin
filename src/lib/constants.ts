@@ -156,13 +156,11 @@ export const SIDEBAR_NAV_ITEMS = [
   },
   {
     title: 'Project Workflow',
-    badge: 'Future Phases',
-    isFuture: true,
     items: [
-      { name: '01 Tender', href: '#', icon: 'FileSpreadsheet', stageId: '01', isFuture: true },
-      { name: '02 LOI / LOA', href: '#', icon: 'FileCheck', stageId: '02', isFuture: true },
-      { name: '03 Acceptance', href: '#', icon: 'FileSignature', stageId: '03', isFuture: true },
-      { name: '04 CPG + Agreement', href: '#', icon: 'ShieldCheck', stageId: '04', isFuture: true },
+      { name: '01 Tender', href: '/tenders', icon: 'FileSpreadsheet', stageId: '01', isFuture: false },
+      { name: '02 LOI / LOA', href: '/loi-loa', icon: 'FileCheck', stageId: '02', isFuture: false },
+      { name: '03 Acceptance', href: '/acceptance', icon: 'FileSignature', stageId: '03', isFuture: false },
+      { name: '04 CPG + Agreement', href: '/cpg-agreement', icon: 'ShieldCheck', stageId: '04', isFuture: false },
       { name: '05 GTP', href: '#', icon: 'Cpu', stageId: '05', isFuture: true },
       { name: '06 PO', href: '#', icon: 'ShoppingCart', stageId: '06', isFuture: true },
       { name: '07 Inspection Call', href: '#', icon: 'BellRing', stageId: '07', isFuture: true },

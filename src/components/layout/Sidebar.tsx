@@ -33,19 +33,19 @@ interface SidebarProps {
 }
 
 const WORKFLOW_NAV_STAGES = [
-  { id: '01', name: '01 Tender', icon: FileSpreadsheet },
-  { id: '02', name: '02 LOI / LOA', icon: FileCheck },
-  { id: '03', name: '03 Acceptance', icon: FileSignature },
-  { id: '04', name: '04 CPG + Agreement', icon: ShieldCheck },
-  { id: '05', name: '05 GTP', icon: Cpu },
-  { id: '06', name: '06 PO', icon: ShoppingCart },
-  { id: '07', name: '07 Inspection Call', icon: BellRing },
-  { id: '08', name: '08 Inspection Order', icon: ClipboardCheck },
-  { id: '09', name: '09 JIR / Inspection Report', icon: FileBadge },
-  { id: '10', name: '10 DI / Dispatch Clearance', icon: Truck },
-  { id: '11', name: '11 MICC', icon: Award },
-  { id: '12', name: '12 Progressive Bill', icon: Receipt },
-  { id: '13', name: '13 Final Bill', icon: CheckCheck },
+  { id: '01', name: '01 Tender', icon: FileSpreadsheet, href: '/tenders', active: true },
+  { id: '02', name: '02 LOI / LOA', icon: FileCheck, href: '/loi-loa', active: true },
+  { id: '03', name: '03 Acceptance', icon: FileSignature, href: '/acceptance', active: true },
+  { id: '04', name: '04 CPG + Agreement', icon: ShieldCheck, href: '/cpg-agreement', active: true },
+  { id: '05', name: '05 GTP', icon: Cpu, href: '#', active: false },
+  { id: '06', name: '06 PO', icon: ShoppingCart, href: '#', active: false },
+  { id: '07', name: '07 Inspection Call', icon: BellRing, href: '#', active: false },
+  { id: '08', name: '08 Inspection Order', icon: ClipboardCheck, href: '#', active: false },
+  { id: '09', name: '09 JIR / Inspection Report', icon: FileBadge, href: '#', active: false },
+  { id: '10', name: '10 DI / Dispatch Clearance', icon: Truck, href: '#', active: false },
+  { id: '11', name: '11 MICC', icon: Award, href: '#', active: false },
+  { id: '12', name: '12 Progressive Bill', icon: Receipt, href: '#', active: false },
+  { id: '13', name: '13 Final Bill', icon: CheckCheck, href: '#', active: false },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -146,22 +146,45 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <span className="text-[11px] font-bold tracking-wider uppercase text-slate-300 font-editorial">
                 Project Workflow
               </span>
-              <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                Future Phases
+              <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                Phase 2
               </span>
             </div>
 
-            <nav className="space-y-0.5 opacity-65">
+            <nav className="space-y-0.5">
               {WORKFLOW_NAV_STAGES.map((stage) => {
                 const IconComponent = stage.icon;
+                const isStageActive = stage.active && (pathname === stage.href || pathname.startsWith(stage.href + '/'));
+
+                if (stage.active) {
+                  return (
+                    <Link
+                      key={stage.id}
+                      href={stage.href}
+                      onClick={() => onClose()}
+                      className={`flex items-center justify-between px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        isStageActive
+                          ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                          : 'text-slate-300 hover:bg-[#112444] hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isStageActive ? 'text-white' : 'text-blue-400'}`} />
+                        <span className="truncate">{stage.name}</span>
+                      </div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 ml-1.5" title="Active Module" />
+                    </Link>
+                  );
+                }
+
                 return (
                   <div
                     key={stage.id}
                     title={`${stage.name} — Coming in future phases`}
-                    className="flex items-center justify-between px-3 py-1.5 rounded-md text-slate-400 cursor-not-allowed hover:bg-[#0e213f]/40 transition-colors"
+                    className="flex items-center justify-between px-3 py-1.5 rounded-md text-slate-500 cursor-not-allowed hover:bg-[#0e213f]/40 opacity-60 transition-colors"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <IconComponent className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <IconComponent className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       <span className="truncate text-xs">{stage.name}</span>
                     </div>
                     <Lock className="w-3 h-3 text-slate-500 shrink-0 ml-1.5" />
