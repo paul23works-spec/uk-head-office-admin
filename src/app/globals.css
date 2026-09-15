@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --brand-navy-950: #060e1a;
+    --brand-navy-900: #0a192f;
+    --brand-navy-850: #0f223f;
+    --brand-navy-800: #142d52;
+    --brand-navy-700: #1c3c69;
+
+    --brand-blue-700: #1d4ed8;
+    --brand-blue-600: #2563eb;
+    --brand-blue-500: #3b82f6;
+    --brand-blue-50: #eff6ff;
+
+    --brand-gold-600: #b45309;
+    --brand-gold-500: #c59b27;
+    --brand-gold-400: #d97706;
+    --brand-gold-100: #fef3c7;
+    --brand-gold-50: #fffbeb;
+
+    --surface-bg: #f8fafc;
+    --surface-card: #ffffff;
+    --surface-border: #e2e8f0;
+    --surface-border-subtle: #f1f5f9;
+
+    --text-navy: #0f172a;
+    --text-slate: #334155;
+    --text-muted: #64748b;
+  }
+
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Corporate Editorial Font helper */
+.font-editorial {
+  font-family: var(--font-serif), Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+.font-interface {
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Enterprise scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Subtle enterprise card shadow */
+.enterprise-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+}
+
+.enterprise-card:hover {
+  border-color: #cbd5e1;
+}
+
+/* Disabled stage link styling */
+.nav-disabled {
+  opacity: 0.55;
+  cursor: not-allowed !important;
+  user-select: none;
+}
