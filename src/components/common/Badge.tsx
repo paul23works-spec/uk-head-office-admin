@@ -100,7 +100,7 @@ export function EnvironmentBadge() {
   return (
     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0A192F] text-amber-400 text-xs font-semibold tracking-wide border border-amber-500/40 shadow-xs">
       <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-      <span>DEMO / PHASE 1</span>
+      <span>DEMO / PHASE 2</span>
     </div>
   );
 }

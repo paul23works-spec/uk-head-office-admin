@@ -35,7 +35,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700 font-editorial">UK HEAD OFFICE</span>
             <span>•</span>
-            <span>Office Administration System (Phase 1 Foundation)</span>
+            <span>Office Administration System (Phase 2 — A Admin Modules)</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
             <span className="bg-amber-50 text-amber-800 font-semibold px-2 py-0.5 rounded border border-amber-200">
