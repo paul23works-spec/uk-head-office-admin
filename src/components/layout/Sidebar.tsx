@@ -24,6 +24,7 @@ import {
   Settings,
   Lock,
   X,
+  ListTree,
 } from 'lucide-react';
 import { EnvironmentBadge } from '../common/Badge';
 
@@ -37,11 +38,11 @@ const WORKFLOW_NAV_STAGES = [
   { id: '02', name: '02 LOI / LOA', icon: FileCheck, href: '/loi-loa', active: true },
   { id: '03', name: '03 Acceptance', icon: FileSignature, href: '/acceptance', active: true },
   { id: '04', name: '04 CPG + Agreement', icon: ShieldCheck, href: '/cpg-agreement', active: true },
-  { id: '05', name: '05 GTP', icon: Cpu, href: '#', active: false },
-  { id: '06', name: '06 PO', icon: ShoppingCart, href: '#', active: false },
-  { id: '07', name: '07 Inspection Call', icon: BellRing, href: '#', active: false },
-  { id: '08', name: '08 Inspection Order', icon: ClipboardCheck, href: '#', active: false },
-  { id: '09', name: '09 JIR / Inspection Report', icon: FileBadge, href: '#', active: false },
+  { id: '05', name: '05 GTP', icon: Cpu, href: '/gtp', active: true },
+  { id: '06', name: '06 PO', icon: ShoppingCart, href: '/po', active: true },
+  { id: '07', name: '07 Inspection Call', icon: BellRing, href: '/inspection-call', active: true },
+  { id: '08', name: '08 Inspection Order', icon: ClipboardCheck, href: '/inspection-order', active: true },
+  { id: '09', name: '09 JIR / Inspection Report', icon: FileBadge, href: '/jir', active: true },
   { id: '10', name: '10 DI / Dispatch Clearance', icon: Truck, href: '#', active: false },
   { id: '11', name: '11 MICC', icon: Award, href: '#', active: false },
   { id: '12', name: '12 Progressive Bill', icon: Receipt, href: '#', active: false },
@@ -137,6 +138,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <FolderKanban className="w-4 h-4 shrink-0" />
                 <span>Projects</span>
               </Link>
+              <Link
+                href="/boq"
+                onClick={() => onClose()}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all ${
+                  pathname.startsWith('/boq')
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-300 hover:bg-[#112444] hover:text-white'
+                }`}
+              >
+                <ListTree className="w-4 h-4 shrink-0" />
+                <span>BOQ Master</span>
+              </Link>
             </nav>
           </div>
 
@@ -147,7 +160,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 Project Workflow
               </span>
               <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                Phase 2
+                Phase 3
               </span>
             </div>
 

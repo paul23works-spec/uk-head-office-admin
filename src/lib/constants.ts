@@ -60,7 +60,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'B',
     groupTitle: 'B — ADMIN WORK DETAILS',
     description: 'Guaranteed Technical Particulars approval, engineering drawing clearances, and client compliance confirmation.',
-    phase: 'Phase 2 Module',
+    phase: 'Phase 3 Module',
   },
   {
     id: '06',
@@ -70,7 +70,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'B',
     groupTitle: 'B — ADMIN WORK DETAILS',
     description: 'Purchase Orders issuance to manufacturing vendors, equipment schedules, and milestone tracking.',
-    phase: 'Phase 2 Module',
+    phase: 'Phase 3 Module',
   },
   {
     id: '07',
@@ -80,7 +80,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'B',
     groupTitle: 'B — ADMIN WORK DETAILS',
     description: 'Official factory inspection call to client quality engineers and third-party inspection agency.',
-    phase: 'Phase 2 Module',
+    phase: 'Phase 3 Module',
   },
   {
     id: '08',
@@ -90,7 +90,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'B',
     groupTitle: 'B — ADMIN WORK DETAILS',
     description: 'Inspection authorization order issuance, deputation of inspecting officer, and schedule formalization.',
-    phase: 'Phase 2 Module',
+    phase: 'Phase 3 Module',
   },
   {
     id: '09',
@@ -100,7 +100,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'B',
     groupTitle: 'B — ADMIN WORK DETAILS',
     description: 'Joint Inspection Report generation, routine test certificate validation, and quality sign-off.',
-    phase: 'Phase 2 Module',
+    phase: 'Phase 3 Module',
   },
 
   // ADMIN C: Stages 10–13
@@ -112,7 +112,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Dispatch Instruction clearance authorization, transit insurance documentation, and gate pass processing.',
-    phase: 'Phase 2 Module',
+    phase: 'Future Phase',
   },
   {
     id: '11',
@@ -122,7 +122,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Material Inspection and Clearance Certificate issuance by nodal authority upon site delivery.',
-    phase: 'Phase 2 Module',
+    phase: 'Future Phase',
   },
   {
     id: '12',
@@ -132,7 +132,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Progressive running account (RA) bill preparation, MB measurement verification, and statutory deductions.',
-    phase: 'Phase 2 Module',
+    phase: 'Future Phase',
   },
   {
     id: '13',
@@ -142,7 +142,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Final project reconciliation bill, no-claim certificate, CPG release processing, and financial closure.',
-    phase: 'Phase 2 Module',
+    phase: 'Future Phase',
   },
 ];
 
@@ -152,6 +152,7 @@ export const SIDEBAR_NAV_ITEMS = [
     items: [
       { name: 'Dashboard', href: '/', icon: 'LayoutDashboard', active: true },
       { name: 'Projects', href: '/projects', icon: 'FolderKanban', active: true },
+      { name: 'BOQ Management', href: '/boq', icon: 'ListTree', active: true },
     ],
   },
   {
@@ -161,11 +162,11 @@ export const SIDEBAR_NAV_ITEMS = [
       { name: '02 LOI / LOA', href: '/loi-loa', icon: 'FileCheck', stageId: '02', isFuture: false },
       { name: '03 Acceptance', href: '/acceptance', icon: 'FileSignature', stageId: '03', isFuture: false },
       { name: '04 CPG + Agreement', href: '/cpg-agreement', icon: 'ShieldCheck', stageId: '04', isFuture: false },
-      { name: '05 GTP', href: '#', icon: 'Cpu', stageId: '05', isFuture: true },
-      { name: '06 PO', href: '#', icon: 'ShoppingCart', stageId: '06', isFuture: true },
-      { name: '07 Inspection Call', href: '#', icon: 'BellRing', stageId: '07', isFuture: true },
-      { name: '08 Inspection Order', href: '#', icon: 'ClipboardCheck', stageId: '08', isFuture: true },
-      { name: '09 JIR / Inspection Report', href: '#', icon: 'FileBadge', stageId: '09', isFuture: true },
+      { name: '05 GTP', href: '/gtp', icon: 'Cpu', stageId: '05', isFuture: false },
+      { name: '06 PO', href: '/po', icon: 'ShoppingCart', stageId: '06', isFuture: false },
+      { name: '07 Inspection Call', href: '/inspection-call', icon: 'BellRing', stageId: '07', isFuture: false },
+      { name: '08 Inspection Order', href: '/inspection-order', icon: 'ClipboardCheck', stageId: '08', isFuture: false },
+      { name: '09 JIR / Inspection Report', href: '/jir', icon: 'FileBadge', stageId: '09', isFuture: false },
       { name: '10 DI / Dispatch Clearance', href: '#', icon: 'Truck', stageId: '10', isFuture: true },
       { name: '11 MICC', href: '#', icon: 'Award', stageId: '11', isFuture: true },
       { name: '12 Progressive Bill', href: '#', icon: 'Receipt', stageId: '12', isFuture: true },

@@ -267,3 +267,253 @@ export interface AgreementRecord {
   updatedAt: string;
 }
 
+// ==========================================
+// PHASE 3: B ADMIN & BOQ TYPES (STAGES 05 - 09)
+// ==========================================
+
+// Vendor Foundation
+export type VendorStatus = 'Active' | 'Inactive';
+
+export interface Vendor {
+  id: string; // VND-001
+  code: string; // e.g. VND-TRF-01
+  name: string; // e.g. Assam Electrical Industries Ltd
+  category: string; // e.g. Transformers & Switchgear
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address: string;
+  status: VendorStatus;
+  remarks?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// BOQ Item Model
+export interface BoqItem {
+  id: string; // BOQ-2024-001
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  itemNumber: string; // e.g. "1.01", "2.04"
+  description: string;
+  specification: string;
+  quantity: number;
+  unit: string; // 'Nos', 'Sets', 'Km', 'Mtr', 'MT'
+  rate: number; // rate per unit
+  amount: number; // deterministic: quantity * rate
+  category: string; // 'Transformers', 'Switchgear', 'Conductors', 'Civil & Structures', etc.
+  vendorId?: string; // OPTIONAL at creation
+  vendorName?: string;
+  remarks?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 05 — GTP (Guaranteed Technical Particulars)
+export type GtpStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'Under Review'
+  | 'Clarification Required'
+  | 'Approved'
+  | 'Rejected';
+
+export interface GtpRecord {
+  id: string; // GTP-2024-001
+  gtpNumber: string; // e.g. GTP/BGA/TRF/001
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  boqItemId: string;
+  boqItemNumber: string;
+  materialItem: string;
+  vendorId: string;
+  vendorName: string;
+  submissionDate: string;
+  revision: string; // e.g. "R0", "R1", "R2"
+  previousRevisionRef?: string;
+  revisionDate: string;
+  status: GtpStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 06 — PO (Purchase Order)
+export type PoStatus =
+  | 'Draft'
+  | 'Issued'
+  | 'Acknowledged'
+  | 'In Progress'
+  | 'Closed'
+  | 'Cancelled';
+
+export interface PoLineItem {
+  id: string; // POL-001
+  poId: string;
+  boqItemId: string;
+  boqItemNumber: string;
+  description: string;
+  boqQuantity: number;
+  quantity: number; // current PO line quantity
+  balanceQuantity: number; // remaining BOQ qty
+  unit: string;
+  rate: number;
+  amount: number; // quantity * rate
+  deliveryRequirement?: string;
+  remarks?: string;
+}
+
+export interface PoRecord {
+  id: string; // PO-2024-001
+  poNumber: string; // e.g. PO/UK/APDCL/2024/041
+  poDate: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  vendorId: string;
+  vendorName: string;
+  relatedTenderId?: string;
+  relatedLoiLoaId?: string;
+  items: PoLineItem[];
+  totalAmount: number; // deterministic sum of line amounts
+  status: PoStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 07 — Inspection Call
+export type InspectionCallStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'Under Review'
+  | 'Scheduled'
+  | 'Completed'
+  | 'Cancelled';
+
+export interface InspectionCallRecord {
+  id: string; // INC-2024-001
+  inspectionCallNumber: string; // e.g. IC/UK/2024/015
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  vendorId: string;
+  vendorName: string;
+  poId: string;
+  poNumber: string;
+  boqItemId: string;
+  boqItemNumber: string;
+  material: string;
+  poQuantity: number;
+  previouslyCalledQuantity: number;
+  quantity: number; // current call quantity
+  remainingQuantity: number;
+  unit: string;
+  requestDate: string;
+  proposedInspectionDate: string;
+  inspectionLocation: string;
+  status: InspectionCallStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 08 — Inspection Order
+export type InspectionOrderStatus =
+  | 'Draft'
+  | 'Issued'
+  | 'Scheduled'
+  | 'Completed'
+  | 'Cancelled';
+
+export interface InspectionOrderRecord {
+  id: string; // INO-2024-001
+  inspectionOrderNumber: string; // e.g. IO/APDCL/2024/082
+  inspectionCallId: string;
+  inspectionCallNumber: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  vendorId: string;
+  vendorName: string;
+  poId: string;
+  poNumber: string;
+  boqItemId: string;
+  material: string;
+  quantity: number;
+  unit: string;
+  orderDate: string;
+  inspectionDate: string;
+  inspectionLocation: string;
+  assignedAuthority: string; // e.g. "Chief General Manager (QC) / TPIA"
+  assignedPerson: string; // e.g. "P. K. Sarmah, Dy. General Manager"
+  status: InspectionOrderStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 09 — JIR (Joint Inspection Report)
+export type JirStatus =
+  | 'Draft'
+  | 'Under Inspection'
+  | 'Accepted'
+  | 'Partially Accepted'
+  | 'Rejected'
+  | 'Completed';
+
+export interface JirRecord {
+  id: string; // JIR-2024-001
+  jirNumber: string; // e.g. JIR/APDCL/2024/104
+  inspectionOrderId: string;
+  inspectionOrderNumber: string;
+  inspectionCallId: string;
+  inspectionCallNumber: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  vendorId: string;
+  vendorName: string;
+  poId: string;
+  poNumber: string;
+  boqItemId: string;
+  inspectionDate: string;
+  material: string;
+  unit: string;
+  offeredQuantity: number;
+  inspectedQuantity: number; // <= offeredQuantity
+  acceptedQuantity: number; // acceptedQuantity + rejectedQuantity <= inspectedQuantity
+  rejectedQuantity: number;
+  balanceQuantity: number; // offeredQuantity - acceptedQuantity
+  observations: string;
+  testResults: string;
+  status: JirStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage B Relational Progress
+export interface StageBProgress {
+  completedCount: number;
+  totalCount: number;
+  percentage: number;
+  stages: {
+    stageId: string; // '05' to '09'
+    name: string;
+    status: 'Completed' | 'In Progress' | 'Not Started';
+    recordRef?: string;
+    hasRecord: boolean;
+  }[];
+  boqItemCount: number;
+  boqTotalValue: number;
+}
+
+

@@ -111,7 +111,7 @@ export default function CpgAgreementPage() {
               CPG &amp; Contract Agreement Management
             </h1>
             <DemoTag />
-            <EnvironmentBadge />
+            <EnvironmentBadge phase="PHASE 2" />
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Unified administration of Contract Performance Guarantees (Bank Guarantees) and bilateral Contract Agreement executions.

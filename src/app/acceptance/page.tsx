@@ -60,7 +60,7 @@ export default function AcceptancePage() {
               Acceptance Filing &amp; Verification
             </h1>
             <DemoTag />
-            <EnvironmentBadge />
+            <EnvironmentBadge phase="PHASE 2" />
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Formal unconditional contract acceptance submission, executive countersignatures, and authority filing linked to LOI / LOA.

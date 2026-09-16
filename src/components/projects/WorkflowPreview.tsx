@@ -19,6 +19,13 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
     getAcceptanceByProjectId,
     getCpgByProjectId,
     getAgreementByProjectId,
+    getGtpsByProjectId,
+    getPosByProjectId,
+    getInspectionCallsByProjectId,
+    getInspectionOrdersByProjectId,
+    getJirsByProjectId,
+    getLatestGtpForBoqItem,
+    boqItems,
   } = useProjects();
 
   const tender = getTenderByProjectId(project.id);
@@ -26,6 +33,12 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
   const acceptance = getAcceptanceByProjectId(project.id);
   const cpg = getCpgByProjectId(project.id);
   const agreement = getAgreementByProjectId(project.id);
+
+  const projectGtps = getGtpsByProjectId(project.id);
+  const projectPos = getPosByProjectId(project.id);
+  const projectCalls = getInspectionCallsByProjectId(project.id);
+  const projectOrders = getInspectionOrdersByProjectId(project.id);
+  const projectJirs = getJirsByProjectId(project.id);
 
   const getStageRoute = (stageId: string): string | null => {
     switch (stageId) {
@@ -37,6 +50,16 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
         return '/acceptance';
       case '04':
         return '/cpg-agreement';
+      case '05':
+        return '/gtp';
+      case '06':
+        return '/po';
+      case '07':
+        return '/inspection-call';
+      case '08':
+        return '/inspection-order';
+      case '09':
+        return '/jir';
       default:
         return null;
     }
@@ -86,6 +109,68 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
         }
         return { status: 'Not Started' };
 
+      case '05': {
+        if (projectGtps.length > 0) {
+          const pBoq = boqItems.filter((b) => b.projectId === project.id);
+          const allApproved = pBoq.length > 0 && pBoq.every((b) => {
+            const latest = getLatestGtpForBoqItem(b.id);
+            return latest && latest.status === 'Approved';
+          });
+          return {
+            status: allApproved ? 'Completed' : 'In Progress',
+            detail: `${projectGtps.length} GTP(s) Submitted`,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
+      case '06': {
+        const active = projectPos.filter((p) => p.status !== 'Cancelled');
+        if (active.length > 0) {
+          const allClosed = active.every((p) => p.status === 'Closed');
+          return {
+            status: allClosed ? 'Completed' : 'In Progress',
+            detail: active[0].poNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
+      case '07': {
+        const active = projectCalls.filter((c) => c.status !== 'Cancelled');
+        if (active.length > 0) {
+          const allDone = active.every((c) => c.status === 'Completed');
+          return {
+            status: allDone ? 'Completed' : 'In Progress',
+            detail: active[0].inspectionCallNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
+      case '08': {
+        const active = projectOrders.filter((o) => o.status !== 'Cancelled');
+        if (active.length > 0) {
+          const allDone = active.every((o) => o.status === 'Completed');
+          return {
+            status: allDone ? 'Completed' : 'In Progress',
+            detail: active[0].inspectionOrderNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
+      case '09': {
+        if (projectJirs.length > 0) {
+          const hasAccepted = projectJirs.some((j) => j.status === 'Accepted' || j.status === 'Completed');
+          return {
+            status: hasAccepted ? 'Completed' : 'In Progress',
+            detail: projectJirs[0].jirNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
       default: {
         const stageState = project.workflow?.find((w) => w.stageId === stageId);
         if (stageState) return { status: stageState.status };
@@ -100,7 +185,7 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
   };
 
   const renderStageItem = (stage: WorkflowStageDefinition) => {
-    const isLiveStage = ['01', '02', '03', '04'].includes(stage.id);
+    const isLiveStage = ['01', '02', '03', '04', '05', '06', '07', '08', '09'].includes(stage.id);
     const route = getStageRoute(stage.id);
     const { status, detail } = getStageStatus(stage.id);
 
@@ -218,11 +303,11 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
           </span>
         </div>
 
-        {/* Phase 2 Architecture Notice */}
+        {/* Phase 3 Architecture Notice */}
         <div className="mt-3 p-3 rounded-lg bg-blue-50/70 border border-blue-200 flex items-center gap-2.5 text-xs text-blue-900">
           <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
           <span>
-            <strong className="text-blue-950">Phase 2 Active Modules:</strong> Stages 01 Tender, 02 LOI / LOA, 03 Acceptance, and 04 CPG + Agreement are live and synchronized with the project record. Stages 05 through 13 remain locked preview for upcoming phases.
+            <strong className="text-blue-950">Phase 3 Active Modules:</strong> Stages 01 Tender through 09 JIR / Inspection Report are live and synchronized with the project record. Stages 10 through 13 remain locked preview for upcoming phases.
           </span>
         </div>
       </div>
@@ -234,7 +319,7 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
             Workflow Progression (Stages 01 – 13)
           </span>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-            Stages 01–04 Active
+            Stages 01–09 Active
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

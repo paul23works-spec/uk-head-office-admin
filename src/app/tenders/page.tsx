@@ -75,7 +75,7 @@ export default function TendersPage() {
               Tender Administration
             </h1>
             <DemoTag />
-            <EnvironmentBadge />
+            <EnvironmentBadge phase="PHASE 2" />
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Turnkey project bid records, NIT specification files, qualification tracking, and commercial submissions.

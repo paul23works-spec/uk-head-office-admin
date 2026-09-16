@@ -70,7 +70,7 @@ export default function LoiLoaPage() {
               Letter of Intent / Letter of Award (LOI / LOA)
             </h1>
             <DemoTag />
-            <EnvironmentBadge />
+            <EnvironmentBadge phase="PHASE 2" />
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Official contract awards, notification of awards (NOA), and formal order acknowledgment linked to Tender.

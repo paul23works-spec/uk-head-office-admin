@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ExternalLink,
   Lock,
+  ListTree,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { StatusBadge, DemoTag, EnvironmentBadge } from '@/components/common/Badge';
@@ -29,11 +30,17 @@ export default function ProjectDetailPage() {
     updateProjectStatus,
     activities,
     getStageAProgress,
+    getStageBProgress,
     getTenderByProjectId,
     getLoiLoaByProjectId,
     getAcceptanceByProjectId,
     getCpgByProjectId,
     getAgreementByProjectId,
+    gtps,
+    pos,
+    inspectionCalls,
+    inspectionOrders,
+    jirs,
   } = useProjects();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
@@ -70,11 +77,18 @@ export default function ProjectDetailPage() {
   };
 
   const stageA = getStageAProgress(project.id);
+  const stageB = getStageBProgress(project.id);
   const tender = getTenderByProjectId(project.id);
   const loiLoa = getLoiLoaByProjectId(project.id);
   const acceptance = getAcceptanceByProjectId(project.id);
   const cpg = getCpgByProjectId(project.id);
   const agreement = getAgreementByProjectId(project.id);
+
+  const projectGtps = gtps.filter((g) => g.projectId === project.id);
+  const projectPos = pos.filter((p) => p.projectId === project.id);
+  const projectCalls = inspectionCalls.filter((c) => c.projectId === project.id);
+  const projectOrders = inspectionOrders.filter((o) => o.projectId === project.id);
+  const projectJirs = jirs.filter((j) => j.projectId === project.id);
 
   return (
     <div className="space-y-6">
@@ -441,6 +455,264 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
 
+              {/* Phase 3 Active: Procurement & Inspection Foundation (Stages 05–09) + BOQ */}
+              <div className="enterprise-card rounded-xl p-6 border border-slate-200 bg-white space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                        PHASE 3
+                      </span>
+                      <h3 className="text-base font-bold text-slate-900 font-editorial">
+                        Procurement &amp; Inspection Foundation (Stages 05–09)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      BOQ baseline, GTP approval, Purchase Orders, Inspection Calls, Inspection Orders, and JIR reports.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-slate-900 font-mono">
+                        {stageB.boqItemCount} BOQ Items (₹{stageB.boqTotalValue.toLocaleString('en-IN')})
+                      </span>
+                      <div className="text-[10px] text-slate-400 font-medium">
+                        {stageB.percentage}% Progression
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-full border-4 border-slate-100 flex items-center justify-center font-bold text-xs font-mono text-amber-700 bg-amber-50/50">
+                      {stageB.percentage}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-amber-600 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${stageB.percentage}%` }}
+                  />
+                </div>
+
+                {/* BOQ Summary Pill / Link */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-lg border border-amber-200/80 bg-amber-50/40">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-amber-100/80 text-amber-800">
+                      <ListTree className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">Project Bill of Quantities (BOQ)</div>
+                      <div className="text-[11px] text-slate-500">
+                        {stageB.boqItemCount} registered items • ₹{stageB.boqTotalValue.toLocaleString('en-IN')} total estimated value
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    href="/boq"
+                    className="text-[11px] font-semibold text-amber-800 hover:text-amber-950 inline-flex items-center gap-1 bg-white px-3 py-1.5 rounded-lg border border-amber-200 self-start sm:self-auto hover:border-amber-300 transition-colors shadow-xs"
+                  >
+                    <span>Manage BOQ Items</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+
+                {/* 5 Stage Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
+                  {/* Stage 05 GTP */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          05 GTP
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectGtps.length > 0 && projectGtps[0].status === 'Approved'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectGtps.length > 0 && (projectGtps[0].status === 'Submitted' || projectGtps[0].status === 'Under Review')
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectGtps.length > 0 ? projectGtps[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectGtps.length > 0 ? `${projectGtps.length} Submissions (${projectGtps[0].gtpNumber})` : 'No GTP Record'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Guaranteed technical parameters
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/gtp"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectGtps.length > 0 ? 'View in Register' : '+ Submit GTP'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 06 PO */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          06 PO
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectPos.length > 0 && (projectPos[0].status === 'Issued' || projectPos[0].status === 'Acknowledged')
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectPos.length > 0 && projectPos[0].status === 'Draft'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectPos.length > 0 ? projectPos[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectPos.length > 0 ? `${projectPos.length} Orders (${projectPos[0].poNumber})` : 'No PO Issued'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Purchase orders to vendors
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/po"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectPos.length > 0 ? 'View in Register' : '+ Issue PO'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 07 Inspection Call */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          07 Inspection Call
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectCalls.length > 0 && (projectCalls[0].status === 'Scheduled' || projectCalls[0].status === 'Completed')
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectCalls.length > 0 && (projectCalls[0].status === 'Submitted' || projectCalls[0].status === 'Under Review')
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectCalls.length > 0 ? projectCalls[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectCalls.length > 0 ? `${projectCalls.length} Calls (${projectCalls[0].inspectionCallNumber})` : 'No Call Raised'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Factory inspection notifications
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/inspection-call"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectCalls.length > 0 ? 'View in Register' : '+ Raise Call'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 08 Inspection Order */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          08 Inspection Order
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectOrders.length > 0 && (projectOrders[0].status === 'Issued' || projectOrders[0].status === 'Scheduled' || projectOrders[0].status === 'Completed')
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectOrders.length > 0 && projectOrders[0].status === 'Draft'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectOrders.length > 0 ? projectOrders[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectOrders.length > 0 ? `${projectOrders.length} Orders (${projectOrders[0].inspectionOrderNumber})` : 'No Order Issued'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Deputation of inspecting agency
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/inspection-order"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectOrders.length > 0 ? 'View in Register' : '+ Issue Order'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 09 JIR */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700">
+                          09 JIR / Report
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectJirs.length > 0 && projectJirs[0].status === 'Accepted'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectJirs.length > 0 && projectJirs[0].status === 'Rejected'
+                              ? 'bg-rose-100 text-rose-800'
+                              : projectJirs.length > 0 && projectJirs[0].status === 'Partially Accepted'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectJirs.length > 0 ? projectJirs[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectJirs.length > 0 ? `${projectJirs.length} Reports (${projectJirs[0].jirNumber})` : 'No JIR Recorded'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Joint inspection findings &amp; results
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/jir"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectJirs.length > 0 ? 'View in Register' : '+ Record JIR'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Contract & Administrative Parameters */}
               <div className="enterprise-card rounded-xl p-6 border border-slate-200 bg-white space-y-4">
                 <h3 className="text-base font-bold text-slate-900 font-editorial border-b border-slate-100 pb-3">
@@ -510,8 +782,8 @@ export default function ProjectDetailPage() {
                     {project.currentStageName}
                   </h4>
                   <p className="text-xs text-slate-600">
-                    {parseInt(project.currentStageId, 10) <= 4
-                      ? 'Live Phase 2 administrative module connected and active.'
+                    {parseInt(project.currentStageId, 10) <= 9
+                      ? 'Live Phase 2/3 administrative, procurement & inspection module connected and active.'
                       : 'Future operational stage. Stage preview mode.'}
                   </p>
                 </div>
@@ -531,13 +803,13 @@ export default function ProjectDetailPage() {
               <div className="rounded-xl p-5 bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-3">
                 <div className="flex items-center gap-2 font-bold text-slate-800">
                   <Lock className="w-4 h-4 text-slate-500" />
-                  <span>Subsequent Stages (05 – 13)</span>
+                  <span>Subsequent Stages (10 – 13)</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Stages 05 GTP through 13 Final Bill are reserved for upcoming development phases and remain locked in Phase 2.
+                  Stages 10 DI through 13 Final Bill are reserved for Phase 4 development and remain locked.
                 </p>
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {['05 GTP', '06 PO', '07 Insp Call', '08 Insp Order', '09 JIR', '10 DI', '11 MICC', '12 Prog Bill', '13 Final Bill'].map(
+                  {['10 DI', '11 MICC', '12 Prog Bill', '13 Final Bill'].map(
                     (s) => (
                       <span
                         key={s}
