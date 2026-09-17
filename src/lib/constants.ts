@@ -146,6 +146,22 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
   },
 ];
 
+export const STAGE_NAV_MAP: Record<string, string> = {
+  '01': '/tenders',
+  '02': '/loi-loa',
+  '03': '/acceptance',
+  '04': '/cpg-agreement',
+  '05': '/gtp',
+  '06': '/po',
+  '07': '/inspection-call',
+  '08': '/inspection-order',
+  '09': '/jir',
+  '10': '/di',
+  '11': '/micc',
+  '12': '/progressive-bill',
+  '13': '/final-bill',
+};
+
 export const SIDEBAR_NAV_ITEMS = [
   {
     title: 'Active Modules',

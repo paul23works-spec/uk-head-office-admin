@@ -693,3 +693,191 @@ export interface StageCProgress {
   remainingContractBalance: number;
   finalBillStatus?: FinalBillStatus;
 }
+
+// ==========================================
+// PHASE 5: COMPLETE PROJECT CONTROL TYPES
+// ==========================================
+
+export type ProjectControlStageStatus =
+  | 'Locked'
+  | 'Not Started'
+  | 'In Progress'
+  | 'Completed'
+  | 'Attention Required';
+
+export interface ProjectStageStatusInfo {
+  stageId: string; // '01' to '13'
+  stageNumber: string; // '01' to '13'
+  name: string;
+  adminGroup: AdminGroupRole;
+  group: StageGroupCode;
+  status: ProjectControlStageStatus;
+  primaryReference?: string;
+  date?: string;
+  summary: string;
+  attentionMessage?: string;
+  navigationHref: string;
+  recordCount: number;
+}
+
+export interface ProjectProcurementSummary {
+  boqItemCount: number;
+  totalBoqEstimatedAmount: number;
+  totalBoqQuantity: number;
+  activePoCount: number;
+  totalOrderedQuantity: number;
+  remainingQuantity: number;
+  totalPoAmount: number;
+  gtpCount: number;
+  approvedGtpCount: number;
+  underReviewGtpCount: number;
+  procurementStatus: 'Not Started' | 'In Progress' | 'Completed' | 'Attention Required';
+}
+
+export interface ProjectInspectionSummary {
+  callCount: number;
+  orderCount: number;
+  jirCount: number;
+  offeredQuantity: number;
+  inspectedQuantity: number;
+  acceptedQuantity: number;
+  rejectedQuantity: number;
+  balanceQuantity: number;
+  inspectionStatus: 'Not Started' | 'In Progress' | 'Completed' | 'Attention Required';
+}
+
+export interface ProjectDispatchSummary {
+  acceptedQuantity: number;
+  activeDiCount: number;
+  dispatchedQuantity: number;
+  remainingDispatchQuantity: number;
+  latestDiNumber?: string;
+  latestDiDate?: string;
+  dispatchStatus: 'Not Started' | 'In Progress' | 'Completed' | 'Attention Required';
+}
+
+export interface ProjectMiccSummary {
+  totalDispatchedQuantity: number;
+  activeMiccCount: number;
+  verifiedQuantity: number;
+  pendingVerificationQuantity: number;
+  rejectedMiccCount: number;
+  miccStatus: 'Not Started' | 'In Progress' | 'Completed' | 'Attention Required';
+}
+
+export interface ProjectControlBillingSummary {
+  contractValue: number;
+  cumulativeApprovedBilling: number;
+  pendingClaimedBilling: number;
+  remainingContractBalance: number;
+  progressiveBillsCount: number;
+  approvedBillsCount: number;
+  finalBillStatus?: FinalBillStatus;
+  finalBillAmount?: number;
+  isFinanciallyClosed: boolean;
+  billingStatus: 'Not Started' | 'In Progress' | 'Completed' | 'Attention Required';
+}
+
+export type ActionCategory =
+  | 'Tender / Contract'
+  | 'Procurement'
+  | 'Inspection'
+  | 'Dispatch'
+  | 'Material Inward'
+  | 'Billing'
+  | 'Closure';
+
+export interface ProjectPendingAction {
+  id: string;
+  stageNumber: string;
+  stageName: string;
+  title: string;
+  description: string;
+  category: ActionCategory;
+  priority: 'High' | 'Medium' | 'Low';
+  actionUrl: string;
+  actionText: string;
+  sourceReference?: string;
+}
+
+export type ExceptionSeverity = 'Info' | 'Pending' | 'Attention';
+
+export interface ProjectException {
+  id: string;
+  stageNumber: string;
+  stageName: string;
+  title: string;
+  description: string;
+  severity: ExceptionSeverity;
+  actionUrl?: string;
+  actionText?: string;
+  reference?: string;
+}
+
+export interface ProjectActivityEvent {
+  id: string;
+  stageNumber: string;
+  stageName: string;
+  date: string;
+  timestamp: string;
+  reference: string;
+  title: string;
+  description: string;
+  status: string;
+  navigationHref: string;
+  type: string;
+}
+
+export interface ProjectHealthSummary {
+  healthStatus: 'On Track' | 'Attention Needed' | 'Critical Attention' | 'Completed';
+  completedStagesCount: number;
+  totalStagesCount: number; // 13
+  workflowProgressPercent: number; // (completedStagesCount / 13) * 100
+  pendingActionsCount: number;
+  exceptionsCount: number;
+  adminAProgress: number; // 01-04
+  adminBProgress: number; // 05-09
+  adminCProgress: number; // 10-13
+  billingProgressPercent: number;
+}
+
+export interface ProjectSearchResult {
+  id: string;
+  projectId: string;
+  reference: string;
+  stageNumber: string;
+  stageName: string;
+  type: string;
+  status: string;
+  date: string;
+  description: string;
+  navigationHref: string;
+}
+
+export interface ProjectControlSummary {
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  client: string;
+  location: string;
+  contractValueFormatted: string;
+  contractValue: number;
+  startDate: string;
+  expectedCompletion: string;
+  projectManager: string;
+  currentStageNumber: string;
+  currentStageName: string;
+  currentStageStatus: ProjectControlStageStatus;
+  overallProgress: number;
+  stageStatuses: ProjectStageStatusInfo[];
+  procurementSummary: ProjectProcurementSummary;
+  inspectionSummary: ProjectInspectionSummary;
+  dispatchSummary: ProjectDispatchSummary;
+  miccSummary: ProjectMiccSummary;
+  billingSummary: ProjectControlBillingSummary;
+  pendingActions: ProjectPendingAction[];
+  exceptions: ProjectException[];
+  activityTimeline: ProjectActivityEvent[];
+  healthSummary: ProjectHealthSummary;
+}
+

@@ -16,15 +16,24 @@ import {
   Award,
   Receipt,
   CheckCheck,
+  Search,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { StatusBadge, DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { WorkflowPreview } from '@/components/projects/WorkflowPreview';
 import { ActivityTimeline } from '@/components/projects/ActivityTimeline';
 import { DocumentsPlaceholder } from '@/components/projects/DocumentsPlaceholder';
+import { ProjectStageTimeline } from '@/components/project-control/ProjectStageTimeline';
+import { ProjectOperationalSummary } from '@/components/project-control/ProjectOperationalSummary';
+import { ProjectHealth } from '@/components/project-control/ProjectHealth';
+import { ProjectPendingActions } from '@/components/project-control/ProjectPendingActions';
+import { ProjectExceptions } from '@/components/project-control/ProjectExceptions';
+import { ProjectActivityTimeline as ProjectControlActivityTimeline } from '@/components/project-control/ProjectActivityTimeline';
+import { ProjectSearchModal } from '@/components/project-control/ProjectSearchModal';
 import { ProjectStatus } from '@/types';
 
-type TabKey = 'overview' | 'progress' | 'documents' | 'activity';
+type TabKey = 'control' | 'overview' | 'progress' | 'documents' | 'activity';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -49,8 +58,11 @@ export default function ProjectDetailPage() {
     miccs,
     progressiveBills,
     finalBills,
+    getProjectControlSummary,
+    searchProjectRecords,
   } = useProjects();
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [activeTab, setActiveTab] = useState<TabKey>('control');
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   const projectId = params?.id ? String(params.id) : '';
   const project = getProject(projectId);
@@ -104,6 +116,8 @@ export default function ProjectDetailPage() {
   const projectProgressiveBills = progressiveBills.filter((b) => b.projectId === project.id);
   const projectFinalBills = finalBills.filter((b) => b.projectId === project.id);
 
+  const controlSummary = getProjectControlSummary(project.id);
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb and Back Action */}
@@ -121,8 +135,16 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <EnvironmentBadge />
-          <DemoTag />
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
+            title="Search across all 13 stages for this project"
+          >
+            <Search className="w-3.5 h-3.5 text-slate-400" />
+            <span>Search Records</span>
+          </button>
+          <EnvironmentBadge phase="PHASE 5" />
+          <DemoTag text="DEMO / PHASE 5" />
         </div>
       </div>
 
@@ -134,10 +156,18 @@ export default function ProjectDetailPage() {
               <span className="font-mono text-xs font-bold text-blue-800 bg-blue-50 px-2.5 py-1 rounded border border-blue-200">
                 {project.code}
               </span>
-              <StatusBadge status={project.status} size="md" />
-              <span className="text-xs font-medium text-slate-500 px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
-                Stage {project.currentStageName}
+              <span className="font-mono text-xs font-bold text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200">
+                PROJECT CONTROL CENTER
               </span>
+              <StatusBadge status={project.status} size="md" />
+              <span className="text-xs font-medium text-slate-700 px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
+                Current Stage: {controlSummary ? `Stage ${controlSummary.currentStageNumber} — ${controlSummary.currentStageName}` : `Stage ${project.currentStageName}`}
+              </span>
+              {controlSummary && (
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  {controlSummary.overallProgress}% Workflow Progress
+                </span>
+              )}
             </div>
 
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 font-editorial">
@@ -216,10 +246,22 @@ export default function ProjectDetailPage() {
 
       {/* Navigation Tabs */}
       <div className="border-b border-slate-200">
-        <nav className="flex space-x-6 text-xs font-semibold" aria-label="Project tabs">
+        <nav className="flex space-x-6 text-xs font-semibold overflow-x-auto" aria-label="Project tabs">
+          <button
+            onClick={() => setActiveTab('control')}
+            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
+              activeTab === 'control'
+                ? 'border-blue-600 text-blue-600 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Project Control Center</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('overview')}
-            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'overview'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -231,7 +273,7 @@ export default function ProjectDetailPage() {
 
           <button
             onClick={() => setActiveTab('progress')}
-            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'progress'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -243,7 +285,7 @@ export default function ProjectDetailPage() {
 
           <button
             onClick={() => setActiveTab('documents')}
-            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'documents'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -255,7 +297,7 @@ export default function ProjectDetailPage() {
 
           <button
             onClick={() => setActiveTab('activity')}
-            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`pb-3 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
               activeTab === 'activity'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -269,6 +311,36 @@ export default function ProjectDetailPage() {
 
       {/* Tab Panels */}
       <div>
+        {activeTab === 'control' && controlSummary && (
+          <div className="space-y-6">
+            {/* 1. Health & Deterministic Progress */}
+            <ProjectHealth health={controlSummary.healthSummary} />
+
+            {/* 2. Core Operational Summary Cards */}
+            <ProjectOperationalSummary
+              procurement={controlSummary.procurementSummary}
+              inspection={controlSummary.inspectionSummary}
+              dispatch={controlSummary.dispatchSummary}
+              micc={controlSummary.miccSummary}
+              billing={controlSummary.billingSummary}
+            />
+
+            {/* 3. Unified 13-Stage Timeline */}
+            <ProjectStageTimeline
+              stages={controlSummary.stageStatuses}
+              currentStageNumber={controlSummary.currentStageNumber}
+            />
+
+            {/* 4. Pending Actions and Operational Exceptions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ProjectPendingActions actions={controlSummary.pendingActions} />
+              <ProjectExceptions exceptions={controlSummary.exceptions} />
+            </div>
+
+            {/* 5. Activity Timeline */}
+            <ProjectControlActivityTimeline events={controlSummary.activityTimeline} />
+          </div>
+        )}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: Contract Details & Phase 2, Phase 3, Phase 4 Modules */}
@@ -1049,6 +1121,16 @@ export default function ProjectDetailPage() {
           <ActivityTimeline activities={activities} projectId={project.id} />
         )}
       </div>
+
+      {/* Cross-Module Project Record Search Modal */}
+      <ProjectSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        projectName={project.name}
+        projectCode={project.code}
+        onSearch={(query) => searchProjectRecords(project.id, query)}
+      />
     </div>
   );
 }
+

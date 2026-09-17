@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import {
   FolderKanban,
@@ -24,6 +24,7 @@ import {
   Award,
   Receipt,
   CheckCheck,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { KpiCard } from '@/components/dashboard/KpiCard';
@@ -32,8 +33,25 @@ import { PendingActionsTable } from '@/components/dashboard/PendingActionsTable'
 import { RecentProjectsTable } from '@/components/dashboard/RecentProjectsTable';
 import { EnvironmentBadge, DemoTag } from '@/components/common/Badge';
 
+const STAGE_NAMES: Record<number, string> = {
+  1: 'Tender',
+  2: 'LOI / LOA',
+  3: 'Acceptance',
+  4: 'CPG & Aggr.',
+  5: 'GTP Approval',
+  6: 'PO Issued',
+  7: 'Insp. Call',
+  8: 'Insp. Order',
+  9: 'JIR Accepted',
+  10: 'DI Clearance',
+  11: 'MICC Received',
+  12: 'Prog. Bill',
+  13: 'Final Bill',
+};
+
 export default function DashboardPage() {
   const {
+    projects,
     stats,
     tenders,
     loiLoas,
@@ -50,6 +68,7 @@ export default function DashboardPage() {
     miccs,
     progressiveBills,
     finalBills,
+    getProjectControlSummary,
   } = useProjects();
 
   const tendersUnderEval = tenders.filter((t) => t.status === 'Under Evaluation' || t.status === 'Submitted').length;
@@ -71,6 +90,58 @@ export default function DashboardPage() {
     .filter((b) => b.status === 'Approved')
     .reduce((sum, b) => sum + (b.currentApprovedAmount || 0), 0);
   const finalBillsApproved = finalBills.filter((b) => b.status === 'Approved').length;
+
+  // Phase 5 Project Control aggregates
+  const projectControlSummaries = useMemo(() => {
+    return projects
+      .map((p) => {
+        const summary = getProjectControlSummary(p.id);
+        return summary ? { project: p, summary } : null;
+      })
+      .filter((item): item is { project: (typeof projects)[0]; summary: NonNullable<ReturnType<typeof getProjectControlSummary>> } => item !== null);
+  }, [projects, getProjectControlSummary]);
+
+  const totalContractVal = useMemo(() => {
+    return projects.reduce((acc, p) => acc + (typeof p.contractValue === 'number' ? p.contractValue : Number(p.contractValue) || 0), 0);
+  }, [projects]);
+
+  const totalApprovedBillingFromControl = useMemo(() => {
+    return projectControlSummaries.reduce(
+      (sum, item) => sum + (item.summary.billingSummary.cumulativeApprovedBilling || 0),
+      0
+    );
+  }, [projectControlSummaries]);
+
+  const totalRemainingBalance = Math.max(0, totalContractVal - totalApprovedBillingFromControl);
+
+  const projectsWithPendingActions = useMemo(() => {
+    return projectControlSummaries.filter((item) => item.summary.pendingActions.length > 0).length;
+  }, [projectControlSummaries]);
+
+  const projectsRequiringAttention = useMemo(() => {
+    return projectControlSummaries.filter(
+      (item) =>
+        item.summary.exceptions.some((e) => e.severity === 'Attention') ||
+        item.summary.healthSummary.healthStatus === 'Attention Needed' ||
+        item.summary.healthSummary.healthStatus === 'Critical Attention'
+    ).length;
+  }, [projectControlSummaries]);
+
+  // Stage distribution (1..13)
+  const stageDistribution = useMemo(() => {
+    const dist: Record<number, { count: number; projectIds: string[] }> = {};
+    for (let i = 1; i <= 13; i++) {
+      dist[i] = { count: 0, projectIds: [] };
+    }
+    projectControlSummaries.forEach(({ project, summary }) => {
+      const s = parseInt(summary.currentStageNumber, 10);
+      if (!isNaN(s) && dist[s]) {
+        dist[s].count++;
+        dist[s].projectIds.push(project.id);
+      }
+    });
+    return dist;
+  }, [projectControlSummaries]);
 
   return (
     <div className="space-y-8">
@@ -103,14 +174,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Demo Environment Notice Banner */}
-      <div className="rounded-lg bg-emerald-50/80 border border-emerald-200 p-3.5 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-        <div className="text-xs text-emerald-950">
-          <span className="font-bold uppercase tracking-wider text-[11px] text-emerald-800 mr-2">
-            Phase 4 Turnkey Modules Active:
+      {/* Phase 5 Banner */}
+      <div className="rounded-lg bg-indigo-50/80 border border-indigo-200 p-3.5 flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5" />
+        <div className="text-xs text-indigo-950">
+          <span className="font-bold uppercase tracking-wider text-[11px] text-indigo-800 mr-2">
+            Phase 5 Complete Project Control Active:
           </span>
-          All 13 turnkey workflow stages (01 Tender through 13 Final Bill) are live and interconnected, featuring BOQ, GTP, PO, Inspections, Dispatch (DI), Material Inward (MICC), Progressive Billing, and Final Contract Settlement.
+          All 13 turnkey workflow stages (01 Tender through 13 Final Bill) are live and unified under real-time operational control, health scoring, pending actions, and cross-stage audits.
         </div>
       </div>
 
@@ -506,6 +577,122 @@ export default function DashboardPage() {
               <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </Link>
+        </div>
+      </section>
+
+      {/* Phase 5: Complete Project Control & Stage Pipeline */}
+      <section aria-labelledby="project-control-heading" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-200 gap-2">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-5 h-5 text-indigo-600" />
+            <div>
+              <h2 id="project-control-heading" className="font-bold text-base uppercase tracking-wider text-slate-900 font-editorial">
+                Project Control &amp; 13-Stage Pipeline
+              </h2>
+              <p className="text-xs text-slate-500">
+                Unified real-time project control, current stage distribution, and administrative health monitoring.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+              Phase 5 Control Active
+            </span>
+          </div>
+        </div>
+
+        {/* Control Metrics Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Contract Portfolio</div>
+            <div className="mt-1 text-2xl font-bold font-editorial text-slate-900">
+              ₹{(totalContractVal / 10000000).toFixed(2)} Cr
+            </div>
+            <div className="mt-1 text-xs text-slate-500">
+              {projects.length} turnkey contracts registered
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Approved Progressive Billing</div>
+            <div className="mt-1 text-2xl font-bold font-editorial text-emerald-700">
+              ₹{(totalApprovedBillingFromControl / 10000000).toFixed(2)} Cr
+            </div>
+            <div className="mt-1 text-xs text-emerald-600 font-medium">
+              {totalContractVal > 0 ? ((totalApprovedBillingFromControl / totalContractVal) * 100).toFixed(1) : 0}% contract realized
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Remaining Unbilled Balance</div>
+            <div className="mt-1 text-2xl font-bold font-editorial text-blue-700">
+              ₹{(totalRemainingBalance / 10000000).toFixed(2)} Cr
+            </div>
+            <div className="mt-1 text-xs text-slate-500">
+              Contract value pending realization
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Operational Queues</div>
+            <div className="mt-1 text-2xl font-bold font-editorial text-amber-700">
+              {projectsWithPendingActions} Projects
+            </div>
+            <div className="mt-1 text-xs text-amber-600 font-medium">
+              {projectsRequiringAttention} contracts requiring attention
+            </div>
+          </div>
+        </div>
+
+        {/* 13-Stage Project Distribution Ribbon */}
+        <div className="p-4 rounded-xl bg-slate-900 text-white shadow-sm border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Current Stage Distribution (Stages 01 – 13)
+              </span>
+            </div>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Deterministic 13-Stage Linear Sequence
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-13 gap-2">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((stageNum) => {
+              const item = stageDistribution[stageNum] || { count: 0, projectIds: [] };
+              const hasProjects = item.count > 0;
+              return (
+                <div
+                  key={stageNum}
+                  className={`p-2.5 rounded-lg text-center transition-all ${
+                    hasProjects
+                      ? 'bg-indigo-600/90 border border-indigo-400 shadow-xs text-white'
+                      : 'bg-slate-800/60 border border-slate-700/50 text-slate-400'
+                  }`}
+                >
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider opacity-80">
+                    S{String(stageNum).padStart(2, '0')}
+                  </div>
+                  <div className="text-xs font-bold truncate mt-0.5" title={STAGE_NAMES[stageNum]}>
+                    {STAGE_NAMES[stageNum]}
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-center">
+                    <span
+                      className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
+                        hasProjects
+                          ? 'bg-white text-indigo-900 shadow-xs'
+                          : 'bg-slate-700/70 text-slate-400'
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

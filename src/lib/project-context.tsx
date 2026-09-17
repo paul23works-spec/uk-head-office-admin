@@ -27,6 +27,12 @@ import {
   ProgressiveBillLineItem,
   FinalBillRecord,
   StageCProgress,
+  ProjectControlSummary,
+  ProjectStageStatusInfo,
+  ProjectPendingAction as ProjectControlPendingAction,
+  ProjectException,
+  ProjectActivityEvent,
+  ProjectSearchResult,
 } from '@/types';
 import {
   INITIAL_PROJECTS,
@@ -70,6 +76,15 @@ import {
   validateProgressiveBillCreation,
   validateFinalBillCreation,
 } from './c-admin-engine';
+import {
+  getProjectControlSummary as getControlSummaryFromEngine,
+  calculateStageStatuses as calculateStageStatusesFromEngine,
+  calculatePendingActions as calculatePendingActionsFromEngine,
+  calculateProjectExceptions as calculateProjectExceptionsFromEngine,
+  buildProjectActivityTimeline as buildProjectActivityTimelineFromEngine,
+  searchProjectRecords as searchProjectRecordsFromEngine,
+  extractProjectWorkflowRecords,
+} from './project-control-engine';
 
 export interface StageAProgress {
   completedCount: number;
@@ -297,6 +312,16 @@ interface ProjectContextType {
 
   // Relational Progress Phase 4
   getStageCProgress: (projectId: string) => StageCProgress;
+
+  // ==========================================
+  // PHASE 5: PROJECT CONTROL ENGINE HELPERS
+  // ==========================================
+  getProjectControlSummary: (projectId: string) => ProjectControlSummary | undefined;
+  getProjectStageStatuses: (projectId: string) => ProjectStageStatusInfo[];
+  getProjectControlPendingActions: (projectId: string) => ProjectControlPendingAction[];
+  getProjectExceptions: (projectId: string) => ProjectException[];
+  getProjectControlActivityTimeline: (projectId: string) => ProjectActivityEvent[];
+  searchProjectRecords: (projectId: string, query: string) => ProjectSearchResult[];
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -2258,6 +2283,69 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  // ==========================================
+  // PHASE 5: COMPLETE PROJECT CONTROL HELPERS
+  // ==========================================
+
+  const getWorkflowDataForProject = (projectId: string) => {
+    return extractProjectWorkflowRecords(
+      projectId,
+      projects,
+      tenders,
+      loiLoas,
+      acceptances,
+      cpgs,
+      agreements,
+      boqItems,
+      gtps,
+      pos,
+      inspectionCalls,
+      inspectionOrders,
+      jirs,
+      dis,
+      miccs,
+      progressiveBills,
+      finalBills,
+      vendors
+    );
+  };
+
+  const getProjectControlSummary = (projectId: string): ProjectControlSummary | undefined => {
+    const data = getWorkflowDataForProject(projectId);
+    if (!data) return undefined;
+    return getControlSummaryFromEngine(data.project, data);
+  };
+
+  const getProjectStageStatuses = (projectId: string): ProjectStageStatusInfo[] => {
+    const data = getWorkflowDataForProject(projectId);
+    if (!data) return [];
+    return calculateStageStatusesFromEngine(data.project, data);
+  };
+
+  const getProjectControlPendingActions = (projectId: string): ProjectControlPendingAction[] => {
+    const data = getWorkflowDataForProject(projectId);
+    if (!data) return [];
+    return calculatePendingActionsFromEngine(data.project, data);
+  };
+
+  const getProjectExceptions = (projectId: string): ProjectException[] => {
+    const data = getWorkflowDataForProject(projectId);
+    if (!data) return [];
+    return calculateProjectExceptionsFromEngine(data.project, data);
+  };
+
+  const getProjectControlActivityTimeline = (projectId: string): ProjectActivityEvent[] => {
+    const data = getWorkflowDataForProject(projectId);
+    if (!data) return [];
+    return buildProjectActivityTimelineFromEngine(data.project, data);
+  };
+
+  const searchProjectRecords = (projectId: string, query: string): ProjectSearchResult[] => {
+    const data = getWorkflowDataForProject(projectId);
+    if (!data) return [];
+    return searchProjectRecordsFromEngine(data.project, data, query);
+  };
+
   return (
     <ProjectContext.Provider
       value={{
@@ -2385,6 +2473,14 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         getFinalBillByProjectId,
 
         getStageCProgress,
+
+        // Phase 5: Project Control Center Helpers
+        getProjectControlSummary,
+        getProjectStageStatuses,
+        getProjectControlPendingActions,
+        getProjectExceptions,
+        getProjectControlActivityTimeline,
+        searchProjectRecords,
       }}
     >
       {children}
