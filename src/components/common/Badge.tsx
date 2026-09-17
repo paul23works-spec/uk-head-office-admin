@@ -87,11 +87,12 @@ export function PriorityBadge({ priority }: { priority: ActionPriority }) {
   }
 }
 
-export function DemoTag({ label = 'DEMO DATA' }: { label?: string }) {
+export function DemoTag({ label, text }: { label?: string; text?: string }) {
+  const display = text || label || 'DEMO DATA';
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] tracking-wider uppercase font-semibold bg-amber-100/70 text-amber-900 border border-amber-300">
       <span className="w-1 h-1 rounded-full bg-amber-700"></span>
-      {label}
+      {display}
     </span>
   );
 }

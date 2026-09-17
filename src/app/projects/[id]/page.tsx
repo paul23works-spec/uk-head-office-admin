@@ -11,8 +11,11 @@ import {
   ShieldAlert,
   ChevronRight,
   ExternalLink,
-  Lock,
   ListTree,
+  Truck,
+  Award,
+  Receipt,
+  CheckCheck,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { StatusBadge, DemoTag, EnvironmentBadge } from '@/components/common/Badge';
@@ -31,6 +34,7 @@ export default function ProjectDetailPage() {
     activities,
     getStageAProgress,
     getStageBProgress,
+    getStageCProgress,
     getTenderByProjectId,
     getLoiLoaByProjectId,
     getAcceptanceByProjectId,
@@ -41,6 +45,10 @@ export default function ProjectDetailPage() {
     inspectionCalls,
     inspectionOrders,
     jirs,
+    dis,
+    miccs,
+    progressiveBills,
+    finalBills,
   } = useProjects();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
@@ -78,6 +86,8 @@ export default function ProjectDetailPage() {
 
   const stageA = getStageAProgress(project.id);
   const stageB = getStageBProgress(project.id);
+  const stageC = getStageCProgress(project.id);
+
   const tender = getTenderByProjectId(project.id);
   const loiLoa = getLoiLoaByProjectId(project.id);
   const acceptance = getAcceptanceByProjectId(project.id);
@@ -89,6 +99,10 @@ export default function ProjectDetailPage() {
   const projectCalls = inspectionCalls.filter((c) => c.projectId === project.id);
   const projectOrders = inspectionOrders.filter((o) => o.projectId === project.id);
   const projectJirs = jirs.filter((j) => j.projectId === project.id);
+  const projectDis = dis.filter((d) => d.projectId === project.id);
+  const projectMiccs = miccs.filter((m) => m.projectId === project.id);
+  const projectProgressiveBills = progressiveBills.filter((b) => b.projectId === project.id);
+  const projectFinalBills = finalBills.filter((b) => b.projectId === project.id);
 
   return (
     <div className="space-y-6">
@@ -257,7 +271,7 @@ export default function ProjectDetailPage() {
       <div>
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column: Contract Details & Phase 2 Admin Foundation */}
+            {/* Left Column: Contract Details & Phase 2, Phase 3, Phase 4 Modules */}
             <div className="lg:col-span-2 space-y-6">
               {/* Phase 2 Administrative Foundation Module Status */}
               <div className="enterprise-card rounded-xl p-6 border border-slate-200 bg-white space-y-5">
@@ -713,6 +727,206 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
 
+              {/* Phase 4 Active: C-Admin Modules (Stages 10–13) */}
+              <div className="enterprise-card rounded-xl p-6 border border-slate-200 bg-white space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
+                        PHASE 4
+                      </span>
+                      <h3 className="text-base font-bold text-slate-900 font-editorial">
+                        C-Admin Modules: Delivery &amp; Billing (Stages 10–13)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Dispatch Instructions (DI), Material Inward (MICC), Progressive Billing, and Final Bill Settlement.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-slate-900 font-mono">
+                        {stageC.completedCount} of {stageC.totalCount} Complete
+                      </span>
+                      <div className="text-[10px] text-slate-400 font-medium">
+                        {stageC.percentage}% Progression
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-full border-4 border-slate-100 flex items-center justify-center font-bold text-xs font-mono text-emerald-700 bg-emerald-50/50">
+                      {stageC.percentage}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-emerald-600 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${stageC.percentage}%` }}
+                  />
+                </div>
+
+                {/* 4 C-Admin Stage Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                  {/* Stage 10 DI */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700 flex items-center gap-1.5">
+                          <Truck className="w-3.5 h-3.5" />
+                          10 Dispatch Clearance (DI)
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectDis.length > 0 && projectDis[0].status === 'Dispatched'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectDis.length > 0 && (projectDis[0].status === 'Draft' || projectDis[0].status === 'Ready for Dispatch')
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectDis.length > 0 ? projectDis[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectDis.length > 0 ? `${projectDis.length} DIs (${projectDis[0].diNumber})` : 'No DI Issued'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Authorized dispatch clearances
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/di"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectDis.length > 0 ? 'View in Register' : '+ Issue DI'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 11 MICC */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700 flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5" />
+                          11 MICC Inward
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectMiccs.length > 0 && projectMiccs[0].status === 'Verified'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectMiccs.length > 0 && projectMiccs[0].status === 'Under Verification'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectMiccs.length > 0 ? projectMiccs[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectMiccs.length > 0 ? `${projectMiccs.length} Certificates (${projectMiccs[0].miccNumber})` : 'No MICC Issued'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Site receipt &amp; physical verification
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/micc"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectMiccs.length > 0 ? 'View in Register' : '+ Issue MICC'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 12 Progressive Bill */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700 flex items-center gap-1.5">
+                          <Receipt className="w-3.5 h-3.5" />
+                          12 Progressive Bill
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectProgressiveBills.length > 0 && projectProgressiveBills[0].status === 'Approved'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectProgressiveBills.length > 0 && (projectProgressiveBills[0].status === 'Submitted' || projectProgressiveBills[0].status === 'Under Review')
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectProgressiveBills.length > 0 ? projectProgressiveBills[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectProgressiveBills.length > 0 ? `${projectProgressiveBills.length} Invoices (${projectProgressiveBills[0].billNumber})` : 'No Progressive Bill'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Running account invoices on verified MICC
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/progressive-bill"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectProgressiveBills.length > 0 ? 'View in Register' : '+ Raise Bill'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Stage 13 Final Bill */}
+                  <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono text-[11px] font-bold text-blue-700 flex items-center gap-1.5">
+                          <CheckCheck className="w-3.5 h-3.5" />
+                          13 Final Bill
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            projectFinalBills.length > 0 && projectFinalBills[0].status === 'Approved'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : projectFinalBills.length > 0
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {projectFinalBills.length > 0 ? projectFinalBills[0].status : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-2 font-mono truncate">
+                        {projectFinalBills.length > 0 ? `${projectFinalBills[0].finalBillNumber} (${projectFinalBills[0].status})` : 'No Final Bill'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                        Final contract reconciliation &amp; settlement
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                      <Link
+                        href="/final-bill"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                      >
+                        <span>{projectFinalBills.length > 0 ? 'View in Register' : '+ Lodge Final Bill'}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Contract & Administrative Parameters */}
               <div className="enterprise-card rounded-xl p-6 border border-slate-200 bg-white space-y-4">
                 <h3 className="text-base font-bold text-slate-900 font-editorial border-b border-slate-100 pb-3">
@@ -782,9 +996,7 @@ export default function ProjectDetailPage() {
                     {project.currentStageName}
                   </h4>
                   <p className="text-xs text-slate-600">
-                    {parseInt(project.currentStageId, 10) <= 9
-                      ? 'Live Phase 2/3 administrative, procurement & inspection module connected and active.'
-                      : 'Future operational stage. Stage preview mode.'}
+                    Live Phase 4 complete turnkey workflow active across all 13 stages.
                   </p>
                 </div>
 
@@ -799,21 +1011,21 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
 
-              {/* Locked Subsequent Stages Panel */}
-              <div className="rounded-xl p-5 bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-3">
-                <div className="flex items-center gap-2 font-bold text-slate-800">
-                  <Lock className="w-4 h-4 text-slate-500" />
-                  <span>Subsequent Stages (10 – 13)</span>
+              {/* Complete 13-Stage Summary Card */}
+              <div className="rounded-xl p-5 bg-emerald-50/70 border border-emerald-200 text-xs text-slate-700 space-y-3">
+                <div className="flex items-center gap-2 font-bold text-emerald-900">
+                  <CheckCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Phase 4 Turnkey Complete</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Stages 10 DI through 13 Final Bill are reserved for Phase 4 development and remain locked.
+                  All 13 turnkey administration modules are synchronized and connected from Stage 01 Tender to Stage 13 Final Bill.
                 </p>
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {['10 DI', '11 MICC', '12 Prog Bill', '13 Final Bill'].map(
+                  {['01 Tender', '02 LOI', '03 Acc', '04 CPG', '05 GTP', '06 PO', '07 Call', '08 Order', '09 JIR', '10 DI', '11 MICC', '12 Bill', '13 Final'].map(
                     (s) => (
                       <span
                         key={s}
-                        className="text-[10px] px-2 py-0.5 rounded bg-slate-200/80 text-slate-600 font-mono font-medium"
+                        className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-medium border border-emerald-200"
                       >
                         {s}
                       </span>

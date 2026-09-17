@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldAlert, ExternalLink, Lock, CheckCircle2, Clock } from 'lucide-react';
+import { ShieldAlert, ExternalLink, CheckCircle2, Clock } from 'lucide-react';
 import { Project, WorkflowStageDefinition, WorkflowStageStatus } from '@/types';
 import { WORKFLOW_STAGES } from '@/lib/constants';
 import { useProjects } from '@/lib/project-context';
@@ -24,6 +24,10 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
     getInspectionCallsByProjectId,
     getInspectionOrdersByProjectId,
     getJirsByProjectId,
+    getDisByProjectId,
+    getMiccsByProjectId,
+    getProgressiveBillsByProjectId,
+    getFinalBillByProjectId,
     getLatestGtpForBoqItem,
     boqItems,
   } = useProjects();
@@ -39,6 +43,10 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
   const projectCalls = getInspectionCallsByProjectId(project.id);
   const projectOrders = getInspectionOrdersByProjectId(project.id);
   const projectJirs = getJirsByProjectId(project.id);
+  const projectDis = getDisByProjectId(project.id);
+  const projectMiccs = getMiccsByProjectId(project.id);
+  const projectProgressiveBills = getProgressiveBillsByProjectId(project.id);
+  const projectFinalBill = getFinalBillByProjectId(project.id);
 
   const getStageRoute = (stageId: string): string | null => {
     switch (stageId) {
@@ -60,6 +68,14 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
         return '/inspection-order';
       case '09':
         return '/jir';
+      case '10':
+        return '/di';
+      case '11':
+        return '/micc';
+      case '12':
+        return '/progressive-bill';
+      case '13':
+        return '/final-bill';
       default:
         return null;
     }
@@ -171,6 +187,53 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
         return { status: 'Not Started' };
       }
 
+      case '10': {
+        const activeDis = projectDis.filter((d) => d.status !== 'Cancelled');
+        if (activeDis.length > 0) {
+          const hasDispatched = activeDis.some((d) => d.status === 'Dispatched');
+          return {
+            status: hasDispatched ? 'Completed' : 'In Progress',
+            detail: activeDis[0].diNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
+      case '11': {
+        const activeMiccs = projectMiccs.filter((m) => m.status !== 'Rejected');
+        if (activeMiccs.length > 0) {
+          const hasVerified = activeMiccs.some((m) => m.status === 'Verified');
+          return {
+            status: hasVerified ? 'Completed' : 'In Progress',
+            detail: activeMiccs[0].miccNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
+      case '12': {
+        const activeBills = projectProgressiveBills.filter((b) => b.status !== 'Rejected');
+        if (activeBills.length > 0) {
+          const hasApproved = activeBills.some((b) => b.status === 'Approved');
+          return {
+            status: hasApproved ? 'Completed' : 'In Progress',
+            detail: activeBills[0].billNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
+      case '13': {
+        if (projectFinalBill) {
+          const isApproved = projectFinalBill.status === 'Approved';
+          return {
+            status: isApproved ? 'Completed' : 'In Progress',
+            detail: projectFinalBill.finalBillNumber,
+          };
+        }
+        return { status: 'Not Started' };
+      }
+
       default: {
         const stageState = project.workflow?.find((w) => w.stageId === stageId);
         if (stageState) return { status: stageState.status };
@@ -185,7 +248,6 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
   };
 
   const renderStageItem = (stage: WorkflowStageDefinition) => {
-    const isLiveStage = ['01', '02', '03', '04', '05', '06', '07', '08', '09'].includes(stage.id);
     const route = getStageRoute(stage.id);
     const { status, detail } = getStageStatus(stage.id);
 
@@ -193,13 +255,11 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
       <div
         key={stage.id}
         className={`p-3.5 rounded-lg border transition-all relative flex flex-col justify-between ${
-          isLiveStage
-            ? status === 'Completed'
-              ? 'bg-emerald-50/60 border-emerald-300 shadow-xs'
-              : status === 'In Progress'
-              ? 'bg-blue-50/80 border-blue-300 ring-1 ring-blue-400/30'
-              : 'bg-white border-slate-200'
-            : 'bg-slate-50/60 border-slate-200 opacity-75'
+          status === 'Completed'
+            ? 'bg-emerald-50/60 border-emerald-300 shadow-xs'
+            : status === 'In Progress'
+            ? 'bg-blue-50/80 border-blue-300 ring-1 ring-blue-400/30'
+            : 'bg-white border-slate-200'
         }`}
       >
         <div>
@@ -207,13 +267,11 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
             <div className="flex items-center gap-2">
               <span
                 className={`w-6 h-6 rounded-md flex items-center justify-center font-mono text-[11px] font-bold ${
-                  isLiveStage
-                    ? status === 'Completed'
-                      ? 'bg-emerald-600 text-white'
-                      : status === 'In Progress'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-200 text-slate-700'
-                    : 'bg-slate-200 text-slate-400'
+                  status === 'Completed'
+                    ? 'bg-emerald-600 text-white'
+                    : status === 'In Progress'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-200 text-slate-700'
                 }`}
               >
                 {stage.id}
@@ -227,29 +285,22 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
               </h4>
             </div>
 
-            {isLiveStage ? (
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  status === 'Completed'
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : status === 'In Progress'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-slate-100 text-slate-600'
-                }`}
-              >
-                {status === 'Completed' ? (
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                ) : status === 'In Progress' ? (
-                  <Clock className="w-3 h-3 text-blue-600" />
-                ) : null}
-                {status}
-              </span>
-            ) : (
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 flex items-center gap-1">
-                <Lock className="w-2.5 h-2.5 text-slate-400" />
-                Locked
-              </span>
-            )}
+            <span
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                status === 'Completed'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : status === 'In Progress'
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-slate-100 text-slate-600'
+              }`}
+            >
+              {status === 'Completed' ? (
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              ) : status === 'In Progress' ? (
+                <Clock className="w-3 h-3 text-blue-600" />
+              ) : null}
+              {status}
+            </span>
           </div>
 
           <p className="text-[11px] text-slate-500 mt-2 line-clamp-2">
@@ -266,7 +317,7 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
         <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
           <span className="text-slate-400 font-mono">Stage {stage.id}/13</span>
 
-          {isLiveStage && route ? (
+          {route ? (
             <Link
               href={route}
               className="font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 transition-colors"
@@ -275,7 +326,7 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
               <ExternalLink className="w-2.5 h-2.5" />
             </Link>
           ) : (
-            <span className="font-semibold text-slate-400">Future Phase</span>
+            <span className="font-semibold text-slate-400">View</span>
           )}
         </div>
       </div>
@@ -303,23 +354,23 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
           </span>
         </div>
 
-        {/* Phase 3 Architecture Notice */}
-        <div className="mt-3 p-3 rounded-lg bg-blue-50/70 border border-blue-200 flex items-center gap-2.5 text-xs text-blue-900">
-          <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
+        {/* Phase 4 Architecture Notice */}
+        <div className="mt-3 p-3 rounded-lg bg-emerald-50/80 border border-emerald-200 flex items-center gap-2.5 text-xs text-emerald-950">
+          <ShieldAlert className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>
-            <strong className="text-blue-950">Phase 3 Active Modules:</strong> Stages 01 Tender through 09 JIR / Inspection Report are live and synchronized with the project record. Stages 10 through 13 remain locked preview for upcoming phases.
+            <strong className="text-emerald-950">Phase 4 Complete Pipeline:</strong> All 13 stages (01 Tender through 13 Final Bill) are live, fully interconnected, and synchronized with enterprise project records.
           </span>
         </div>
       </div>
 
-      {/* Continuous 13-Stage Grid (No A / B / C labels) */}
+      {/* Continuous 13-Stage Grid */}
       <div className="space-y-3">
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <span className="font-bold text-xs uppercase tracking-wider text-slate-800 font-editorial">
             Workflow Progression (Stages 01 – 13)
           </span>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-            Stages 01–09 Active
+            Stages 01–13 Active
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

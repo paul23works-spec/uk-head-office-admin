@@ -516,4 +516,180 @@ export interface StageBProgress {
   boqTotalValue: number;
 }
 
+// ==========================================
+// PHASE 4: C ADMIN WORKFLOW (STAGES 10–13)
+// ==========================================
 
+// Stage 10 — DI (Dispatch Instruction / Dispatch Clearance)
+export type DiStatus =
+  | 'Draft'
+  | 'Ready for Dispatch'
+  | 'Dispatched'
+  | 'Partially Dispatched'
+  | 'Cancelled';
+
+export interface DiRecord {
+  id: string; // DI-2024-001
+  diNumber: string; // e.g. DI/UK/APDCL/2024/021
+  diDate: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  poId: string;
+  poNumber: string;
+  jirId: string;
+  jirNumber: string;
+  boqItemId: string;
+  boqItemNumber?: string;
+  vendorId: string;
+  vendorName: string;
+  materialDescription: string;
+  quantity: number;
+  unit: string;
+  dispatchDate?: string;
+  destination: string;
+  vehicleReference?: string;
+  lrTransportReference?: string;
+  status: DiStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 11 — MICC (Material Inspection and Clearance Certificate)
+export type MiccStatus =
+  | 'Draft'
+  | 'Under Verification'
+  | 'Verified'
+  | 'Rejected';
+
+export interface MiccRecord {
+  id: string; // MICC-2024-001
+  miccNumber: string; // e.g. MICC/APDCL/BGA/2024/015
+  miccDate: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  diId: string;
+  diNumber: string;
+  poId: string;
+  poNumber: string;
+  jirId: string;
+  jirNumber: string;
+  boqItemId: string;
+  boqItemNumber?: string;
+  vendorId: string;
+  vendorName: string;
+  materialDescription: string;
+  quantity: number;
+  unit: string;
+  fieldOffice: string; // e.g. "Bongaigaon Site Circle Office"
+  verifiedBy?: string;
+  verificationDate?: string;
+  status: MiccStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 12 — Progressive Bill
+export type ProgressiveBillStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'Under Review'
+  | 'Approved'
+  | 'Partially Approved'
+  | 'Rejected';
+
+export interface ProgressiveBillLineItem {
+  id: string; // PBL-001
+  billId: string;
+  miccId: string;
+  miccNumber: string;
+  diId: string;
+  diNumber: string;
+  poId: string;
+  poNumber: string;
+  boqItemId: string;
+  boqItemNumber?: string;
+  description: string;
+  unit: string;
+  claimedQuantity: number;
+  rate: number;
+  claimedAmount: number; // claimedQuantity * rate
+  approvedQuantity: number;
+  approvedAmount: number; // approvedQuantity * rate
+  remarks?: string;
+}
+
+export interface ProgressiveBillRecord {
+  id: string; // PB-2024-001
+  billNumber: string; // e.g. RA-01/UK/APDCL/2024
+  billDate: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  status: ProgressiveBillStatus;
+  lineItems: ProgressiveBillLineItem[];
+  previousApprovedAmount: number;
+  currentClaimedAmount: number;
+  currentApprovedAmount: number;
+  cumulativeApprovedAmount: number;
+  contractValue: number;
+  remainingContractBalance: number;
+  submissionDate?: string;
+  approvalDate?: string;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage 13 — Final Bill
+export type FinalBillStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'Under Review'
+  | 'Approved'
+  | 'Rejected';
+
+export interface FinalBillRecord {
+  id: string; // FB-2024-001
+  finalBillNumber: string; // e.g. FB/UK/APDCL/2024/001
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  billDate: string;
+  contractValue: number;
+  totalApprovedProgressiveBills: number;
+  adjustments: number; // Signed: positive increases final payable, negative decreases
+  finalBillAmount: number; // contractValue + adjustments - totalApprovedProgressiveBills
+  approvalDate?: string;
+  approvedBy?: string;
+  status: FinalBillStatus;
+  remarks: string;
+  documents?: DocumentMetadata[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Stage C Relational Progress
+export interface StageCProgress {
+  completedCount: number;
+  totalCount: number;
+  percentage: number;
+  stages: {
+    stageId: string; // '10' to '13'
+    name: string;
+    status: 'Completed' | 'In Progress' | 'Not Started';
+    recordRef?: string;
+    hasRecord: boolean;
+  }[];
+  activeDiCount: number;
+  verifiedMiccCount: number;
+  cumulativeApprovedBilling: number;
+  remainingContractBalance: number;
+  finalBillStatus?: FinalBillStatus;
+}

@@ -112,7 +112,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Dispatch Instruction clearance authorization, transit insurance documentation, and gate pass processing.',
-    phase: 'Future Phase',
+    phase: 'Phase 4 Module',
   },
   {
     id: '11',
@@ -122,7 +122,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Material Inspection and Clearance Certificate issuance by nodal authority upon site delivery.',
-    phase: 'Future Phase',
+    phase: 'Phase 4 Module',
   },
   {
     id: '12',
@@ -132,7 +132,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Progressive running account (RA) bill preparation, MB measurement verification, and statutory deductions.',
-    phase: 'Future Phase',
+    phase: 'Phase 4 Module',
   },
   {
     id: '13',
@@ -142,7 +142,7 @@ export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [
     group: 'C',
     groupTitle: 'C — ADMIN',
     description: 'Final project reconciliation bill, no-claim certificate, CPG release processing, and financial closure.',
-    phase: 'Future Phase',
+    phase: 'Phase 4 Module',
   },
 ];
 
@@ -167,10 +167,10 @@ export const SIDEBAR_NAV_ITEMS = [
       { name: '07 Inspection Call', href: '/inspection-call', icon: 'BellRing', stageId: '07', isFuture: false },
       { name: '08 Inspection Order', href: '/inspection-order', icon: 'ClipboardCheck', stageId: '08', isFuture: false },
       { name: '09 JIR / Inspection Report', href: '/jir', icon: 'FileBadge', stageId: '09', isFuture: false },
-      { name: '10 DI / Dispatch Clearance', href: '#', icon: 'Truck', stageId: '10', isFuture: true },
-      { name: '11 MICC', href: '#', icon: 'Award', stageId: '11', isFuture: true },
-      { name: '12 Progressive Bill', href: '#', icon: 'Receipt', stageId: '12', isFuture: true },
-      { name: '13 Final Bill', href: '#', icon: 'CheckCheck', stageId: '13', isFuture: true },
+      { name: '10 DI / Dispatch Clearance', href: '/di', icon: 'Truck', stageId: '10', isFuture: false },
+      { name: '11 MICC', href: '/micc', icon: 'Award', stageId: '11', isFuture: false },
+      { name: '12 Progressive Bill', href: '/progressive-bill', icon: 'Receipt', stageId: '12', isFuture: false },
+      { name: '13 Final Bill', href: '/final-bill', icon: 'CheckCheck', stageId: '13', isFuture: false },
     ],
   },
   {

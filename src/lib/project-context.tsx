@@ -21,6 +21,12 @@ import {
   InspectionOrderRecord,
   JirRecord,
   StageBProgress,
+  DiRecord,
+  MiccRecord,
+  ProgressiveBillRecord,
+  ProgressiveBillLineItem,
+  FinalBillRecord,
+  StageCProgress,
 } from '@/types';
 import {
   INITIAL_PROJECTS,
@@ -39,6 +45,10 @@ import {
   INITIAL_INSPECTION_CALLS,
   INITIAL_INSPECTION_ORDERS,
   INITIAL_JIRS,
+  INITIAL_DIS,
+  INITIAL_MICCS,
+  INITIAL_PROGRESSIVE_BILLS,
+  INITIAL_FINAL_BILLS,
 } from './mock-data';
 import { WORKFLOW_STAGES, DEMO_USER_PROFILE } from './constants';
 import {
@@ -50,6 +60,16 @@ import {
   validateInspectionOrderCreation,
   validateJirCreation,
 } from './procurement-engine';
+import {
+  calculateDispatchBalance,
+  validateDiCreation,
+  calculateMiccBalance,
+  validateMiccCreation,
+  calculateBillableQuantity,
+  calculateProjectBillingSummary,
+  validateProgressiveBillCreation,
+  validateFinalBillCreation,
+} from './c-admin-engine';
 
 export interface StageAProgress {
   completedCount: number;
@@ -199,6 +219,84 @@ interface ProjectContextType {
 
   // Relational Progress Phase 3
   getStageBProgress: (projectId: string) => StageBProgress;
+
+  // ==========================================
+  // PHASE 4: C ADMIN COLLECTIONS & CRUD
+  // ==========================================
+
+  // Stage 10 DI
+  dis: DiRecord[];
+  createDi: (data: Omit<DiRecord, 'id' | 'createdAt' | 'updatedAt'>) => DiRecord;
+  updateDi: (id: string, updates: Partial<DiRecord>) => void;
+  getDi: (id: string) => DiRecord | undefined;
+  getDisByProjectId: (projectId: string) => DiRecord[];
+  getRemainingDispatchQuantity: (jirId: string, excludeDiId?: string) => number;
+
+  // Stage 11 MICC
+  miccs: MiccRecord[];
+  createMicc: (data: Omit<MiccRecord, 'id' | 'createdAt' | 'updatedAt'>) => MiccRecord;
+  updateMicc: (id: string, updates: Partial<MiccRecord>) => void;
+  getMicc: (id: string) => MiccRecord | undefined;
+  getMiccsByProjectId: (projectId: string) => MiccRecord[];
+  getRemainingMiccQuantity: (diId: string, excludeMiccId?: string) => number;
+
+  // Stage 12 Progressive Bill
+  progressiveBills: ProgressiveBillRecord[];
+  createProgressiveBill: (
+    data: Omit<
+      ProgressiveBillRecord,
+      | 'id'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'previousApprovedAmount'
+      | 'currentClaimedAmount'
+      | 'currentApprovedAmount'
+      | 'cumulativeApprovedAmount'
+      | 'contractValue'
+      | 'remainingContractBalance'
+    > & {
+      previousApprovedAmount?: number;
+      currentClaimedAmount?: number;
+      currentApprovedAmount?: number;
+      cumulativeApprovedAmount?: number;
+      contractValue?: number;
+      remainingContractBalance?: number;
+    }
+  ) => ProgressiveBillRecord;
+  updateProgressiveBill: (id: string, updates: Partial<ProgressiveBillRecord>) => void;
+  getProgressiveBill: (id: string) => ProgressiveBillRecord | undefined;
+  getProgressiveBillsByProjectId: (projectId: string) => ProgressiveBillRecord[];
+  getBillableQuantityForMicc: (miccId: string, excludeBillId?: string) => number;
+  getProjectBillingSummary: (
+    projectId: string,
+    excludeBillId?: string
+  ) => {
+    contractValue: number;
+    cumulativeApprovedAmount: number;
+    pendingClaimedAmount: number;
+    remainingContractBalance: number;
+    approvedBillsCount: number;
+  };
+
+  // Stage 13 Final Bill
+  finalBills: FinalBillRecord[];
+  createFinalBill: (
+    data: Omit<
+      FinalBillRecord,
+      | 'id'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'contractValue'
+      | 'totalApprovedProgressiveBills'
+      | 'finalBillAmount'
+    >
+  ) => FinalBillRecord;
+  updateFinalBill: (id: string, updates: Partial<FinalBillRecord>) => void;
+  getFinalBill: (id: string) => FinalBillRecord | undefined;
+  getFinalBillByProjectId: (projectId: string) => FinalBillRecord | undefined;
+
+  // Relational Progress Phase 4
+  getStageCProgress: (projectId: string) => StageCProgress;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -217,6 +315,10 @@ const STORAGE_KEY_POS = 'uk_admin_pos_phase3';
 const STORAGE_KEY_INSPECTION_CALLS = 'uk_admin_inspection_calls_phase3';
 const STORAGE_KEY_INSPECTION_ORDERS = 'uk_admin_inspection_orders_phase3';
 const STORAGE_KEY_JIRS = 'uk_admin_jirs_phase3';
+const STORAGE_KEY_DIS = 'uk_admin_dis_phase4';
+const STORAGE_KEY_MICCS = 'uk_admin_miccs_phase4';
+const STORAGE_KEY_PROGRESSIVE_BILLS = 'uk_admin_progressive_bills_phase4';
+const STORAGE_KEY_FINAL_BILLS = 'uk_admin_final_bills_phase4';
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
@@ -240,6 +342,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [inspectionCalls, setInspectionCalls] = useState<InspectionCallRecord[]>(INITIAL_INSPECTION_CALLS);
   const [inspectionOrders, setInspectionOrders] = useState<InspectionOrderRecord[]>(INITIAL_INSPECTION_ORDERS);
   const [jirs, setJirs] = useState<JirRecord[]>(INITIAL_JIRS);
+
+  // Phase 4 State
+  const [dis, setDis] = useState<DiRecord[]>(INITIAL_DIS);
+  const [miccs, setMiccs] = useState<MiccRecord[]>(INITIAL_MICCS);
+  const [progressiveBills, setProgressiveBills] = useState<ProgressiveBillRecord[]>(INITIAL_PROGRESSIVE_BILLS);
+  const [finalBills, setFinalBills] = useState<FinalBillRecord[]>(INITIAL_FINAL_BILLS);
 
   const isLoadedRef = useRef(false);
 
@@ -288,6 +396,18 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
         const storedJirs = localStorage.getItem(STORAGE_KEY_JIRS);
         if (storedJirs) setJirs(JSON.parse(storedJirs));
+
+        const storedDis = localStorage.getItem(STORAGE_KEY_DIS);
+        if (storedDis) setDis(JSON.parse(storedDis));
+
+        const storedMiccs = localStorage.getItem(STORAGE_KEY_MICCS);
+        if (storedMiccs) setMiccs(JSON.parse(storedMiccs));
+
+        const storedProgressive = localStorage.getItem(STORAGE_KEY_PROGRESSIVE_BILLS);
+        if (storedProgressive) setProgressiveBills(JSON.parse(storedProgressive));
+
+        const storedFinal = localStorage.getItem(STORAGE_KEY_FINAL_BILLS);
+        if (storedFinal) setFinalBills(JSON.parse(storedFinal));
       } catch {
         // Ignore localStorage read errors in restricted contexts
       }
@@ -315,6 +435,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(STORAGE_KEY_INSPECTION_CALLS, JSON.stringify(inspectionCalls));
       localStorage.setItem(STORAGE_KEY_INSPECTION_ORDERS, JSON.stringify(inspectionOrders));
       localStorage.setItem(STORAGE_KEY_JIRS, JSON.stringify(jirs));
+      localStorage.setItem(STORAGE_KEY_DIS, JSON.stringify(dis));
+      localStorage.setItem(STORAGE_KEY_MICCS, JSON.stringify(miccs));
+      localStorage.setItem(STORAGE_KEY_PROGRESSIVE_BILLS, JSON.stringify(progressiveBills));
+      localStorage.setItem(STORAGE_KEY_FINAL_BILLS, JSON.stringify(finalBills));
     } catch {
       // Ignore localStorage write errors
     }
@@ -333,6 +457,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     inspectionCalls,
     inspectionOrders,
     jirs,
+    dis,
+    miccs,
+    progressiveBills,
+    finalBills,
   ]);
 
   const stats = useMemo(() => {
@@ -1566,6 +1694,570 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  // ==========================================
+  // PHASE 4: DI METHODS (STAGE 10)
+  // ==========================================
+  const getRemainingDispatchQuantity = (jirId: string, excludeDiId?: string): number => {
+    const jir = jirs.find((j) => j.id === jirId);
+    return calculateDispatchBalance(jir, dis, excludeDiId);
+  };
+
+  const getDi = (id: string) => dis.find((d) => d.id === id || d.diNumber === id);
+  const getDisByProjectId = (projectId: string) => dis.filter((d) => d.projectId === projectId);
+
+  const createDi = (data: Omit<DiRecord, 'id' | 'createdAt' | 'updatedAt'>): DiRecord => {
+    const jir = jirs.find((j) => j.id === data.jirId);
+    validateDiCreation(data, jir, dis);
+
+    const newId = `DI-2024-${String(dis.length + 1).padStart(3, '0')}`;
+    const nowStr = new Date().toISOString().split('T')[0];
+
+    const newRecord: DiRecord = {
+      ...data,
+      id: newId,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    setDis((prev) => [newRecord, ...prev]);
+
+    // Sync Project Workflow Stage 10
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id === data.projectId) {
+          const stageStatus: WorkflowStageStatus =
+            data.status === 'Dispatched' ? 'Completed' : 'In Progress';
+          const updatedWorkflow = p.workflow.map((w) =>
+            w.stageId === '10' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+          );
+          return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+        }
+        return p;
+      })
+    );
+
+    const newAct: Activity = {
+      id: `HIST-${Date.now()}`,
+      projectId: data.projectId,
+      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      action: `Issued Dispatch Instruction: ${data.diNumber}`,
+      timestamp: 'Just now',
+      environment: 'DEMO',
+      details: `DI issued for ${data.materialDescription} (${data.quantity} ${data.unit}) to ${data.destination} with status ${data.status}.`,
+    };
+    setActivities((prev) => [newAct, ...prev]);
+
+    return newRecord;
+  };
+
+  const updateDi = (id: string, updates: Partial<DiRecord>) => {
+    const nowStr = new Date().toISOString().split('T')[0];
+    let targetProject = '';
+
+    setDis((prev) =>
+      prev.map((d) => {
+        if (d.id === id) {
+          targetProject = d.projectId;
+          return { ...d, ...updates, updatedAt: nowStr };
+        }
+        return d;
+      })
+    );
+
+    if (targetProject && updates.status) {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id === targetProject) {
+            const stageStatus: WorkflowStageStatus =
+              updates.status === 'Dispatched' ? 'Completed' : 'In Progress';
+            const updatedWorkflow = p.workflow.map((w) =>
+              w.stageId === '10' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+            );
+            return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+          }
+          return p;
+        })
+      );
+    }
+  };
+
+  // ==========================================
+  // PHASE 4: MICC METHODS (STAGE 11)
+  // ==========================================
+  const getRemainingMiccQuantity = (diId: string, excludeMiccId?: string): number => {
+    const di = dis.find((d) => d.id === diId);
+    return calculateMiccBalance(di, miccs, excludeMiccId);
+  };
+
+  const getMicc = (id: string) => miccs.find((m) => m.id === id || m.miccNumber === id);
+  const getMiccsByProjectId = (projectId: string) => miccs.filter((m) => m.projectId === projectId);
+
+  const createMicc = (data: Omit<MiccRecord, 'id' | 'createdAt' | 'updatedAt'>): MiccRecord => {
+    const di = dis.find((d) => d.id === data.diId);
+    validateMiccCreation(data, di, miccs);
+
+    const newId = `MICC-2024-${String(miccs.length + 1).padStart(3, '0')}`;
+    const nowStr = new Date().toISOString().split('T')[0];
+
+    const newRecord: MiccRecord = {
+      ...data,
+      id: newId,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    setMiccs((prev) => [newRecord, ...prev]);
+
+    // Sync Project Workflow Stage 11
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id === data.projectId) {
+          const stageStatus: WorkflowStageStatus =
+            data.status === 'Verified' ? 'Completed' : 'In Progress';
+          const updatedWorkflow = p.workflow.map((w) =>
+            w.stageId === '11' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+          );
+          return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+        }
+        return p;
+      })
+    );
+
+    const newAct: Activity = {
+      id: `HIST-${Date.now()}`,
+      projectId: data.projectId,
+      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      action: `Recorded MICC: ${data.miccNumber}`,
+      timestamp: 'Just now',
+      environment: 'DEMO',
+      details: `MICC certificate recorded for ${data.materialDescription} (${data.quantity} ${data.unit}) with status ${data.status}.`,
+    };
+    setActivities((prev) => [newAct, ...prev]);
+
+    return newRecord;
+  };
+
+  const updateMicc = (id: string, updates: Partial<MiccRecord>) => {
+    const nowStr = new Date().toISOString().split('T')[0];
+    let targetProject = '';
+
+    setMiccs((prev) =>
+      prev.map((m) => {
+        if (m.id === id) {
+          targetProject = m.projectId;
+          return { ...m, ...updates, updatedAt: nowStr };
+        }
+        return m;
+      })
+    );
+
+    if (targetProject && updates.status) {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id === targetProject) {
+            const stageStatus: WorkflowStageStatus =
+              updates.status === 'Verified' ? 'Completed' : 'In Progress';
+            const updatedWorkflow = p.workflow.map((w) =>
+              w.stageId === '11' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+            );
+            return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+          }
+          return p;
+        })
+      );
+    }
+  };
+
+  // ==========================================
+  // PHASE 4: PROGRESSIVE BILL METHODS (STAGE 12)
+  // ==========================================
+  const getBillableQuantityForMicc = (miccId: string, excludeBillId?: string): number => {
+    const micc = miccs.find((m) => m.id === miccId);
+    return calculateBillableQuantity(micc, progressiveBills, excludeBillId);
+  };
+
+  const getProjectBillingSummary = (projectId: string, excludeBillId?: string) => {
+    const project = projects.find((p) => p.id === projectId || p.code === projectId);
+    return calculateProjectBillingSummary(project, progressiveBills, excludeBillId);
+  };
+
+  const getProgressiveBill = (id: string) =>
+    progressiveBills.find((b) => b.id === id || b.billNumber === id);
+  const getProgressiveBillsByProjectId = (projectId: string) =>
+    progressiveBills.filter((b) => b.projectId === projectId);
+
+  const createProgressiveBill = (
+    data: Omit<
+      ProgressiveBillRecord,
+      | 'id'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'previousApprovedAmount'
+      | 'currentClaimedAmount'
+      | 'currentApprovedAmount'
+      | 'cumulativeApprovedAmount'
+      | 'contractValue'
+      | 'remainingContractBalance'
+    > & {
+      previousApprovedAmount?: number;
+      currentClaimedAmount?: number;
+      currentApprovedAmount?: number;
+      cumulativeApprovedAmount?: number;
+      contractValue?: number;
+      remainingContractBalance?: number;
+    }
+  ): ProgressiveBillRecord => {
+    const project = projects.find((p) => p.id === data.projectId || p.code === data.projectId);
+    validateProgressiveBillCreation(data, project, miccs, progressiveBills);
+
+    const summary = calculateProjectBillingSummary(project, progressiveBills);
+    const newId = `PB-2024-${String(progressiveBills.length + 1).padStart(3, '0')}`;
+    const nowStr = new Date().toISOString().split('T')[0];
+
+    const processedItems: ProgressiveBillLineItem[] = (data.lineItems || []).map((line, idx) => {
+      const lineClaimed =
+        line.claimedAmount !== undefined
+          ? line.claimedAmount
+          : Math.round((Number(line.claimedQuantity) || 0) * (Number(line.rate) || 0));
+      const lineApproved =
+        line.approvedAmount !== undefined
+          ? line.approvedAmount
+          : (data.status === 'Approved' || data.status === 'Partially Approved')
+          ? lineClaimed
+          : 0;
+      return {
+        ...line,
+        id: line.id || `PBL-${String(idx + 1).padStart(3, '0')}`,
+        billId: newId,
+        claimedAmount: lineClaimed,
+        approvedAmount: lineApproved,
+        approvedQuantity: line.approvedQuantity !== undefined ? line.approvedQuantity : line.claimedQuantity,
+      };
+    });
+
+    const claimedTotal =
+      data.currentClaimedAmount !== undefined
+        ? data.currentClaimedAmount
+        : processedItems.reduce((sum, item) => sum + item.claimedAmount, 0);
+
+    const approvedTotal =
+      data.currentApprovedAmount !== undefined
+        ? data.currentApprovedAmount
+        : (data.status === 'Approved' || data.status === 'Partially Approved')
+        ? processedItems.reduce((sum, item) => sum + item.approvedAmount, 0)
+        : 0;
+
+    const cumulativeApproved = summary.cumulativeApprovedAmount + approvedTotal;
+    const remainingContractBalance = Math.max(0, summary.contractValue - cumulativeApproved);
+
+    const newRecord: ProgressiveBillRecord = {
+      ...data,
+      id: newId,
+      lineItems: processedItems,
+      previousApprovedAmount: summary.cumulativeApprovedAmount,
+      currentClaimedAmount: claimedTotal,
+      currentApprovedAmount: approvedTotal,
+      cumulativeApprovedAmount: cumulativeApproved,
+      contractValue: summary.contractValue,
+      remainingContractBalance,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    setProgressiveBills((prev) => [newRecord, ...prev]);
+
+    // Sync Project Workflow Stage 12
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id === data.projectId) {
+          const stageStatus: WorkflowStageStatus =
+            data.status === 'Approved' ? 'Completed' : 'In Progress';
+          const updatedWorkflow = p.workflow.map((w) =>
+            w.stageId === '12' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+          );
+          return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+        }
+        return p;
+      })
+    );
+
+    const newAct: Activity = {
+      id: `HIST-${Date.now()}`,
+      projectId: data.projectId,
+      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      action: `Submitted Progressive Bill: ${data.billNumber}`,
+      timestamp: 'Just now',
+      environment: 'DEMO',
+      details: `Invoice for Claimed: ₹${claimedTotal.toLocaleString('en-IN')} submitted with status ${data.status}.`,
+    };
+    setActivities((prev) => [newAct, ...prev]);
+
+    return newRecord;
+  };
+
+  const updateProgressiveBill = (id: string, updates: Partial<ProgressiveBillRecord>) => {
+    const nowStr = new Date().toISOString().split('T')[0];
+    let targetProject = '';
+
+    setProgressiveBills((prev) =>
+      prev.map((b) => {
+        if (b.id === id) {
+          targetProject = b.projectId;
+          const lineItems = updates.lineItems ? updates.lineItems : b.lineItems;
+          const claimedTotal =
+            updates.currentClaimedAmount !== undefined
+              ? updates.currentClaimedAmount
+              : updates.lineItems
+              ? lineItems.reduce((sum: number, i: ProgressiveBillLineItem) => sum + i.claimedAmount, 0)
+              : b.currentClaimedAmount;
+
+          let approvedTotal =
+            updates.currentApprovedAmount !== undefined ? updates.currentApprovedAmount : b.currentApprovedAmount;
+          if (updates.status === 'Approved' && approvedTotal === 0) {
+            approvedTotal = claimedTotal;
+          }
+
+          return {
+            ...b,
+            ...updates,
+            lineItems,
+            currentClaimedAmount: claimedTotal,
+            currentApprovedAmount: approvedTotal,
+            updatedAt: nowStr,
+          };
+        }
+        return b;
+      })
+    );
+
+    if (targetProject && updates.status) {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id === targetProject) {
+            const stageStatus: WorkflowStageStatus =
+              updates.status === 'Approved' ? 'Completed' : 'In Progress';
+            const updatedWorkflow = p.workflow.map((w) =>
+              w.stageId === '12' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+            );
+            return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+          }
+          return p;
+        })
+      );
+    }
+  };
+
+  // ==========================================
+  // PHASE 4: FINAL BILL METHODS (STAGE 13)
+  // ==========================================
+  const getFinalBill = (id: string) => finalBills.find((f) => f.id === id || f.finalBillNumber === id);
+  const getFinalBillByProjectId = (projectId: string) =>
+    finalBills.find((f) => f.projectId === projectId && f.status !== 'Rejected');
+
+  const createFinalBill = (
+    data: Omit<
+      FinalBillRecord,
+      | 'id'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'contractValue'
+      | 'totalApprovedProgressiveBills'
+      | 'finalBillAmount'
+    >
+  ): FinalBillRecord => {
+    const project = projects.find((p) => p.id === data.projectId || p.code === data.projectId);
+    const { contractValue, totalApprovedProgressiveBills, finalBillAmount } = validateFinalBillCreation(
+      data,
+      project,
+      finalBills,
+      progressiveBills
+    );
+
+    const newId = `FB-2024-${String(finalBills.length + 1).padStart(3, '0')}`;
+    const nowStr = new Date().toISOString().split('T')[0];
+
+    const newRecord: FinalBillRecord = {
+      ...data,
+      id: newId,
+      contractValue,
+      totalApprovedProgressiveBills,
+      finalBillAmount,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+    };
+
+    setFinalBills((prev) => [newRecord, ...prev]);
+
+    // Sync Project Workflow Stage 13
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id === data.projectId) {
+          const stageStatus: WorkflowStageStatus =
+            data.status === 'Approved' ? 'Completed' : 'In Progress';
+          const updatedWorkflow = p.workflow.map((w) =>
+            w.stageId === '13' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+          );
+          return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+        }
+        return p;
+      })
+    );
+
+    const newAct: Activity = {
+      id: `HIST-${Date.now()}`,
+      projectId: data.projectId,
+      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      action: `Lodged Final Bill: ${data.finalBillNumber}`,
+      timestamp: 'Just now',
+      environment: 'DEMO',
+      details: `Final reconciliation bill for ₹${finalBillAmount.toLocaleString('en-IN')} submitted with status ${data.status}.`,
+    };
+    setActivities((prev) => [newAct, ...prev]);
+
+    return newRecord;
+  };
+
+  const updateFinalBill = (id: string, updates: Partial<FinalBillRecord>) => {
+    const nowStr = new Date().toISOString().split('T')[0];
+    let targetProject = '';
+
+    setFinalBills((prev) =>
+      prev.map((f) => {
+        if (f.id === id) {
+          targetProject = f.projectId;
+          const adj = updates.adjustments !== undefined ? updates.adjustments : f.adjustments;
+          const finalBillAmount =
+            updates.finalBillAmount !== undefined
+              ? updates.finalBillAmount
+              : Math.max(0, f.contractValue + adj - f.totalApprovedProgressiveBills);
+
+          return {
+            ...f,
+            ...updates,
+            adjustments: adj,
+            finalBillAmount,
+            updatedAt: nowStr,
+          };
+        }
+        return f;
+      })
+    );
+
+    if (targetProject && updates.status) {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id === targetProject) {
+            const stageStatus: WorkflowStageStatus =
+              updates.status === 'Approved' ? 'Completed' : 'In Progress';
+            const updatedWorkflow = p.workflow.map((w) =>
+              w.stageId === '13' ? { ...w, status: stageStatus, updatedAt: nowStr } : w
+            );
+            return { ...p, workflow: updatedWorkflow, updatedAt: nowStr };
+          }
+          return p;
+        })
+      );
+    }
+  };
+
+  // ==========================================
+  // RELATIONAL STAGE C PROGRESS CALCULATOR
+  // ==========================================
+  const getStageCProgress = (projectId: string): StageCProgress => {
+    const project = projects.find((p) => p.id === projectId || p.code === projectId);
+    const projectDis = dis.filter((d) => d.projectId === projectId);
+    const projectMiccs = miccs.filter((m) => m.projectId === projectId);
+    const projectBills = progressiveBills.filter((b) => b.projectId === projectId);
+    const projectFinal = finalBills.find(
+      (f) => f.projectId === projectId && f.status !== 'Rejected'
+    );
+
+    // Stage 10 (DI)
+    let diStageStatus: 'Completed' | 'In Progress' | 'Not Started' = 'Not Started';
+    const activeDis = projectDis.filter((d) => d.status !== 'Cancelled');
+    if (activeDis.length > 0) {
+      const hasCompleted = activeDis.some((d) => d.status === 'Dispatched');
+      diStageStatus = hasCompleted ? 'Completed' : 'In Progress';
+    }
+
+    // Stage 11 (MICC)
+    let miccStageStatus: 'Completed' | 'In Progress' | 'Not Started' = 'Not Started';
+    const activeMiccs = projectMiccs.filter((m) => m.status !== 'Rejected');
+    if (activeMiccs.length > 0) {
+      const hasCompleted = activeMiccs.some((m) => m.status === 'Verified');
+      miccStageStatus = hasCompleted ? 'Completed' : 'In Progress';
+    }
+
+    // Stage 12 (Progressive Bill)
+    let billStageStatus: 'Completed' | 'In Progress' | 'Not Started' = 'Not Started';
+    const activeBills = projectBills.filter((b) => b.status !== 'Rejected');
+    const billingSummary = calculateProjectBillingSummary(project, projectBills);
+    if (activeBills.length > 0) {
+      if (billingSummary.remainingContractBalance === 0 || activeBills.some((b) => b.status === 'Approved')) {
+        billStageStatus = 'Completed';
+      } else {
+        billStageStatus = 'In Progress';
+      }
+    }
+
+    // Stage 13 (Final Bill)
+    let finalStageStatus: 'Completed' | 'In Progress' | 'Not Started' = 'Not Started';
+    if (projectFinal) {
+      if (projectFinal.status === 'Approved') {
+        finalStageStatus = 'Completed';
+      } else {
+        finalStageStatus = 'In Progress';
+      }
+    }
+
+    const stages = [
+      {
+        stageId: '10',
+        name: 'Dispatch Instruction (DI)',
+        status: diStageStatus,
+        recordRef: activeDis.length > 0 ? activeDis[0].diNumber : undefined,
+        hasRecord: activeDis.length > 0,
+      },
+      {
+        stageId: '11',
+        name: 'Material Inward & Clearance (MICC)',
+        status: miccStageStatus,
+        recordRef: activeMiccs.length > 0 ? activeMiccs[0].miccNumber : undefined,
+        hasRecord: activeMiccs.length > 0,
+      },
+      {
+        stageId: '12',
+        name: 'Progressive Billing',
+        status: billStageStatus,
+        recordRef: activeBills.length > 0 ? `${activeBills.length} Bill(s)` : undefined,
+        hasRecord: activeBills.length > 0,
+      },
+      {
+        stageId: '13',
+        name: 'Final Bill Reconciliation',
+        status: finalStageStatus,
+        recordRef: projectFinal ? projectFinal.finalBillNumber : undefined,
+        hasRecord: !!projectFinal,
+      },
+    ];
+
+    const completedCount = stages.filter((s) => s.status === 'Completed').length;
+    const totalCount = stages.length;
+    const percentage = Math.round((completedCount / totalCount) * 100);
+
+    return {
+      completedCount,
+      totalCount,
+      percentage,
+      stages,
+      activeDiCount: activeDis.length,
+      verifiedMiccCount: activeMiccs.filter((m) => m.status === 'Verified').length,
+      cumulativeApprovedBilling: billingSummary.cumulativeApprovedAmount,
+      remainingContractBalance: billingSummary.remainingContractBalance,
+      finalBillStatus: projectFinal?.status,
+    };
+  };
+
   return (
     <ProjectContext.Provider
       value={{
@@ -1662,6 +2354,37 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         getJirsByProjectId,
 
         getStageBProgress,
+
+        // Phase 4
+        dis,
+        createDi,
+        updateDi,
+        getDi,
+        getDisByProjectId,
+        getRemainingDispatchQuantity,
+
+        miccs,
+        createMicc,
+        updateMicc,
+        getMicc,
+        getMiccsByProjectId,
+        getRemainingMiccQuantity,
+
+        progressiveBills,
+        createProgressiveBill,
+        updateProgressiveBill,
+        getProgressiveBill,
+        getProgressiveBillsByProjectId,
+        getBillableQuantityForMicc,
+        getProjectBillingSummary,
+
+        finalBills,
+        createFinalBill,
+        updateFinalBill,
+        getFinalBill,
+        getFinalBillByProjectId,
+
+        getStageCProgress,
       }}
     >
       {children}

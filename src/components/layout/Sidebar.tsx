@@ -43,10 +43,10 @@ const WORKFLOW_NAV_STAGES = [
   { id: '07', name: '07 Inspection Call', icon: BellRing, href: '/inspection-call', active: true },
   { id: '08', name: '08 Inspection Order', icon: ClipboardCheck, href: '/inspection-order', active: true },
   { id: '09', name: '09 JIR / Inspection Report', icon: FileBadge, href: '/jir', active: true },
-  { id: '10', name: '10 DI / Dispatch Clearance', icon: Truck, href: '#', active: false },
-  { id: '11', name: '11 MICC', icon: Award, href: '#', active: false },
-  { id: '12', name: '12 Progressive Bill', icon: Receipt, href: '#', active: false },
-  { id: '13', name: '13 Final Bill', icon: CheckCheck, href: '#', active: false },
+  { id: '10', name: '10 DI / Dispatch Clearance', icon: Truck, href: '/di', active: true },
+  { id: '11', name: '11 MICC', icon: Award, href: '/micc', active: true },
+  { id: '12', name: '12 Progressive Bill', icon: Receipt, href: '/progressive-bill', active: true },
+  { id: '13', name: '13 Final Bill', icon: CheckCheck, href: '/final-bill', active: true },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -153,14 +153,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </nav>
           </div>
 
-          {/* Project Workflow (Continuous 13 Stages, locked for future phases) */}
+          {/* Project Workflow (All 13 Stages Active) */}
           <div className="pt-2 border-t border-[#152747]">
             <div className="px-3 pb-2 flex items-center justify-between">
               <span className="text-[11px] font-bold tracking-wider uppercase text-slate-300 font-editorial">
                 Project Workflow
               </span>
               <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                Phase 3
+                Phase 4
               </span>
             </div>
 

@@ -20,6 +20,10 @@ import {
   BellRing,
   ClipboardCheck,
   FileBadge,
+  Truck,
+  Award,
+  Receipt,
+  CheckCheck,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { KpiCard } from '@/components/dashboard/KpiCard';
@@ -42,6 +46,10 @@ export default function DashboardPage() {
     inspectionCalls,
     inspectionOrders,
     jirs,
+    dis,
+    miccs,
+    progressiveBills,
+    finalBills,
   } = useProjects();
 
   const tendersUnderEval = tenders.filter((t) => t.status === 'Under Evaluation' || t.status === 'Submitted').length;
@@ -56,6 +64,13 @@ export default function DashboardPage() {
   const callActive = inspectionCalls.filter((c) => c.status !== 'Cancelled').length;
   const orderIssued = inspectionOrders.filter((o) => o.status === 'Issued').length;
   const jirAccepted = jirs.filter((j) => j.status === 'Accepted').length;
+
+  const disActive = dis.filter((d) => d.status !== 'Cancelled').length;
+  const miccsVerified = miccs.filter((m) => m.status === 'Verified').length;
+  const totalApprovedBilling = progressiveBills
+    .filter((b) => b.status === 'Approved')
+    .reduce((sum, b) => sum + (b.currentApprovedAmount || 0), 0);
+  const finalBillsApproved = finalBills.filter((b) => b.status === 'Approved').length;
 
   return (
     <div className="space-y-8">
@@ -89,13 +104,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Demo Environment Notice Banner */}
-      <div className="rounded-lg bg-blue-50/80 border border-blue-200/80 p-3.5 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
-        <div className="text-xs text-blue-900">
-          <span className="font-bold uppercase tracking-wider text-[11px] text-blue-800 mr-2">
-            Phase 3 Procurement &amp; Inspection Foundation Active:
+      <div className="rounded-lg bg-emerald-50/80 border border-emerald-200 p-3.5 flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+        <div className="text-xs text-emerald-950">
+          <span className="font-bold uppercase tracking-wider text-[11px] text-emerald-800 mr-2">
+            Phase 4 Turnkey Modules Active:
           </span>
-          BOQ and Stages 05 GTP, 06 PO, 07 Inspection Call, 08 Inspection Order, and 09 JIR are fully active alongside Phase 2 Administrative Foundation (01–04). Stages 10 through 13 remain locked preview.
+          All 13 turnkey workflow stages (01 Tender through 13 Final Bill) are live and interconnected, featuring BOQ, GTP, PO, Inspections, Dispatch (DI), Material Inward (MICC), Progressive Billing, and Final Contract Settlement.
         </div>
       </div>
 
@@ -383,6 +398,111 @@ export default function DashboardPage() {
             </div>
             <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
               <span>{jirAccepted} accepted</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Phase 4: Active C-Admin Modules (Stages 10–13) */}
+      <section aria-labelledby="stage-c-heading" className="space-y-3">
+        <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <Truck className="w-4 h-4 text-emerald-600" />
+            <h2 id="stage-c-heading" className="font-bold text-sm uppercase tracking-wider text-slate-900 font-editorial">
+              Phase 4 Active C-Admin Modules (Stages 10 – 13)
+            </h2>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+            Phase 4 Modules Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Stage 10 DI */}
+          <Link
+            href="/di"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                10 DI
+              </span>
+              <div className="p-1.5 rounded-md bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <Truck className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {dis.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>{disActive} active clearances</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Stage 11 MICC */}
+          <Link
+            href="/micc"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                11 MICC
+              </span>
+              <div className="p-1.5 rounded-md bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <Award className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {miccs.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>{miccsVerified} verified receipts</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Stage 12 Progressive Bill */}
+          <Link
+            href="/progressive-bill"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                12 Progressive Bill
+              </span>
+              <div className="p-1.5 rounded-md bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <Receipt className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {progressiveBills.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>₹{(totalApprovedBilling / 100000).toFixed(1)}L approved</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Stage 13 Final Bill */}
+          <Link
+            href="/final-bill"
+            className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                13 Final Bill
+              </span>
+              <div className="p-1.5 rounded-md bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <CheckCheck className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-bold font-editorial text-slate-900">
+              {finalBills.length}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 flex items-center justify-between">
+              <span>{finalBillsApproved} settled closures</span>
               <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </Link>
