@@ -109,7 +109,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
             </div>
             <div className="hidden xl:block leading-tight">
               <p className="text-xs font-semibold text-slate-900">{user?.name || 'Unknown'}</p>
-              <p className="text-[11px] text-slate-500">{user?.role || 'Unknown'}</p>
+              <p className="text-[11px] text-slate-500">{user?.department || 'Unknown'}</p>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
           </button>
@@ -119,10 +119,10 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1">
               <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100">
                 <p className="text-xs font-semibold text-slate-900">{user?.name || 'Unknown'}</p>
-                <p className="text-xs text-slate-500">{user?.role || 'Unknown'}</p>
+                <p className="text-xs text-slate-500">{user?.department || 'Unknown'}</p>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[10px] font-mono text-slate-400">
-                    {'ADMIN'}
+                    {user?.employeeId || 'EMP-???'}
                   </span>
                   <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
                     DEMO

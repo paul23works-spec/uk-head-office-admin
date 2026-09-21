@@ -53,7 +53,7 @@ export default function LoginPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-slate-900 text-sm">{u.name}</div>
-                    <div className="text-xs text-slate-500">{u.role}</div>
+                    <div className="text-xs text-slate-500">{u.department} &bull; {u.role}</div>
                   </div>
                 </div>
                 <User className="w-4 h-4 text-slate-400" />
@@ -62,7 +62,7 @@ export default function LoginPage() {
           </div>
           
           <div className="mt-8 text-center text-xs text-slate-400">
-            Phase 6.1 — Simulated Authentication Layer
+            Phase 6.2 — Simulated Authentication Layer
           </div>
         </div>
       </div>

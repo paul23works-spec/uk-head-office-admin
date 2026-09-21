@@ -5,13 +5,15 @@ export interface User {
   name: string;
   role: AppRole;
   avatarInitials: string;
+  employeeId: string;
+  department: string;
 }
 
 export const USERS: User[] = [
-  { id: 'u1', name: 'Master Administrator', role: 'MASTER', avatarInitials: 'MA' },
-  { id: 'u2', name: 'Admin A (Tender & Contracts)', role: 'ADMIN_A', avatarInitials: 'AA' },
-  { id: 'u3', name: 'Admin B (Procurement & Insp)', role: 'ADMIN_B', avatarInitials: 'AB' },
-  { id: 'u4', name: 'Admin C (Dispatch & Billing)', role: 'ADMIN_C', avatarInitials: 'AC' },
+  { id: 'u1', name: 'Rajiv Sharma', role: 'MASTER', avatarInitials: 'RS', employeeId: 'EMP-001', department: 'Management' },
+  { id: 'u2', name: 'Arjun Sharma', role: 'ADMIN_A', avatarInitials: 'AS', employeeId: 'EMP-002', department: 'Tender & Contracts' },
+  { id: 'u3', name: 'Rohan Das', role: 'ADMIN_B', avatarInitials: 'RD', employeeId: 'EMP-003', department: 'Procurement & Inspection' },
+  { id: 'u4', name: 'Priya Saikia', role: 'ADMIN_C', avatarInitials: 'PS', employeeId: 'EMP-004', department: 'Dispatch & Billing' },
 ];
 
 /**
