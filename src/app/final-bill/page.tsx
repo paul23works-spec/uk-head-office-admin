@@ -12,7 +12,7 @@ import Link from 'next/link';
 
 export default function FinalBillPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '13');
+  const canEdit = canEditStage(user, '13');
   const { finalBills, projects, progressiveBills } = useProjects();
   const [selectedBill, setSelectedBill] = useState<FinalBillRecord | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);

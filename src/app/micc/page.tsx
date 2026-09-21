@@ -21,7 +21,7 @@ import { MiccRecord } from '@/types';
 
 export default function MiccPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '11');
+  const canEdit = canEditStage(user, '11');
   const { miccs, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

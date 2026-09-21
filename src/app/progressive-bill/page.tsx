@@ -21,7 +21,7 @@ import { ProgressiveBillRecord } from '@/types';
 
 export default function ProgressiveBillPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '12');
+  const canEdit = canEditStage(user, '12');
   const { progressiveBills, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

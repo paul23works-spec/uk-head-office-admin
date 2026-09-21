@@ -21,7 +21,7 @@ import { DiRecord } from '@/types';
 
 export default function DiPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '10');
+  const canEdit = canEditStage(user, '10');
   const { dis, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

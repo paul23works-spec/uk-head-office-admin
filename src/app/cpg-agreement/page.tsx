@@ -31,7 +31,7 @@ type ActiveTab = 'overview' | 'cpg' | 'agreement';
 
 export default function CpgAgreementPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '04');
+  const canEdit = canEditStage(user, '04');
   const { cpgs, agreements, projects, getCpgByProjectId, getAgreementByProjectId } = useProjects();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');

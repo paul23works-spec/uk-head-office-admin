@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { canEditStage } from '@/lib/permissions';
+import { canEditStage, getStageActionIdentity } from '@/lib/permissions';
 import {
   Project,
   PendingAction,
@@ -553,7 +553,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newActivity: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: newId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Created new demo project entry: ${newProject.code}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -566,7 +567,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return newProject;
   };
 
-  const updateProjectStatus = (id: string, status: ProjectStatus, remarks?: string) => {
+  const updateProjectStatus = (id: string, status: ProjectStatus, remarks?: string) => { 
     const nowStr = new Date().toISOString().split('T')[0];
     setProjects((prev) =>
       prev.map((p) => {
@@ -587,7 +588,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const newActivity: Activity = {
         id: `HIST-${Date.now()}`,
         projectId: target.id,
-        user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+        user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
         action: `Status updated to ${status}`,
         timestamp: 'Just now',
         environment: 'DEMO',
@@ -610,6 +612,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getTenderByProjectId = (projectId: string) => tenders.find((t) => t.projectId === projectId);
 
   const createTender = (data: Omit<TenderRecord, 'id' | 'createdAt' | 'updatedAt'>): TenderRecord => {
+    const auth = getStageActionIdentity(user, '01');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `TND-2024-${String(tenders.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
 
@@ -642,7 +646,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Created Tender Record: ${data.tenderNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -654,7 +659,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateTender = (id: string, updates: Partial<TenderRecord>) => {
-    if (!canEditStage(user?.role, '01')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '01');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -672,7 +678,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const newAct: Activity = {
         id: `HIST-${Date.now()}`,
         projectId: targetProject,
-        user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+        user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
         action: `Updated Tender details (${id})`,
         timestamp: 'Just now',
         environment: 'DEMO',
@@ -689,6 +696,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getLoiLoaByProjectId = (projectId: string) => loiLoas.find((l) => l.projectId === projectId);
 
   const createLoiLoa = (data: Omit<LoiLoaRecord, 'id' | 'createdAt' | 'updatedAt'>): LoiLoaRecord => {
+    const auth = getStageActionIdentity(user, '02');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `LOI-2024-${String(loiLoas.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
 
@@ -721,7 +730,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Recorded LOI / LOA: ${data.loiNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -733,7 +743,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateLoiLoa = (id: string, updates: Partial<LoiLoaRecord>) => {
-    if (!canEditStage(user?.role, '02')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '02');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -751,7 +762,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const newAct: Activity = {
         id: `HIST-${Date.now()}`,
         projectId: targetProject,
-        user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+        user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
         action: `Updated LOI / LOA details (${id})`,
         timestamp: 'Just now',
         environment: 'DEMO',
@@ -768,6 +780,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getAcceptanceByProjectId = (projectId: string) => acceptances.find((a) => a.projectId === projectId);
 
   const createAcceptance = (data: Omit<AcceptanceRecord, 'id' | 'createdAt' | 'updatedAt'>): AcceptanceRecord => {
+    const auth = getStageActionIdentity(user, '03');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `ACC-2024-${String(acceptances.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
 
@@ -800,7 +814,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Submitted Formal Acceptance: ${data.acceptanceRef}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -812,7 +827,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateAcceptance = (id: string, updates: Partial<AcceptanceRecord>) => {
-    if (!canEditStage(user?.role, '03')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '03');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -830,7 +846,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const newAct: Activity = {
         id: `HIST-${Date.now()}`,
         projectId: targetProject,
-        user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+        user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
         action: `Updated Acceptance Record (${id})`,
         timestamp: 'Just now',
         environment: 'DEMO',
@@ -847,6 +864,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getCpgByProjectId = (projectId: string) => cpgs.find((c) => c.projectId === projectId);
 
   const createCpg = (data: Omit<CpgRecord, 'id' | 'createdAt' | 'updatedAt'>): CpgRecord => {
+    const auth = getStageActionIdentity(user, '04');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `CPG-2024-${String(cpgs.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
 
@@ -862,7 +881,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Lodged CPG Guarantee: ${data.cpgRef}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -874,7 +894,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateCpg = (id: string, updates: Partial<CpgRecord>) => {
-    if (!canEditStage(user?.role, '04')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '04');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -892,7 +913,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const newAct: Activity = {
         id: `HIST-${Date.now()}`,
         projectId: targetProject,
-        user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+        user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
         action: `Updated CPG Record (${id})`,
         timestamp: 'Just now',
         environment: 'DEMO',
@@ -909,6 +931,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getAgreementByProjectId = (projectId: string) => agreements.find((a) => a.projectId === projectId);
 
   const createAgreement = (data: Omit<AgreementRecord, 'id' | 'createdAt' | 'updatedAt'>): AgreementRecord => {
+    const auth = getStageActionIdentity(user, '04');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `AGR-2024-${String(agreements.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
 
@@ -948,7 +972,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Executed Contract Agreement: ${data.agreementRef}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -960,7 +985,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateAgreement = (id: string, updates: Partial<AgreementRecord>) => {
-    if (!canEditStage(user?.role, '04')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '04');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -978,7 +1004,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const newAct: Activity = {
         id: `HIST-${Date.now()}`,
         projectId: targetProject,
-        user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+        user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
         action: `Updated Contract Agreement (${id})`,
         timestamp: 'Just now',
         environment: 'DEMO',
@@ -1071,6 +1098,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getVendor = (id: string) => vendors.find((v) => v.id === id || v.code === id);
 
   const createVendor = (data: Omit<Vendor, 'id' | 'createdAt' | 'updatedAt'>): Vendor => {
+    const auth = getStageActionIdentity(user, 'BOQ');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `VND-${String(vendors.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
     const newRecord: Vendor = { ...data, id: newId, createdAt: nowStr, updatedAt: nowStr };
@@ -1097,6 +1126,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createBoqItem = (data: Omit<BoqItem, 'id' | 'createdAt' | 'updatedAt' | 'amount'>): BoqItem => {
+    const auth = getStageActionIdentity(user, 'BOQ');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `BOQ-2024-${String(boqItems.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
     const deterministicAmount = Math.round(data.quantity * data.rate);
@@ -1112,7 +1143,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Added BOQ Item: ${data.itemNumber} - ${data.description.substring(0, 30)}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1124,7 +1156,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateBoqItem = (id: string, updates: Partial<BoqItem>) => {
-    if (!canEditStage(user?.role, 'BOQ')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, 'BOQ');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     setBoqItems((prev) =>
       prev.map((b) => {
@@ -1151,6 +1184,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createGtp = (data: Omit<GtpRecord, 'id' | 'createdAt' | 'updatedAt'>): GtpRecord => {
+    const auth = getStageActionIdentity(user, '05');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const newId = `GTP-2024-${String(gtps.length + 1).padStart(3, '0')}`;
     const nowStr = new Date().toISOString().split('T')[0];
     const newRecord: GtpRecord = {
@@ -1192,7 +1227,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Submitted GTP: ${data.gtpNumber} (${data.revision})`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1204,7 +1240,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateGtp = (id: string, updates: Partial<GtpRecord>) => {
-    if (!canEditStage(user?.role, '05')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '05');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
     let nextGtps: GtpRecord[] = [];
@@ -1254,6 +1291,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getPosByProjectId = (projectId: string) => pos.filter((p) => p.projectId === projectId);
 
   const createPo = (data: Omit<PoRecord, 'id' | 'createdAt' | 'updatedAt' | 'totalAmount'>): PoRecord => {
+    const auth = getStageActionIdentity(user, '06');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     // Clarification 1, 2, 5 & 6: Vendor required, Multi-PO over-order prevention
     validatePoCreation(data, (bId) => getRemainingBoqQuantity(bId));
 
@@ -1298,7 +1337,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Issued Purchase Order: ${data.poNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1310,7 +1350,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updatePo = (id: string, updates: Partial<PoRecord>) => {
-    if (!canEditStage(user?.role, '06')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '06');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1364,6 +1405,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const createInspectionCall = (
     data: Omit<InspectionCallRecord, 'id' | 'createdAt' | 'updatedAt' | 'previouslyCalledQuantity' | 'remainingQuantity'>
   ): InspectionCallRecord => {
+    const auth = getStageActionIdentity(user, '07');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const po = pos.find((p) => p.id === data.poId);
     validateInspectionCallCreation(data, !!po, (pId, bId) => getRemainingCallableQuantity(pId, bId));
 
@@ -1405,7 +1448,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Raised Inspection Call: ${data.inspectionCallNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1417,7 +1461,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateInspectionCall = (id: string, updates: Partial<InspectionCallRecord>) => {
-    if (!canEditStage(user?.role, '07')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '07');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1458,7 +1503,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const createInspectionOrder = (
     data: Omit<InspectionOrderRecord, 'id' | 'createdAt' | 'updatedAt'>
   ): InspectionOrderRecord => {
-    if (!canEditStage(user?.role, '08')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '08');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     // Clarification 5: Orphan Inspection Order prevention
     const callExists = inspectionCalls.some((c) => c.id === data.inspectionCallId);
     validateInspectionOrderCreation(data, callExists);
@@ -1492,7 +1538,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Issued Inspection Order: ${data.inspectionOrderNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1504,7 +1551,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateInspectionOrder = (id: string, updates: Partial<InspectionOrderRecord>) => {
-    if (!canEditStage(user?.role, '08')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '08');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1543,7 +1591,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const createJir = (
     data: Omit<JirRecord, 'id' | 'createdAt' | 'updatedAt' | 'balanceQuantity'>
   ): JirRecord => {
-    if (!canEditStage(user?.role, '09')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '09');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     // Clarification 5: Orphan JIR prevention & Arithmetic boundary conditions
     const orderExists = inspectionOrders.some((o) => o.id === data.inspectionOrderId);
     const { balanceQuantity: balanceQty } = validateJirCreation(data, orderExists);
@@ -1579,7 +1628,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Recorded JIR: ${data.jirNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1591,7 +1641,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateJir = (id: string, updates: Partial<JirRecord>) => {
-    if (!canEditStage(user?.role, '09')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '09');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1747,7 +1798,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getDisByProjectId = (projectId: string) => dis.filter((d) => d.projectId === projectId);
 
   const createDi = (data: Omit<DiRecord, 'id' | 'createdAt' | 'updatedAt'>): DiRecord => {
-    if (!canEditStage(user?.role, '10')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '10');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const jir = jirs.find((j) => j.id === data.jirId);
     validateDiCreation(data, jir, dis);
 
@@ -1781,7 +1833,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Issued Dispatch Instruction: ${data.diNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1793,7 +1846,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateDi = (id: string, updates: Partial<DiRecord>) => {
-    if (!canEditStage(user?.role, '10')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '10');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1836,7 +1890,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getMiccsByProjectId = (projectId: string) => miccs.filter((m) => m.projectId === projectId);
 
   const createMicc = (data: Omit<MiccRecord, 'id' | 'createdAt' | 'updatedAt'>): MiccRecord => {
-    if (!canEditStage(user?.role, '11')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '11');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const di = dis.find((d) => d.id === data.diId);
     validateMiccCreation(data, di, miccs);
 
@@ -1870,7 +1925,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Recorded MICC: ${data.miccNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -1882,7 +1938,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateMicc = (id: string, updates: Partial<MiccRecord>) => {
-    if (!canEditStage(user?.role, '11')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '11');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1952,6 +2009,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       remainingContractBalance?: number;
     }
   ): ProgressiveBillRecord => {
+    const auth = getStageActionIdentity(user, '12');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const project = projects.find((p) => p.id === data.projectId || p.code === data.projectId);
     validateProgressiveBillCreation(data, project, miccs, progressiveBills);
 
@@ -2029,7 +2088,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Submitted Progressive Bill: ${data.billNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -2041,7 +2101,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProgressiveBill = (id: string, updates: Partial<ProgressiveBillRecord>) => {
-    if (!canEditStage(user?.role, '12')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '12');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -2111,7 +2172,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       | 'finalBillAmount'
     >
   ): FinalBillRecord => {
-    if (!canEditStage(user?.role, '13')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '13');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const project = projects.find((p) => p.id === data.projectId || p.code === data.projectId);
     const { contractValue, totalApprovedProgressiveBills, finalBillAmount } = validateFinalBillCreation(
       data,
@@ -2153,7 +2215,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const newAct: Activity = {
       id: `HIST-${Date.now()}`,
       projectId: data.projectId,
-      user: `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      user: user ? `${user.name} (${user.department})` : `${DEMO_USER_PROFILE.name} (${DEMO_USER_PROFILE.role})`,
+      actingRole: user?.role || DEMO_USER_PROFILE.role, onBehalfOfId: undefined,
       action: `Lodged Final Bill: ${data.finalBillNumber}`,
       timestamp: 'Just now',
       environment: 'DEMO',
@@ -2165,7 +2228,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateFinalBill = (id: string, updates: Partial<FinalBillRecord>) => {
-    if (!canEditStage(user?.role, '13')) throw new Error('Unauthorized');
+    const auth = getStageActionIdentity(user, '13');
+    if (!auth.isAuthorized) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -2518,4 +2582,9 @@ export function useProjects() {
   }
   return context;
 }
+
+
+
+
+
 

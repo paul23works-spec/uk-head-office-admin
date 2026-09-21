@@ -21,7 +21,7 @@ import { JirRecord } from '@/types';
 
 export default function JirPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '09');
+  const canEdit = canEditStage(user, '09');
   const { jirs, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -78,6 +78,9 @@ export interface Activity {
   id: string;
   projectId: string;
   user: string;
+  actingRole?: string;
+  onBehalfOfId?: string;
+  entityId?: string;
   action: string;
   timestamp: string;
   environment: 'DEMO';

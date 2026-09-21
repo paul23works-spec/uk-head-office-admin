@@ -21,7 +21,7 @@ import { InspectionOrderRecord } from '@/types';
 
 export default function InspectionOrderPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '08');
+  const canEdit = canEditStage(user, '08');
   const { inspectionOrders, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

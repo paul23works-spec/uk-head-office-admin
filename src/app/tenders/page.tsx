@@ -20,7 +20,7 @@ import { CreateLoiLoaModal } from '@/components/loi-loa/CreateLoiLoaModal';
 
 export default function TendersPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '01');
+  const canEdit = canEditStage(user, '01');
   const { tenders, projects, getLoiLoaByProjectId } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

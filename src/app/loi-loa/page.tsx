@@ -20,7 +20,7 @@ import { CreateAcceptanceModal } from '@/components/acceptance/CreateAcceptanceM
 
 export default function LoiLoaPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '02');
+  const canEdit = canEditStage(user, '02');
   const { loiLoas, projects, getAcceptanceByProjectId } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

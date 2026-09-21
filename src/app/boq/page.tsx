@@ -21,7 +21,7 @@ import { BoqItem } from '@/types';
 
 export default function BoqPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, 'BOQ');
+  const canEdit = canEditStage(user, 'BOQ');
   const { boqItems, projects, getRemainingBoqQuantity } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -19,7 +19,7 @@ import { ViewAcceptanceModal } from '@/components/acceptance/ViewAcceptanceModal
 
 export default function AcceptancePage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '03');
+  const canEdit = canEditStage(user, '03');
   const { acceptances, projects, getCpgByProjectId, getAgreementByProjectId } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -21,7 +21,7 @@ import { PoRecord } from '@/types';
 
 export default function PoPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '06');
+  const canEdit = canEditStage(user, '06');
   const { pos, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -21,7 +21,7 @@ import { GtpRecord } from '@/types';
 
 export default function GtpPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '05');
+  const canEdit = canEditStage(user, '05');
   const { gtps, projects, getLatestGtpForBoqItem } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

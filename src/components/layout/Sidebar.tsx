@@ -25,6 +25,7 @@ import {
   Lock,
   X,
   ListTree,
+  UserCheck,
 } from 'lucide-react';
 import { EnvironmentBadge } from '../common/Badge';
 import { useAuth } from '@/lib/auth-context';
@@ -141,7 +142,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <FolderKanban className="w-4 h-4 shrink-0" />
                 <span>Projects</span>
               </Link>
-              {canEditStage(user?.role, 'BOQ') ? (
+              {canEditStage(user, 'BOQ') ? (
                 <Link
                   href="/boq"
                   onClick={() => onClose()}
@@ -183,7 +184,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
 
             <nav className="space-y-0.5">
-              {WORKFLOW_NAV_STAGES.filter((s) => canEditStage(user?.role, s.id)).map((stage) => {
+              {WORKFLOW_NAV_STAGES.filter((s) => canEditStage(user, s.id)).map((stage) => {
                 const IconComponent = stage.icon;
                 const isStageActive = stage.active && (pathname === stage.href || pathname.startsWith(stage.href + '/'));
 
@@ -218,7 +219,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
 
             <nav className="space-y-0.5">
-              {WORKFLOW_NAV_STAGES.filter((s) => !canEditStage(user?.role, s.id)).map((stage) => {
+              {WORKFLOW_NAV_STAGES.filter((s) => !canEditStage(user, s.id)).map((stage) => {
                 const IconComponent = stage.icon;
                 const isStageActive = stage.active && (pathname === stage.href || pathname.startsWith(stage.href + '/'));
 
@@ -272,18 +273,32 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
               
               {user?.role === 'MASTER' && (
-                <Link
-                  href="/management/activity"
-                  onClick={() => onClose()}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                    pathname === '/management/activity'
-                      ? 'bg-blue-600/20 text-blue-300'
-                      : 'text-slate-400 hover:text-white hover:bg-[#0e213f]'
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Activity Monitor</span>
-                </Link>
+                <>
+                  <Link
+                    href="/management/activity"
+                    onClick={() => onClose()}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                      pathname === '/management/activity'
+                        ? 'bg-blue-600/20 text-blue-300'
+                        : 'text-slate-400 hover:text-white hover:bg-[#0e213f]'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Activity Monitor</span>
+                  </Link>
+                  <Link
+                    href="/management/delegation"
+                    onClick={() => onClose()}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                      pathname === '/management/delegation'
+                        ? 'bg-blue-600/20 text-blue-300'
+                        : 'text-slate-400 hover:text-white hover:bg-[#0e213f]'
+                    }`}
+                  >
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>Delegation & Leaves</span>
+                  </Link>
+                </>
               )}
 
               <div

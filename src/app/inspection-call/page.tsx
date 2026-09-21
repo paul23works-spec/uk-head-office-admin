@@ -21,7 +21,7 @@ import { InspectionCallRecord } from '@/types';
 
 export default function InspectionCallPage() {
   const { user } = useAuth();
-  const canEdit = canEditStage(user?.role, '07');
+  const canEdit = canEditStage(user, '07');
   const { inspectionCalls, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');

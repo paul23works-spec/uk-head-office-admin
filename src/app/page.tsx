@@ -228,7 +228,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Phase 2: Active Administrative Foundation (Stages 01–04) */}
-      <section aria-labelledby="stage-a-heading" className={`space-y-3 ${canEditStage(user?.role, '01') ? 'order-2' : 'order-5 opacity-60'}`}>
+      <section aria-labelledby="stage-a-heading" className={`space-y-3 ${canEditStage(user, '01') ? 'order-2' : 'order-5 opacity-60'}`}>
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-blue-600" />
@@ -333,7 +333,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Phase 3: Active Procurement & Inspection Foundation (BOQ & Stages 05–09) */}
-      <section aria-labelledby="stage-b-heading" className={`space-y-3 ${canEditStage(user?.role, '05') ? 'order-3' : 'order-6 opacity-60'}`}>
+      <section aria-labelledby="stage-b-heading" className={`space-y-3 ${canEditStage(user, '05') ? 'order-3' : 'order-6 opacity-60'}`}>
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Cpu className="w-4 h-4 text-amber-600" />
@@ -482,7 +482,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Phase 4: Active C-Admin Modules (Stages 10–13) */}
-      <section aria-labelledby="stage-c-heading" className={`space-y-3 ${canEditStage(user?.role, '10') ? 'order-4' : 'order-7 opacity-60'}`}>
+      <section aria-labelledby="stage-c-heading" className={`space-y-3 ${canEditStage(user, '10') ? 'order-4' : 'order-7 opacity-60'}`}>
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Truck className="w-4 h-4 text-emerald-600" />
