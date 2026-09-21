@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { FinalBillRecord, FinalBillStatus } from '@/types';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateFinalBillModal } from '@/components/final-bill/CreateFinalBillModal';
@@ -9,6 +11,8 @@ import { ViewFinalBillModal } from '@/components/final-bill/ViewFinalBillModal';
 import Link from 'next/link';
 
 export default function FinalBillPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '13');
   const { finalBills, projects, progressiveBills } = useProjects();
   const [selectedBill, setSelectedBill] = useState<FinalBillRecord | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -76,7 +80,8 @@ export default function FinalBillPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             id="create-final-bill-btn"
             onClick={() => setIsCreateOpen(true)}
             className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
@@ -86,6 +91,7 @@ export default function FinalBillPage() {
             </svg>
             Lodge Final Bill
           </button>
+)}</>
         </div>
       </div>
 

@@ -12,12 +12,16 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateBoqModal } from '@/components/boq/CreateBoqModal';
 import { ViewBoqModal } from '@/components/boq/ViewBoqModal';
 import { BoqItem } from '@/types';
 
 export default function BoqPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, 'BOQ');
   const { boqItems, projects, getRemainingBoqQuantity } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,13 +72,15 @@ export default function BoqPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add BOQ Item</span>
           </button>
+)}</>
         </div>
       </div>
 

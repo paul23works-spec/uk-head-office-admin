@@ -27,6 +27,8 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { KpiCard } from '@/components/dashboard/KpiCard';
 import { StatusDistribution } from '@/components/dashboard/StatusDistribution';
 import { PendingActionsTable } from '@/components/dashboard/PendingActionsTable';
@@ -50,6 +52,7 @@ const STAGE_NAMES: Record<number, string> = {
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const {
     projects,
     stats,
@@ -144,7 +147,8 @@ export default function DashboardPage() {
   }, [projectControlSummaries]);
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8">
+      <div className="order-1 flex flex-col gap-8">
       {/* Top Welcome & Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
@@ -221,8 +225,10 @@ export default function DashboardPage() {
         />
       </div>
 
+      </div>
+
       {/* Phase 2: Active Administrative Foundation (Stages 01–04) */}
-      <section aria-labelledby="stage-a-heading" className="space-y-3">
+      <section aria-labelledby="stage-a-heading" className={`space-y-3 ${canEditStage(user?.role, '01') ? 'order-2' : 'order-5 opacity-60'}`}>
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-blue-600" />
@@ -327,7 +333,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Phase 3: Active Procurement & Inspection Foundation (BOQ & Stages 05–09) */}
-      <section aria-labelledby="stage-b-heading" className="space-y-3">
+      <section aria-labelledby="stage-b-heading" className={`space-y-3 ${canEditStage(user?.role, '05') ? 'order-3' : 'order-6 opacity-60'}`}>
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Cpu className="w-4 h-4 text-amber-600" />
@@ -476,7 +482,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Phase 4: Active C-Admin Modules (Stages 10–13) */}
-      <section aria-labelledby="stage-c-heading" className="space-y-3">
+      <section aria-labelledby="stage-c-heading" className={`space-y-3 ${canEditStage(user?.role, '10') ? 'order-4' : 'order-7 opacity-60'}`}>
         <div className="flex items-center justify-between pb-1 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Truck className="w-4 h-4 text-emerald-600" />
@@ -581,7 +587,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Phase 5: Complete Project Control & Stage Pipeline */}
-      <section aria-labelledby="project-control-heading" className="space-y-4">
+      <section aria-labelledby="project-control-heading" className="order-8 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-200 gap-2">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-5 h-5 text-indigo-600" />

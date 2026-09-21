@@ -12,12 +12,16 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateProgressiveBillModal } from '@/components/progressive-bill/CreateProgressiveBillModal';
 import { ViewProgressiveBillModal } from '@/components/progressive-bill/ViewProgressiveBillModal';
 import { ProgressiveBillRecord } from '@/types';
 
 export default function ProgressiveBillPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '12');
   const { progressiveBills, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,13 +101,15 @@ export default function ProgressiveBillPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Generate RA Bill</span>
           </button>
+)}</>
         </div>
       </div>
 

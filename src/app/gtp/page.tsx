@@ -12,12 +12,16 @@ import {
   History,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateGtpModal } from '@/components/gtp/CreateGtpModal';
 import { ViewGtpModal } from '@/components/gtp/ViewGtpModal';
 import { GtpRecord } from '@/types';
 
 export default function GtpPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '05');
   const { gtps, projects, getLatestGtpForBoqItem } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,13 +80,15 @@ export default function GtpPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Submit New GTP</span>
           </button>
+)}</>
         </div>
       </div>
 

@@ -12,12 +12,16 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateInspectionOrderModal } from '@/components/inspection-order/CreateInspectionOrderModal';
 import { ViewInspectionOrderModal } from '@/components/inspection-order/ViewInspectionOrderModal';
 import { InspectionOrderRecord } from '@/types';
 
 export default function InspectionOrderPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '08');
   const { inspectionOrders, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,13 +73,15 @@ export default function InspectionOrderPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Issue Inspection Order</span>
           </button>
+)}</>
         </div>
       </div>
 

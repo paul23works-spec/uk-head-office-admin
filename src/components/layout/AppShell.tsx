@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { GlobalSearchModal } from '../common/GlobalSearchModal';
+import { useAuth } from '@/lib/auth-context';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -11,6 +13,23 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isLoading && !user && pathname !== '/login') {
+      router.push('/login');
+    }
+  }, [user, isLoading, pathname, router]);
+
+  if (isLoading) return null;
+
+  if (pathname === '/login') {
+    return <>{children}</>;
+  }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-slate-900">
@@ -34,8 +53,8 @@ export function AppShell({ children }: AppShellProps) {
         <footer className="border-t border-slate-200 bg-white px-6 py-4 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700 font-editorial">UK HEAD OFFICE</span>
-            <span>•</span>
-            <span>Office Administration System (Phase 4 — C Admin Modules: DI → MICC → Progressive Bill → Final Bill)</span>
+            <span>—</span>
+            <span>Office Administration System (Phase 6.1 — Project Control Center)</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
             <span className="bg-amber-50 text-amber-800 font-semibold px-2 py-0.5 rounded border border-amber-200">

@@ -12,12 +12,16 @@ import {
   Clock,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreatePoModal } from '@/components/po/CreatePoModal';
 import { ViewPoModal } from '@/components/po/ViewPoModal';
 import { PoRecord } from '@/types';
 
 export default function PoPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '06');
   const { pos, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,13 +76,15 @@ export default function PoPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Issue New PO</span>
           </button>
+)}</>
         </div>
       </div>
 

@@ -10,6 +10,8 @@ import {
   Eye,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { TenderRecord } from '@/types';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateTenderModal } from '@/components/tenders/CreateTenderModal';
@@ -17,6 +19,8 @@ import { ViewTenderModal } from '@/components/tenders/ViewTenderModal';
 import { CreateLoiLoaModal } from '@/components/loi-loa/CreateLoiLoaModal';
 
 export default function TendersPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '01');
   const { tenders, projects, getLoiLoaByProjectId } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,13 +94,15 @@ export default function TendersPage() {
             <FolderKanban className="w-3.5 h-3.5" />
             <span>Projects Directory</span>
           </Link>
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateOpen(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Register Tender</span>
           </button>
+)}</>
         </div>
       </div>
 

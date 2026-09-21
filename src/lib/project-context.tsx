@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import {
   Project,
   PendingAction,
@@ -346,6 +348,7 @@ const STORAGE_KEY_PROGRESSIVE_BILLS = 'uk_admin_progressive_bills_phase4';
 const STORAGE_KEY_FINAL_BILLS = 'uk_admin_final_bills_phase4';
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
   const [pendingActions] = useState<PendingAction[]>(INITIAL_PENDING_ACTIONS);
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
@@ -651,6 +654,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateTender = (id: string, updates: Partial<TenderRecord>) => {
+    if (!canEditStage(user?.role, '01')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -729,6 +733,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateLoiLoa = (id: string, updates: Partial<LoiLoaRecord>) => {
+    if (!canEditStage(user?.role, '02')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -807,6 +812,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateAcceptance = (id: string, updates: Partial<AcceptanceRecord>) => {
+    if (!canEditStage(user?.role, '03')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -868,6 +874,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateCpg = (id: string, updates: Partial<CpgRecord>) => {
+    if (!canEditStage(user?.role, '04')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -953,6 +960,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateAgreement = (id: string, updates: Partial<AgreementRecord>) => {
+    if (!canEditStage(user?.role, '04')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1116,6 +1124,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateBoqItem = (id: string, updates: Partial<BoqItem>) => {
+    if (!canEditStage(user?.role, 'BOQ')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     setBoqItems((prev) =>
       prev.map((b) => {
@@ -1195,6 +1204,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateGtp = (id: string, updates: Partial<GtpRecord>) => {
+    if (!canEditStage(user?.role, '05')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
     let nextGtps: GtpRecord[] = [];
@@ -1300,6 +1310,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updatePo = (id: string, updates: Partial<PoRecord>) => {
+    if (!canEditStage(user?.role, '06')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1406,6 +1417,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateInspectionCall = (id: string, updates: Partial<InspectionCallRecord>) => {
+    if (!canEditStage(user?.role, '07')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1446,6 +1458,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const createInspectionOrder = (
     data: Omit<InspectionOrderRecord, 'id' | 'createdAt' | 'updatedAt'>
   ): InspectionOrderRecord => {
+    if (!canEditStage(user?.role, '08')) throw new Error('Unauthorized');
     // Clarification 5: Orphan Inspection Order prevention
     const callExists = inspectionCalls.some((c) => c.id === data.inspectionCallId);
     validateInspectionOrderCreation(data, callExists);
@@ -1491,6 +1504,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateInspectionOrder = (id: string, updates: Partial<InspectionOrderRecord>) => {
+    if (!canEditStage(user?.role, '08')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1529,6 +1543,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const createJir = (
     data: Omit<JirRecord, 'id' | 'createdAt' | 'updatedAt' | 'balanceQuantity'>
   ): JirRecord => {
+    if (!canEditStage(user?.role, '09')) throw new Error('Unauthorized');
     // Clarification 5: Orphan JIR prevention & Arithmetic boundary conditions
     const orderExists = inspectionOrders.some((o) => o.id === data.inspectionOrderId);
     const { balanceQuantity: balanceQty } = validateJirCreation(data, orderExists);
@@ -1576,6 +1591,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateJir = (id: string, updates: Partial<JirRecord>) => {
+    if (!canEditStage(user?.role, '09')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1731,6 +1747,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getDisByProjectId = (projectId: string) => dis.filter((d) => d.projectId === projectId);
 
   const createDi = (data: Omit<DiRecord, 'id' | 'createdAt' | 'updatedAt'>): DiRecord => {
+    if (!canEditStage(user?.role, '10')) throw new Error('Unauthorized');
     const jir = jirs.find((j) => j.id === data.jirId);
     validateDiCreation(data, jir, dis);
 
@@ -1776,6 +1793,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateDi = (id: string, updates: Partial<DiRecord>) => {
+    if (!canEditStage(user?.role, '10')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -1818,6 +1836,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getMiccsByProjectId = (projectId: string) => miccs.filter((m) => m.projectId === projectId);
 
   const createMicc = (data: Omit<MiccRecord, 'id' | 'createdAt' | 'updatedAt'>): MiccRecord => {
+    if (!canEditStage(user?.role, '11')) throw new Error('Unauthorized');
     const di = dis.find((d) => d.id === data.diId);
     validateMiccCreation(data, di, miccs);
 
@@ -1863,6 +1882,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateMicc = (id: string, updates: Partial<MiccRecord>) => {
+    if (!canEditStage(user?.role, '11')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -2021,6 +2041,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProgressiveBill = (id: string, updates: Partial<ProgressiveBillRecord>) => {
+    if (!canEditStage(user?.role, '12')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 
@@ -2090,6 +2111,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       | 'finalBillAmount'
     >
   ): FinalBillRecord => {
+    if (!canEditStage(user?.role, '13')) throw new Error('Unauthorized');
     const project = projects.find((p) => p.id === data.projectId || p.code === data.projectId);
     const { contractValue, totalApprovedProgressiveBills, finalBillAmount } = validateFinalBillCreation(
       data,
@@ -2143,6 +2165,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateFinalBill = (id: string, updates: Partial<FinalBillRecord>) => {
+    if (!canEditStage(user?.role, '13')) throw new Error('Unauthorized');
     const nowStr = new Date().toISOString().split('T')[0];
     let targetProject = '';
 

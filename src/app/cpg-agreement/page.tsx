@@ -18,6 +18,8 @@ import {
   Layers,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { CpgRecord, AgreementRecord } from '@/types';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateCpgModal } from '@/components/cpg-agreement/CreateCpgModal';
@@ -28,6 +30,8 @@ import { ViewAgreementModal } from '@/components/cpg-agreement/ViewAgreementModa
 type ActiveTab = 'overview' | 'cpg' | 'agreement';
 
 export default function CpgAgreementPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '04');
   const { cpgs, agreements, projects, getCpgByProjectId, getAgreementByProjectId } = useProjects();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
@@ -127,21 +131,25 @@ export default function CpgAgreementPage() {
             <span>View Acceptances</span>
           </Link>
 
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateCpgOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Log CPG (BG)</span>
           </button>
+)}</>
 
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateAgrOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Execute Agreement</span>
           </button>
+)}</>
         </div>
       </div>
 
@@ -373,7 +381,8 @@ export default function CpgAgreementPage() {
                               </div>
                             </button>
                           ) : (
-                            <button
+                            <>{canEdit && (
+<button
                               onClick={() => {
                                 setIsCreateCpgOpen(true);
                               }}
@@ -382,6 +391,7 @@ export default function CpgAgreementPage() {
                               <Plus className="w-3 h-3" />
                               Log CPG
                             </button>
+)}</>
                           )}
                         </td>
 
@@ -400,7 +410,8 @@ export default function CpgAgreementPage() {
                               </div>
                             </button>
                           ) : (
-                            <button
+                            <>{canEdit && (
+<button
                               onClick={() => {
                                 setIsCreateAgrOpen(true);
                               }}
@@ -409,6 +420,7 @@ export default function CpgAgreementPage() {
                               <Plus className="w-3 h-3" />
                               Record Agreement
                             </button>
+)}</>
                           )}
                         </td>
 

@@ -12,12 +12,16 @@ import {
   ClipboardCheck,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateJirModal } from '@/components/jir/CreateJirModal';
 import { ViewJirModal } from '@/components/jir/ViewJirModal';
 import { JirRecord } from '@/types';
 
 export default function JirPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '09');
   const { jirs, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,13 +73,15 @@ export default function JirPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Record New JIR</span>
           </button>
+)}</>
         </div>
       </div>
 

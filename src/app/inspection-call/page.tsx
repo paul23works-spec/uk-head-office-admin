@@ -12,12 +12,16 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
+import { useAuth } from '@/lib/auth-context';
+import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { CreateInspectionCallModal } from '@/components/inspection-call/CreateInspectionCallModal';
 import { ViewInspectionCallModal } from '@/components/inspection-call/ViewInspectionCallModal';
 import { InspectionCallRecord } from '@/types';
 
 export default function InspectionCallPage() {
+  const { user } = useAuth();
+  const canEdit = canEditStage(user?.role, '07');
   const { inspectionCalls, projects } = useProjects();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,13 +75,15 @@ export default function InspectionCallPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <>{canEdit && (
+<button
             onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Raise Inspection Call</span>
           </button>
+)}</>
         </div>
       </div>
 
