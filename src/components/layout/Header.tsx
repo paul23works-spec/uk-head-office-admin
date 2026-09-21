@@ -3,7 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Search, ChevronDown, ShieldCheck } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
-import { DEMO_USER_PROFILE } from '@/lib/constants';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { NotificationsPopover } from '../common/NotificationsPopover';
 import { EnvironmentBadge } from '../common/Badge';
 
@@ -13,8 +15,15 @@ interface HeaderProps {
 
 export function Header({ onOpenMobileMenu }: HeaderProps) {
   const { setIsSearchOpen } = useProjects();
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -96,11 +105,11 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
             aria-expanded={isProfileOpen}
           >
             <div className="w-8 h-8 rounded-full bg-[#0A192F] text-amber-300 font-semibold text-xs flex items-center justify-center border border-amber-400/40 shadow-xs">
-              {DEMO_USER_PROFILE.avatarInitials}
+              {user?.avatarInitials || '?'}
             </div>
             <div className="hidden xl:block leading-tight">
-              <p className="text-xs font-semibold text-slate-900">{DEMO_USER_PROFILE.name}</p>
-              <p className="text-[11px] text-slate-500">{DEMO_USER_PROFILE.role}</p>
+              <p className="text-xs font-semibold text-slate-900">{user?.name || 'Unknown'}</p>
+              <p className="text-[11px] text-slate-500">{user?.role || 'Unknown'}</p>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
           </button>
@@ -109,11 +118,11 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
           {isProfileOpen && (
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1">
               <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-900">{DEMO_USER_PROFILE.name}</p>
-                <p className="text-xs text-slate-500">{DEMO_USER_PROFILE.role}</p>
+                <p className="text-xs font-semibold text-slate-900">{user?.name || 'Unknown'}</p>
+                <p className="text-xs text-slate-500">{user?.role || 'Unknown'}</p>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[10px] font-mono text-slate-400">
-                    {DEMO_USER_PROFILE.department}
+                    {'ADMIN'}
                   </span>
                   <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
                     DEMO
@@ -132,8 +141,14 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 p-2 text-[11px] text-slate-400 bg-slate-50 text-center">
-                Authentication deferred to future production phase
+              <div className="border-t border-slate-100 p-2 bg-slate-50">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 hover:text-red-600 hover:bg-red-50 hover:border-red-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Logout
+                </button>
               </div>
             </div>
           )}
