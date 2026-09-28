@@ -58,7 +58,7 @@ import {
   INITIAL_PROGRESSIVE_BILLS,
   INITIAL_FINAL_BILLS,
 } from './mock-data';
-import { WORKFLOW_STAGES, DEMO_USER_PROFILE } from './constants';
+import { WORKFLOW_STAGES, DEMO_USER_PROFILE, DEFAULT_WORKFLOW_TEMPLATE } from './constants';
 import {
   calculateRemainingBoqQuantity,
   calculateRemainingCallableQuantity,
@@ -349,147 +349,76 @@ const STORAGE_KEY_FINAL_BILLS = 'uk_admin_final_bills_phase4';
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
-  const [pendingActions] = useState<PendingAction[]>(INITIAL_PENDING_ACTIONS);
-  const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Phase 2 State
-  const [tenders, setTenders] = useState<TenderRecord[]>(INITIAL_TENDERS);
-  const [loiLoas, setLoiLoas] = useState<LoiLoaRecord[]>(INITIAL_LOI_LOAS);
-  const [acceptances, setAcceptances] = useState<AcceptanceRecord[]>(INITIAL_ACCEPTANCES);
-  const [cpgs, setCpgs] = useState<CpgRecord[]>(INITIAL_CPGS);
-  const [agreements, setAgreements] = useState<AgreementRecord[]>(INITIAL_AGREEMENTS);
+  const [tenders, setTenders] = useState<TenderRecord[]>([]);
+  const [loiLoas, setLoiLoas] = useState<LoiLoaRecord[]>([]);
+  const [acceptances, setAcceptances] = useState<AcceptanceRecord[]>([]);
+  const [cpgs, setCpgs] = useState<CpgRecord[]>([]);
+  const [agreements, setAgreements] = useState<AgreementRecord[]>([]);
 
   // Phase 3 State
-  const [vendors, setVendors] = useState<Vendor[]>(INITIAL_VENDORS);
-  const [boqItems, setBoqItems] = useState<BoqItem[]>(INITIAL_BOQ_ITEMS);
-  const [gtps, setGtps] = useState<GtpRecord[]>(INITIAL_GTPS);
-  const [pos, setPos] = useState<PoRecord[]>(INITIAL_POS);
-  const [inspectionCalls, setInspectionCalls] = useState<InspectionCallRecord[]>(INITIAL_INSPECTION_CALLS);
-  const [inspectionOrders, setInspectionOrders] = useState<InspectionOrderRecord[]>(INITIAL_INSPECTION_ORDERS);
-  const [jirs, setJirs] = useState<JirRecord[]>(INITIAL_JIRS);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [boqItems, setBoqItems] = useState<BoqItem[]>([]);
+  const [gtps, setGtps] = useState<GtpRecord[]>([]);
+  const [pos, setPos] = useState<PoRecord[]>([]);
+  const [inspectionCalls, setInspectionCalls] = useState<InspectionCallRecord[]>([]);
+  const [inspectionOrders, setInspectionOrders] = useState<InspectionOrderRecord[]>([]);
+  const [jirs, setJirs] = useState<JirRecord[]>([]);
 
   // Phase 4 State
-  const [dis, setDis] = useState<DiRecord[]>(INITIAL_DIS);
-  const [miccs, setMiccs] = useState<MiccRecord[]>(INITIAL_MICCS);
-  const [progressiveBills, setProgressiveBills] = useState<ProgressiveBillRecord[]>(INITIAL_PROGRESSIVE_BILLS);
-  const [finalBills, setFinalBills] = useState<FinalBillRecord[]>(INITIAL_FINAL_BILLS);
+  const [dis, setDis] = useState<DiRecord[]>([]);
+  const [miccs, setMiccs] = useState<MiccRecord[]>([]);
+  const [progressiveBills, setProgressiveBills] = useState<ProgressiveBillRecord[]>([]);
+  const [finalBills, setFinalBills] = useState<FinalBillRecord[]>([]);
 
   const isLoadedRef = useRef(false);
 
-  // Safe asynchronous local storage hydration
+  // Fetch projects from API
   useEffect(() => {
-    const timer = setTimeout(() => {
+    async function fetchProjects() {
       try {
-        const storedProjects = localStorage.getItem(STORAGE_KEY_PROJECTS);
-        if (storedProjects) setProjects(JSON.parse(storedProjects));
-
-        const storedActivities = localStorage.getItem(STORAGE_KEY_ACTIVITIES);
-        if (storedActivities) setActivities(JSON.parse(storedActivities));
-
-        const storedTenders = localStorage.getItem(STORAGE_KEY_TENDERS);
-        if (storedTenders) setTenders(JSON.parse(storedTenders));
-
-        const storedLoiLoas = localStorage.getItem(STORAGE_KEY_LOI_LOAS);
-        if (storedLoiLoas) setLoiLoas(JSON.parse(storedLoiLoas));
-
-        const storedAcceptances = localStorage.getItem(STORAGE_KEY_ACCEPTANCES);
-        if (storedAcceptances) setAcceptances(JSON.parse(storedAcceptances));
-
-        const storedCpgs = localStorage.getItem(STORAGE_KEY_CPGS);
-        if (storedCpgs) setCpgs(JSON.parse(storedCpgs));
-
-        const storedAgreements = localStorage.getItem(STORAGE_KEY_AGREEMENTS);
-        if (storedAgreements) setAgreements(JSON.parse(storedAgreements));
-
-        const storedVendors = localStorage.getItem(STORAGE_KEY_VENDORS);
-        if (storedVendors) setVendors(JSON.parse(storedVendors));
-
-        const storedBoq = localStorage.getItem(STORAGE_KEY_BOQ);
-        if (storedBoq) setBoqItems(JSON.parse(storedBoq));
-
-        const storedGtps = localStorage.getItem(STORAGE_KEY_GTPS);
-        if (storedGtps) setGtps(JSON.parse(storedGtps));
-
-        const storedPos = localStorage.getItem(STORAGE_KEY_POS);
-        if (storedPos) setPos(JSON.parse(storedPos));
-
-        const storedCalls = localStorage.getItem(STORAGE_KEY_INSPECTION_CALLS);
-        if (storedCalls) setInspectionCalls(JSON.parse(storedCalls));
-
-        const storedOrders = localStorage.getItem(STORAGE_KEY_INSPECTION_ORDERS);
-        if (storedOrders) setInspectionOrders(JSON.parse(storedOrders));
-
-        const storedJirs = localStorage.getItem(STORAGE_KEY_JIRS);
-        if (storedJirs) setJirs(JSON.parse(storedJirs));
-
-        const storedDis = localStorage.getItem(STORAGE_KEY_DIS);
-        if (storedDis) setDis(JSON.parse(storedDis));
-
-        const storedMiccs = localStorage.getItem(STORAGE_KEY_MICCS);
-        if (storedMiccs) setMiccs(JSON.parse(storedMiccs));
-
-        const storedProgressive = localStorage.getItem(STORAGE_KEY_PROGRESSIVE_BILLS);
-        if (storedProgressive) setProgressiveBills(JSON.parse(storedProgressive));
-
-        const storedFinal = localStorage.getItem(STORAGE_KEY_FINAL_BILLS);
-        if (storedFinal) setFinalBills(JSON.parse(storedFinal));
-      } catch {
-        // Ignore localStorage read errors in restricted contexts
+        const res = await fetch('/api/projects');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const apiProjects = json.data.map((dbProject: any) => {
+            const mockProj = INITIAL_PROJECTS.find(p => p.code === dbProject.code) || ({} as any);
+            return {
+              ...mockProj,
+              id: dbProject.id,
+              code: dbProject.code,
+              name: dbProject.name,
+              client: dbProject.client,
+              location: dbProject.location || mockProj.location || '',
+              status: 'In Progress', // Fallback for UI matching
+              createdAt: new Date(dbProject.createdAt).toISOString().split('T')[0],
+              updatedAt: new Date(dbProject.updatedAt).toISOString().split('T')[0],
+              workflowTemplateId: 'template-turnkey-01',
+              workflowTemplate: DEFAULT_WORKFLOW_TEMPLATE,
+              projectStages: DEFAULT_WORKFLOW_TEMPLATE.stages.map(stg => ({
+                id: `stg-${dbProject.id}-${stg.id}`,
+                projectId: dbProject.id,
+                stageDefId: stg.id,
+                name: stg.name,
+                status: (stg.order === 1 ? 'In Progress' : 'Not Started') as WorkflowStageStatus,
+              })),
+            };
+          });
+          setProjects(apiProjects);
+        }
+      } catch (err) {
+        console.error('Failed to load projects from API', err);
+      } finally {
+        isLoadedRef.current = true;
       }
-      isLoadedRef.current = true;
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Save to local storage on change
-  useEffect(() => {
-    if (!isLoadedRef.current) return;
-    try {
-      localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(projects));
-      localStorage.setItem(STORAGE_KEY_ACTIVITIES, JSON.stringify(activities));
-      localStorage.setItem(STORAGE_KEY_TENDERS, JSON.stringify(tenders));
-      localStorage.setItem(STORAGE_KEY_LOI_LOAS, JSON.stringify(loiLoas));
-      localStorage.setItem(STORAGE_KEY_ACCEPTANCES, JSON.stringify(acceptances));
-      localStorage.setItem(STORAGE_KEY_CPGS, JSON.stringify(cpgs));
-      localStorage.setItem(STORAGE_KEY_AGREEMENTS, JSON.stringify(agreements));
-      localStorage.setItem(STORAGE_KEY_VENDORS, JSON.stringify(vendors));
-      localStorage.setItem(STORAGE_KEY_BOQ, JSON.stringify(boqItems));
-      localStorage.setItem(STORAGE_KEY_GTPS, JSON.stringify(gtps));
-      localStorage.setItem(STORAGE_KEY_POS, JSON.stringify(pos));
-      localStorage.setItem(STORAGE_KEY_INSPECTION_CALLS, JSON.stringify(inspectionCalls));
-      localStorage.setItem(STORAGE_KEY_INSPECTION_ORDERS, JSON.stringify(inspectionOrders));
-      localStorage.setItem(STORAGE_KEY_JIRS, JSON.stringify(jirs));
-      localStorage.setItem(STORAGE_KEY_DIS, JSON.stringify(dis));
-      localStorage.setItem(STORAGE_KEY_MICCS, JSON.stringify(miccs));
-      localStorage.setItem(STORAGE_KEY_PROGRESSIVE_BILLS, JSON.stringify(progressiveBills));
-      localStorage.setItem(STORAGE_KEY_FINAL_BILLS, JSON.stringify(finalBills));
-    } catch {
-      // Ignore localStorage write errors
     }
-  }, [
-    projects,
-    activities,
-    tenders,
-    loiLoas,
-    acceptances,
-    cpgs,
-    agreements,
-    vendors,
-    boqItems,
-    gtps,
-    pos,
-    inspectionCalls,
-    inspectionOrders,
-    jirs,
-    dis,
-    miccs,
-    progressiveBills,
-    finalBills,
-  ]);
+    fetchProjects();
+  }, []);
 
   const stats = useMemo(() => {
     const total = projects.length;
@@ -548,6 +477,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       createdAt: nowStr,
       updatedAt: nowStr,
       workflow: initialWorkflow,
+      workflowTemplateId: 'template-turnkey-01',
+      workflowTemplate: DEFAULT_WORKFLOW_TEMPLATE,
+      projectStages: DEFAULT_WORKFLOW_TEMPLATE.stages.map(stg => ({
+        id: `stg-${newId}-${stg.id}`,
+        projectId: newId,
+        stageDefId: stg.id,
+        name: stg.name,
+        status: (stg.order === 1 ? 'In Progress' : 'Not Started') as WorkflowStageStatus,
+      })),
     };
 
     const newActivity: Activity = {

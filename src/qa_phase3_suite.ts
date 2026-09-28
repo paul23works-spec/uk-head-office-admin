@@ -89,7 +89,7 @@ console.log('--- TEST GROUP 1: BOQ Creation & Vendor Linkage Rules ---');
 // Test 1.1: BOQ item can be created without a vendor
 const boqWithoutVendor: BoqItem = {
   id: 'BOQ-TEST-001',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   itemNumber: '1.01',
@@ -132,7 +132,7 @@ console.log('\n--- TEST GROUP 2: Multi-PO Aggregation & Over-Order Prevention --
 
 const testBoqItem: BoqItem = {
   id: 'BOQ-AGG-001',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Aggregation Project',
   itemNumber: '2.01',
@@ -156,7 +156,7 @@ assert(initialRem === 100, '2.1: Initial remaining BOQ quantity equals full BOQ 
 // Test 2.2: First PO orders 40 units
 const po1: PoRecord = {
   id: 'PO-TEST-001',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Aggregation Project',
   poNumber: 'PO/2024/001',
@@ -192,7 +192,7 @@ assert(remAfterPo1 === 60, '2.2: Remaining quantity after PO 1 (qty 40) is 60 (1
 // Test 2.3: Second PO orders 35 units (aggregating across both POs)
 const po2: PoRecord = {
   id: 'PO-TEST-002',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Aggregation Project',
   poNumber: 'PO/2024/002',
@@ -247,7 +247,7 @@ assertThrows(
 // Test 2.5: Third PO orders exact remaining balance (25 units)
 const po3: PoRecord = {
   id: 'PO-TEST-003',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Aggregation Project',
   poNumber: 'PO/2024/003',
@@ -311,7 +311,7 @@ console.log('\n--- TEST GROUP 3: Multi-Call Aggregation & Over-Call Prevention -
 
 const testPoForCalls: PoRecord = {
   id: 'PO-CALL-TEST-001',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Inspection Call Project',
   poNumber: 'PO/CALL/2024/001',
@@ -349,7 +349,7 @@ assert(initialCallable === 50, '3.1: Initial callable quantity equals PO item qu
 // Test 3.2: Call 1 calls 15 units
 const call1: InspectionCallRecord = {
   id: 'CALL-001',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Inspection Call Project',
   vendorId: 'VND-001',
@@ -381,7 +381,7 @@ assert(callableAfterCall1 === 35, '3.2: Remaining callable after Call 1 (15) is 
 // Test 3.3: Call 2 calls 20 units (aggregating across Call 1 and Call 2)
 const call2: InspectionCallRecord = {
   id: 'CALL-002',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Inspection Call Project',
   vendorId: 'VND-001',
@@ -434,7 +434,7 @@ assertThrows(
 // Test 3.5: Call 3 calls exact remaining 15 units
 const call3: InspectionCallRecord = {
   id: 'CALL-003',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Inspection Call Project',
   vendorId: 'VND-001',
@@ -676,7 +676,7 @@ const gtpHistory: GtpRecord[] = [];
 // Revision R0: Under Review
 const gtpR0: GtpRecord = {
   id: 'GTP-001',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   gtpNumber: 'GTP/2024/001',
@@ -704,7 +704,7 @@ assert(
 // Revision R1: Approved (created later)
 const gtpR1: GtpRecord = {
   id: 'GTP-002',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   gtpNumber: 'GTP/2024/002',
@@ -732,7 +732,7 @@ assert(
 // Revision R2: Rejected (e.g. fresh parameter change rejected)
 const gtpR2: GtpRecord = {
   id: 'GTP-003',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   gtpNumber: 'GTP/2024/003',
@@ -761,7 +761,7 @@ assert(
 // Even if an older revision has a newer createdAt or is first in array, numeric rev R2 MUST win
 const gtpR0Duplicate: GtpRecord = {
   id: 'GTP-004',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   gtpNumber: 'GTP/2024/004',
@@ -788,7 +788,7 @@ assert(
 // Test 6.5: Multi-digit revision precedence: R10 vs R9 (string sort would fail, numeric parse must succeed)
 const gtpR9: GtpRecord = {
   id: 'GTP-R9',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   gtpNumber: 'GTP/R9',
@@ -807,7 +807,7 @@ const gtpR9: GtpRecord = {
 };
 const gtpR10: GtpRecord = {
   id: 'GTP-R10',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   gtpNumber: 'GTP/R10',

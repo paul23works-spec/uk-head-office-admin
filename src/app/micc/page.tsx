@@ -15,6 +15,7 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateMiccModal } from '@/components/micc/CreateMiccModal';
 import { ViewMiccModal } from '@/components/micc/ViewMiccModal';
 import { MiccRecord } from '@/types';
@@ -81,6 +82,7 @@ export default function MiccPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Material Inward &amp; Clearance Certificate (MICC)
             </h1>
+            <DelegatedStageIndicator stageId="11" />
             <DemoTag label="STAGE 11 DATA" />
             <EnvironmentBadge phase="PHASE 4" />
           </div>

@@ -134,7 +134,7 @@ assertThrows(
 );
 
 // 3.6 Project BOQ totals calculation
-const prj1Boq = INITIAL_BOQ_ITEMS.filter((b) => b.projectId === 'PRJ-2024-001');
+const prj1Boq = INITIAL_BOQ_ITEMS.filter((b) => b.projectId === '739bed9a-5b64-4c1e-900b-e753ae6274c9');
 const totalPrj1Value = prj1Boq.reduce((sum, b) => sum + b.amount, 0);
 assert(prj1Boq.length === 5, `3.6a: Project PRJ-2024-001 has 5 BOQ items`);
 assert(totalPrj1Value > 0, `3.6b: Project PRJ-2024-001 BOQ total is ₹${totalPrj1Value.toLocaleString('en-IN')}`);
@@ -189,7 +189,7 @@ assert(allGtpBoqValid, '5.3: All GTP records link to valid BOQ items');
 // 5.4 Revision creation: R0 -> R1
 const gtpR0: GtpRecord = {
   id: 'GTP-T-001',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   boqItemId: 'BOQ-T-001',
@@ -208,7 +208,7 @@ const gtpR0: GtpRecord = {
 };
 const gtpR1: GtpRecord = {
   id: 'GTP-T-002',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   boqItemId: 'BOQ-T-001',
@@ -240,7 +240,7 @@ console.log('\n--- DOMAIN 6: PO UI QA & Multi-PO Aggregation ---');
 
 const boq100: BoqItem = {
   id: 'BOQ-100-TEST',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   itemNumber: '5.01',
@@ -262,7 +262,7 @@ const poA1: PoRecord = {
   id: 'PO-A1',
   poNumber: 'PO/2024/A1',
   poDate: '2024-02-01',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   vendorId: 'VND-001',
@@ -293,7 +293,7 @@ const poA2: PoRecord = {
   id: 'PO-A2',
   poNumber: 'PO/2024/A2',
   poDate: '2024-02-15',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   vendorId: 'VND-001',
@@ -354,7 +354,7 @@ const po50: PoRecord = {
   id: 'PO-50-TEST',
   poNumber: 'PO/50/001',
   poDate: '2024-01-01',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   vendorId: 'VND-001',
@@ -385,7 +385,7 @@ const callsA: InspectionCallRecord[] = [];
 const cA1: InspectionCallRecord = {
   id: 'CALL-A1',
   inspectionCallNumber: 'IC/2024/A1',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   vendorId: 'VND-001',
@@ -414,7 +414,7 @@ callsA.push(cA1);
 const cA2: InspectionCallRecord = {
   id: 'CALL-A2',
   inspectionCallNumber: 'IC/2024/A2',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'UK-EHV-001',
   projectName: 'Test Project',
   vendorId: 'VND-001',
@@ -671,11 +671,11 @@ console.log('\n--- DOMAIN 12: Project Detail QA & Stage B Foundation Card ---');
 
 assert(prj1Boq.length > 0, `12.1: Project Detail displays BOQ item count (${prj1Boq.length} items)`);
 assert(totalPrj1Value > 0, `12.2: Project Detail displays BOQ total value (₹${totalPrj1Value.toLocaleString('en-IN')})`);
-const prj1Gtps = INITIAL_GTPS.filter((g) => g.projectId === 'PRJ-2024-001');
-const prj1Pos = INITIAL_POS.filter((p) => p.projectId === 'PRJ-2024-001');
-const prj1Calls = INITIAL_INSPECTION_CALLS.filter((c) => c.projectId === 'PRJ-2024-001');
-const prj1Orders = INITIAL_INSPECTION_ORDERS.filter((o) => o.projectId === 'PRJ-2024-001');
-const prj1Jirs = INITIAL_JIRS.filter((j) => j.projectId === 'PRJ-2024-001');
+const prj1Gtps = INITIAL_GTPS.filter((g) => g.projectId === '739bed9a-5b64-4c1e-900b-e753ae6274c9');
+const prj1Pos = INITIAL_POS.filter((p) => p.projectId === '739bed9a-5b64-4c1e-900b-e753ae6274c9');
+const prj1Calls = INITIAL_INSPECTION_CALLS.filter((c) => c.projectId === '739bed9a-5b64-4c1e-900b-e753ae6274c9');
+const prj1Orders = INITIAL_INSPECTION_ORDERS.filter((o) => o.projectId === '739bed9a-5b64-4c1e-900b-e753ae6274c9');
+const prj1Jirs = INITIAL_JIRS.filter((j) => j.projectId === '739bed9a-5b64-4c1e-900b-e753ae6274c9');
 
 assert(prj1Gtps.length >= 1, `12.3: Project Detail GTP status active (${prj1Gtps.length} records)`);
 assert(prj1Pos.length >= 1, `12.4: Project Detail PO status/count active (${prj1Pos.length} records)`);

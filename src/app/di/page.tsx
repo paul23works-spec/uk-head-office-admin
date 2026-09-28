@@ -15,6 +15,7 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateDiModal } from '@/components/di/CreateDiModal';
 import { ViewDiModal } from '@/components/di/ViewDiModal';
 import { DiRecord } from '@/types';
@@ -83,6 +84,7 @@ export default function DiPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Dispatch Instruction (DI) / Factory Clearance
             </h1>
+            <DelegatedStageIndicator stageId="10" />
             <DemoTag label="STAGE 10 DATA" />
             <EnvironmentBadge phase="PHASE 4" />
           </div>

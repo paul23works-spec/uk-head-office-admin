@@ -38,7 +38,7 @@ export function CreateMiccModal({
     miccNumber: initialMiccNum,
     miccDate: new Date().toISOString().split('T')[0],
     quantity: initialQuantity,
-    fieldOffice: 'Bongaigaon Site Circle Office, APDCL',
+    fieldOffice: '',
     verifiedBy: 'B. C. Roy, Resident Engineer / TPIA Site In-charge',
     status: 'Verified' as MiccStatus,
     remarks: 'Physical consignment verified on site. Quantities received in intact condition.',
@@ -326,7 +326,7 @@ export function CreateMiccModal({
                 value={formData.fieldOffice}
                 onChange={(e) => setFormData({ ...formData, fieldOffice: e.target.value })}
                 className="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
-                placeholder="e.g. Bongaigaon Site Circle Office"
+                placeholder="e.g. Project Site Office"
               />
               {errors.fieldOffice && <p className="text-xs text-rose-400 mt-1">{errors.fieldOffice}</p>}
             </div>

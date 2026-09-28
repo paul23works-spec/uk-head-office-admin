@@ -15,6 +15,7 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateGtpModal } from '@/components/gtp/CreateGtpModal';
 import { ViewGtpModal } from '@/components/gtp/ViewGtpModal';
 import { GtpRecord } from '@/types';
@@ -71,6 +72,7 @@ export default function GtpPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Guaranteed Technical Particulars (GTP) Approval
             </h1>
+            <DelegatedStageIndicator stageId="05" />
             <DemoTag label="STAGE 05 DATA" />
             <EnvironmentBadge phase="PHASE 3" />
           </div>

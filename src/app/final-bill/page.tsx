@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { FinalBillRecord, FinalBillStatus } from '@/types';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateFinalBillModal } from '@/components/final-bill/CreateFinalBillModal';
 import { ViewFinalBillModal } from '@/components/final-bill/ViewFinalBillModal';
 import Link from 'next/link';
@@ -69,6 +70,7 @@ export default function FinalBillPage() {
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">
               Stage 13
             </span>
+            <DelegatedStageIndicator stageId="13" />
             <DemoTag label="STAGE 13 DATA" />
             <EnvironmentBadge phase="PHASE 4" />
           </div>

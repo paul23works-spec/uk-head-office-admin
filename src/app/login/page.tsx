@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/auth-context';
 import { USERS, AppRole } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
-import { Shield, User, Lock } from 'lucide-react';
+import { User, Lock } from 'lucide-react';
 import { useEffect } from 'react';
 
 export default function LoginPage() {
@@ -17,6 +17,11 @@ export default function LoginPage() {
   }, [user, isLoading, router]);
 
   const handleLogin = (role: AppRole) => {
+    try {
+      sessionStorage.setItem('ukg_brand_intro_pending', 'true');
+    } catch (e) {
+      // Safe fallback
+    }
     login(role);
     router.push('/');
   };
@@ -26,12 +31,20 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="bg-slate-900 px-6 py-8 text-center">
-          <div className="mx-auto w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-            <Shield className="w-7 h-7 text-white" />
+        <div className="bg-slate-900 px-6 py-8 text-center relative overflow-hidden">
+          {/* Subtle ambient corporate glow */}
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 bg-blue-600/15 rounded-full blur-2xl pointer-events-none" />
+
+          {/* Authoritative UK GROUP Brand Asset */}
+          <div className="relative mx-auto w-28 h-28 sm:w-32 sm:h-32 mb-4 bg-white rounded-2xl shadow-lg border border-slate-100/80 p-2.5 flex items-center justify-center">
+            <img
+              src="/images/uk-group-logo.png"
+              alt="UK GROUP"
+              className="w-full h-full object-contain pointer-events-none select-none"
+            />
           </div>
-          <h1 className="text-xl font-bold font-editorial tracking-tight text-white">UK Head Office Admin</h1>
-          <p className="text-slate-400 text-sm mt-2">Project Control Center</p>
+          <h1 className="text-xl font-bold font-editorial tracking-tight text-white">UK Enterprise Admin</h1>
+          <p className="text-slate-400 text-sm mt-1.5">Project Control Center</p>
         </div>
         
         <div className="p-6">

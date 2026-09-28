@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UK GROUP Brand Intro Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #060b16;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Container */
+    .brand-intro-container {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 45%, #0f1c34 0%, #080e1a 50%, #04070e 100%);
+      transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1), transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), filter 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .brand-intro-container.fade-out {
+      opacity: 0;
+      transform: scale(1.035);
+      filter: blur(8px);
+      pointer-events: none;
+    }
+
+    /* Subtle ambient backlights */
+    .ambient-glow-crown {
+      position: absolute;
+      top: calc(50% - 110px);
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 240px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(234, 179, 8, 0.18) 0%, rgba(202, 138, 4, 0.05) 50%, transparent 75%);
+      filter: blur(28px);
+      pointer-events: none;
+      opacity: 0;
+      animation: ambientFade 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+
+    .ambient-glow-emblem {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.16) 0%, rgba(30, 58, 138, 0.08) 50%, transparent 75%);
+      filter: blur(36px);
+      pointer-events: none;
+      opacity: 0;
+      animation: ambientFade 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+    }
+
+    /* White luminous stage / pedestal halo */
+    .brand-stage-halo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 45%, rgba(241, 245, 249, 0.65) 60%, rgba(255, 255, 255, 0) 75%);
+      filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.6));
+      pointer-events: none;
+      opacity: 0;
+      animation: stageFadeIn 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+    }
+
+    /* Logo Frame */
+    .logo-frame {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Base authoritative image layers */
+    .logo-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* Layer 1: Crown */
+    .layer-crown {
+      clip-path: inset(0 0 65.5% 0);
+      opacity: 0;
+      transform: scale(0.93) translateY(-6px);
+      animation: crownReveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+    }
+
+    /* Crown shimmer sweep */
+    .crown-shimmer {
+      position: absolute;
+      top: 2%;
+      left: 10%;
+      width: 80%;
+      height: 34%;
+      background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.65) 48%, rgba(255, 230, 150, 0.4) 52%, transparent 75%);
+      transform: translateX(-120%) skewX(-20deg);
+      opacity: 0;
+      animation: crownShimmerSweep 0.85s ease-out 0.75s forwards;
+      pointer-events: none;
+    }
+
+    /* Layer 2: UKG Emblem */
+    .layer-emblem {
+      clip-path: inset(34.2% 0 24% 0);
+      opacity: 0;
+      transform: translateY(12px) scale(0.97);
+      animation: emblemReveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.95s forwards;
+    }
+
+    /* Layer 3: Typography */
+    .layer-typography {
+      clip-path: inset(75.5% 0 0 0);
+      opacity: 0;
+      transform: translateY(8px);
+      animation: typographyReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.55s forwards;
+    }
+
+    /* Master Shimmer across full finished logo */
+    .master-shimmer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 68%);
+      transform: translateX(-140%) skewX(-25deg);
+      opacity: 0;
+      animation: masterShimmerSweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) 2.15s forwards;
+      pointer-events: none;
+    }
+
+    /* Subtle subtext */
+    .system-label {
+      margin-top: 24px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #94a3b8;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: subtextFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.9s forwards;
+    }
+
+    /* Keyframes */
+    @keyframes stageFadeIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.92);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    @keyframes ambientFade {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes crownReveal {
+      0% {
+        opacity: 0;
+        transform: scale(0.93) translateY(-8px);
+        filter: brightness(1.2);
+      }
+      70% {
+        filter: brightness(1.08);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: brightness(1);
+      }
+    }
+
+    @keyframes crownShimmerSweep {
+      0% {
+        opacity: 0;
+        transform: translateX(-100%) skewX(-20deg);
+      }
+      30% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(140%) skewX(-20deg);
+      }
+    }
+
+    @keyframes emblemReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+        filter: drop-shadow(0 0 16px rgba(37, 99, 235, 0.3));
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 0px transparent);
+      }
+    }
+
+    @keyframes typographyReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(8px);
+        letter-spacing: 0.05em;
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+        letter-spacing: normal;
+      }
+    }
+
+    @keyframes masterShimmerSweep {
+      0% {
+        opacity: 0;
+        transform: translateX(-120%) skewX(-25deg);
+      }
+      20% {
+        opacity: 0.9;
+      }
+      80% {
+        opacity: 0.9;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(140%) skewX(-25deg);
+      }
+    }
+
+    @keyframes subtextFade {
+      0% {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      100% {
+        opacity: 0.75;
+        transform: translateY(0);
+      }
+    }
+
+    /* Mock Dashboard underneath */
+    .mock-dashboard {
+      padding: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .mock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .mock-card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      padding: 24px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Brand Intro Overlay -->
+  <div class="brand-intro-container" id="brandIntro">
+    <div class="ambient-glow-crown"></div>
+    <div class="ambient-glow-emblem"></div>
+    <div class="brand-stage-halo"></div>
+
+    <div class="logo-frame">
+      <!-- Crown Shimmer Highlight -->
+      <div class="crown-shimmer"></div>
+
+      <!-- Crown Layer -->
+      <img src="../public/images/uk-group-logo.png" class="logo-layer layer-crown" alt="UK Group Crown" />
+
+      <!-- UKG Monogram Layer -->
+      <img src="../public/images/uk-group-logo.png" class="logo-layer layer-emblem" alt="UKG Monogram" />
+
+      <!-- Typography Layer -->
+      <img src="../public/images/uk-group-logo.png" class="logo-layer layer-typography" alt="UK Group Typography" />
+
+      <!-- Master shimmer -->
+      <div class="master-shimmer"></div>
+    </div>
+
+    <div class="system-label">
+      UK Head Office &bull; Enterprise Project Control
+    </div>
+  </div>
+
+  <!-- Mock Dashboard (to test transition) -->
+  <div class="mock-dashboard">
+    <div class="mock-header">
+      <h2>UK HEAD OFFICE — Control Dashboard</h2>
+      <div>Active Session: MASTER ADMIN</div>
+    </div>
+    <div class="mock-grid">
+      <div class="mock-card">
+        <h3>Stage 01 — Tender Monitoring</h3>
+        <p style="color: #94a3b8; margin-top: 8px;">12 Active Bids Submitted</p>
+      </div>
+      <div class="mock-card">
+        <h3>Stage 06 — Purchase Orders</h3>
+        <p style="color: #94a3b8; margin-top: 8px;">₹4.2 Cr Dispatched Material</p>
+      </div>
+      <div class="mock-card">
+        <h3>Stage 11 — MICC Clearance</h3>
+        <p style="color: #94a3b8; margin-top: 8px;">8 Certificates Pending Review</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Automatic transition test
+    setTimeout(() => {
+      const intro = document.getElementById('brandIntro');
+      intro.classList.add('fade-out');
+      setTimeout(() => {
+        intro.style.display = 'none';
+      }, 600);
+    }, 3100);
+  </script>
+</body>
+</html>

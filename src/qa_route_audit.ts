@@ -8,7 +8,7 @@ import http from 'http';
 const routes = [
   { path: '/', expectedStatus: 200, expectedBadge: 'Phase 4' },
   { path: '/projects', expectedStatus: 200, expectedBadge: 'Phase' },
-  { path: '/projects/PRJ-2024-001', expectedStatus: 200, expectedBadge: 'Phase 4' },
+  { path: '/projects/739bed9a-5b64-4c1e-900b-e753ae6274c9', expectedStatus: 200, expectedBadge: 'Phase 4' },
   { path: '/tenders', expectedStatus: 200, expectedBadge: 'PHASE 2' },
   { path: '/loi-loa', expectedStatus: 200, expectedBadge: 'PHASE 2' },
   { path: '/acceptance', expectedStatus: 200, expectedBadge: 'PHASE 2' },

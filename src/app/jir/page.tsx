@@ -15,6 +15,7 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateJirModal } from '@/components/jir/CreateJirModal';
 import { ViewJirModal } from '@/components/jir/ViewJirModal';
 import { JirRecord } from '@/types';
@@ -64,6 +65,7 @@ export default function JirPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Joint Inspection Report (JIR) / Quality Sign-Off
             </h1>
+            <DelegatedStageIndicator stageId="09" />
             <DemoTag label="STAGE 09 DATA" />
             <EnvironmentBadge phase="PHASE 3" />
           </div>

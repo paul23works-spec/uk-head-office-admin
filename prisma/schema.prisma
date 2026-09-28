@@ -1,0 +1,409 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EntityStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+  REVOKED
+  EXPIRED
+  CANCELLED
+}
+
+enum DocumentProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+}
+
+model Department {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  employees Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique // e.g. MASTER, ADMIN_A, ADMIN_B
+  permissions Permission[]
+  employees   Employee[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g. STAGE_01_EDIT, PROJECTS_VIEW
+  roles     Role[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Employee {
+  id           String      @id @default(uuid())
+  employeeId   String      @unique // e.g. EMP-001
+  name         String
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  roleId       String
+  role         Role        @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  user         User?
+
+  // Relations for Leaves and Delegations
+  leaves              Leave[]
+  grantedDelegations  Delegation[] @relation("DelegationGrantor")
+  receivedDelegations Delegation[] @relation("DelegationGrantee")
+
+  // For project assignments
+  projects Project[] @relation("ProjectEmployees")
+
+  actionItems ActionItem[]
+
+  status    EntityStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model User {
+  id           String       @id @default(uuid())
+  employeeId   String       @unique
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  email        String       @unique
+  passwordHash String
+  status       EntityStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Leave {
+  id         String       @id @default(uuid())
+  employeeId String
+  employee   Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType  String
+  startDate  DateTime
+  endDate    DateTime
+  reason     String
+  status     EntityStatus @default(ACTIVE)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Delegation {
+  id        String       @id @default(uuid())
+  grantorId String
+  grantor   Employee     @relation("DelegationGrantor", fields: [grantorId], references: [id], onDelete: Cascade)
+  granteeId String
+  grantee   Employee     @relation("DelegationGrantee", fields: [granteeId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  status    EntityStatus @default(ACTIVE)
+  createdBy String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Project {
+  id                 String        @id @default(uuid())
+  code               String        @unique
+  name               String
+  client             String
+  location           String?
+  description        String?
+  status             ProjectStatus @default(PLANNING)
+  startDate          DateTime?
+  expectedCompletion DateTime?
+  actualCompletion   DateTime?
+
+  employees Employee[]     @relation("ProjectEmployees")
+  stages    ProjectStage[]
+  boqs      BOQ[]
+  documents Document[]
+  devices   IoTDevice[]
+
+  workflowTemplateId String?
+  workflowTemplate   WorkflowTemplate?  @relation(fields: [workflowTemplateId], references: [id])
+  actionItems        ActionItem[]
+  notifications      Notification[]
+  communications     CommunicationLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectStage {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stageId   String // e.g., '01', '02', '13'
+  name      String
+  status    String
+
+  stageDefId String?
+  stageDef   WorkflowStageDef? @relation(fields: [stageDefId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, stageId])
+}
+
+model Vendor {
+  id          String       @id @default(uuid())
+  vendorId    String       @unique
+  companyName String
+  contactInfo String?
+  address     String?
+  category    String?
+  status      EntityStatus @default(ACTIVE)
+
+  boqItems BOQItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BOQ {
+  id          String  @id @default(uuid())
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  referenceNo String
+  title       String
+  status      String
+
+  items BOQItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BOQItem {
+  id             String        @id @default(uuid())
+  boqId          String
+  boq            BOQ           @relation(fields: [boqId], references: [id], onDelete: Cascade)
+  description    String
+  unit           String
+  quantity       Float
+  rate           Float
+  amount         Float
+  vendorId       String?
+  vendor         Vendor?       @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id               String                   @id @default(uuid())
+  projectId        String?
+  project          Project?                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  documentType     String
+  filename         String
+  storageKey       String
+  version          String                   @default("1.0")
+  status           EntityStatus             @default(ACTIVE)
+  processingStatus DocumentProcessingStatus @default(PENDING)
+  processingError  String?
+  uploadedBy       String
+  uploadedAt       DateTime                 @default(now())
+
+  referenceNo   String?
+  date          DateTime?
+  extractedData Json?
+
+  issuerId   String?
+  issuer     Organization? @relation("DocumentIssuer", fields: [issuerId], references: [id])
+  receiverId String?
+  receiver   Organization? @relation("DocumentReceiver", fields: [receiverId], references: [id])
+
+  workflowStageId String?
+  workflowStage   WorkflowStageDef? @relation(fields: [workflowStageId], references: [id])
+
+  actionItems    ActionItem[]
+  notifications  Notification[]
+  communications CommunicationLog[]
+}
+
+model Notification {
+  id          String              @id @default(uuid())
+  recipientId String
+  type        String
+  title       String
+  message     String
+  read        Boolean             @default(false)
+  channel     NotificationChannel @default(IN_APP)
+  status      String              @default("PENDING") // PENDING, SENT, FAILED
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+}
+
+enum OrganizationType {
+  INTERNAL
+  CLIENT
+  VENDOR
+  BANK
+  GOVERNMENT
+  OTHER
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  WHATSAPP
+}
+
+model Organization {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  type        OrganizationType
+  contactInfo String?
+  address     String?
+  status      EntityStatus     @default(ACTIVE)
+
+  issuedDocuments   Document[] @relation("DocumentIssuer")
+  receivedDocuments Document[] @relation("DocumentReceiver")
+  boqItems          BOQItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkflowTemplate {
+  id          String             @id @default(uuid())
+  name        String             @unique
+  description String?
+  stages      WorkflowStageDef[]
+  projects    Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkflowStageDef {
+  id         String           @id @default(uuid())
+  templateId String
+  template   WorkflowTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name       String
+  order      Int
+  isOptional Boolean          @default(false)
+  isParallel Boolean          @default(false)
+
+  projectStages ProjectStage[]
+  documents     Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActionItem {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      String    @default("PENDING") // PENDING, COMPLETED, CANCELLED
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   Employee? @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CommunicationLog {
+  id         String              @id @default(uuid())
+  channel    NotificationChannel
+  direction  String // INBOUND, OUTBOUND
+  externalId String? // Message-ID for email, WA Message ID
+  from       String
+  to         String
+  subject    String?
+  body       String?
+  status     String
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  requiresApproval Boolean @default(false)
+  approvedBy       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String // CREATE, UPDATE, DELETE, etc.
+  entityType String
+  entityId   String
+  metadata   Json?
+  timestamp  DateTime @default(now())
+}
+
+model IoTDevice {
+  id          String         @id @default(uuid())
+  deviceId    String         @unique
+  deviceType  String
+  projectId   String?
+  project     Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  transformer String?
+  status      String         @default("OFFLINE")
+  lastSeen    DateTime?
+  telemetry   IoTTelemetry[]
+  alerts      IoTAlert[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model IoTTelemetry {
+  id        String    @id @default(uuid())
+  deviceId  String
+  device    IoTDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  payload   Json
+  timestamp DateTime  @default(now())
+}
+
+model IoTAlert {
+  id        String    @id @default(uuid())
+  deviceId  String
+  device    IoTDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  severity  String
+  timestamp DateTime  @default(now())
+}

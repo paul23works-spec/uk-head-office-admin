@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { TenderRecord } from '@/types';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateTenderModal } from '@/components/tenders/CreateTenderModal';
 import { ViewTenderModal } from '@/components/tenders/ViewTenderModal';
 import { CreateLoiLoaModal } from '@/components/loi-loa/CreateLoiLoaModal';
@@ -78,6 +79,7 @@ export default function TendersPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Tender Administration
             </h1>
+            <DelegatedStageIndicator stageId="01" />
             <DemoTag />
             <EnvironmentBadge phase="PHASE 2" />
           </div>

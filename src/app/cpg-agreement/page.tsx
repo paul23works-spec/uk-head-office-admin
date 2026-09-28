@@ -22,6 +22,7 @@ import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { CpgRecord, AgreementRecord } from '@/types';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateCpgModal } from '@/components/cpg-agreement/CreateCpgModal';
 import { CreateAgreementModal } from '@/components/cpg-agreement/CreateAgreementModal';
 import { ViewCpgModal } from '@/components/cpg-agreement/ViewCpgModal';
@@ -114,6 +115,7 @@ export default function CpgAgreementPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               CPG &amp; Contract Agreement Management
             </h1>
+            <DelegatedStageIndicator stageId="04" />
             <DemoTag />
             <EnvironmentBadge phase="PHASE 2" />
           </div>

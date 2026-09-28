@@ -15,6 +15,7 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateProgressiveBillModal } from '@/components/progressive-bill/CreateProgressiveBillModal';
 import { ViewProgressiveBillModal } from '@/components/progressive-bill/ViewProgressiveBillModal';
 import { ProgressiveBillRecord } from '@/types';
@@ -92,6 +93,7 @@ export default function ProgressiveBillPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Progressive Billing (RA Bills) / Interim Invoices
             </h1>
+            <DelegatedStageIndicator stageId="12" />
             <DemoTag label="STAGE 12 DATA" />
             <EnvironmentBadge phase="PHASE 4" />
           </div>

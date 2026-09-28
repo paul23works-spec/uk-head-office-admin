@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { GlobalSearchModal } from '../common/GlobalSearchModal';
+import { DelegationToast } from '../common/DelegationToast';
+import { BrandIntro } from '../common/BrandIntro';
 import { useAuth } from '@/lib/auth-context';
 import { usePathname, useRouter } from 'next/navigation';
 import { sessionStore } from '@/lib/session-store';
@@ -35,9 +37,24 @@ const formatStageName = (pathname: string): string => {
 
 export function AppShell({ children }: AppShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showBrandIntro, setShowBrandIntro] = useState(false);
   const { user, sessionId, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (user && pathname !== '/login') {
+      try {
+        const isPending = sessionStorage.getItem('ukg_brand_intro_pending');
+        if (isPending === 'true') {
+          sessionStorage.removeItem('ukg_brand_intro_pending');
+          setShowBrandIntro(true);
+        }
+      } catch (e) {
+        // Safe fallback
+      }
+    }
+  }, [user, pathname]);
 
   useEffect(() => {
     if (!isLoading && !user && pathname !== '/login') {
@@ -80,7 +97,7 @@ export function AppShell({ children }: AppShellProps) {
         {/* Global Enterprise Footer */}
         <footer className="border-t border-slate-200 bg-white px-6 py-4 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700 font-editorial">UK HEAD OFFICE</span>
+            <span className="font-semibold text-slate-700 font-editorial">UK ENTERPRISE</span>
             <span>—</span>
             <span>Office Administration System (Phase 6.2 — Activity Tracking)</span>
           </div>
@@ -95,6 +112,14 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Global Quick Search Modal */}
       <GlobalSearchModal />
+
+      {/* Global Delegation Notification Toast */}
+      <DelegationToast />
+
+      {/* UK GROUP Brand Introduction Overlay */}
+      {showBrandIntro && (
+        <BrandIntro onComplete={() => setShowBrandIntro(false)} />
+      )}
     </div>
   );
 }

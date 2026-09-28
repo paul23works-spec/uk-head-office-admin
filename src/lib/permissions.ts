@@ -18,7 +18,7 @@ export const USERS: User[] = [
   { id: 'u4', name: 'Priya Saikia', role: 'ADMIN_C', avatarInitials: 'PS', employeeId: 'EMP-004', department: 'Dispatch & Billing' },
 ];
 
-function checkBasePermission(role: AppRole, stageId: string): boolean {
+export function checkBasePermission(role: AppRole, stageId: string): boolean {
   if (role === 'MASTER') return true;
   if (stageId === 'PROJECTS') return false;
 

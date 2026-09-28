@@ -188,7 +188,7 @@ assert(
 
 // 1.7 Orphan DI rejected
 expectError(
-  () => validateDiCreation({ quantity: 10, projectId: 'PRJ-2024-001' }, undefined, []),
+  () => validateDiCreation({ quantity: 10, projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9' }, undefined, []),
   'linked jir',
   'DI-07',
   'Orphan DI without linked JIR is rejected'
@@ -216,7 +216,7 @@ const micc1: MiccRecord = {
   id: 'MICC-001',
   miccNumber: 'MICC/TEST/001',
   miccDate: '2024-09-10',
-  projectId: 'PRJ-2024-001',
+  projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9',
   projectCode: 'APDCL-2024-01',
   projectName: 'Bongaigaon 132kV',
   diId: di1.id,
@@ -273,7 +273,7 @@ assert(miccBalWithRej === 10, 'MICC-05', 'Rejected MICC does not consume DI bala
 
 // 2.6 Orphan MICC rejected
 expectError(
-  () => validateMiccCreation({ quantity: 5, projectId: 'PRJ-2024-001' }, undefined, []),
+  () => validateMiccCreation({ quantity: 5, projectId: '739bed9a-5b64-4c1e-900b-e753ae6274c9' }, undefined, []),
   'linked dispatch instruction',
   'MICC-06',
   'Orphan MICC without DI reference is rejected'

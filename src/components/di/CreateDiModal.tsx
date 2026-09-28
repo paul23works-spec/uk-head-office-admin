@@ -344,7 +344,7 @@ export function CreateDiModal({
                 value={formData.destination}
                 onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
                 className="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-                placeholder="e.g. APDCL Central Stores, Guwahati / Bongaigaon Site Office"
+                placeholder="e.g. APDCL Central Stores, Guwahati / Project Site Office"
               />
               {errors.destination && <p className="text-xs text-rose-400 mt-1">{errors.destination}</p>}
             </div>

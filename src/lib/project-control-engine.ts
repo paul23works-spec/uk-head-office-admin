@@ -44,6 +44,7 @@ import {
 } from '@/types';
 import { calculateRemainingBoqQuantity } from './procurement-engine';
 import { parseContractValue } from './c-admin-engine';
+import { DEFAULT_WORKFLOW_TEMPLATE } from './constants';
 
 export interface ProjectWorkflowRecords {
   project: Project;
@@ -356,6 +357,10 @@ export function calculateBillingSummary(
 // 6. STAGE STATUSES (ALL 13 STAGES)
 // ==========================================
 
+export function normalizeStageName(name: string): string {
+  return name.replace(/^\d+\s*(—|-)?\s*/, '').trim();
+}
+
 export function calculateStageStatuses(
   project: Project,
   records: ProjectWorkflowRecords
@@ -396,408 +401,234 @@ export function calculateStageStatuses(
   const miccSummary = calculateMiccSummary(project, projectDis, projectMiccs);
   const billSummary = calculateBillingSummary(project, projectPbs, projectFbs);
 
+  // Fallback to DEFAULT_WORKFLOW_TEMPLATE if project has none (for tests/legacy)
+  const template = project.workflowTemplate || DEFAULT_WORKFLOW_TEMPLATE;
+  const stages = [...template.stages].sort((a, b) => a.order - b.order);
+
   const stageResults: ProjectStageStatusInfo[] = [];
 
-  // STAGE 01: Tender
-  {
-    const hasTender = !!tender;
-    const isCompleted = tender?.status === 'Awarded' || !!loiLoa;
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : hasTender
-      ? 'In Progress'
-      : 'Not Started';
-    stageResults.push({
-      stageId: '01',
-      stageNumber: '01',
-      name: 'Tender',
-      adminGroup: 'ADMIN_A',
-      group: 'A',
-      status,
-      primaryReference: tender?.tenderNumber,
-      date: tender?.tenderDate || tender?.createdAt,
-      summary: tender ? `Tender ${tender.tenderNumber} (${tender.status})` : 'Tender preparation and submission',
-      navigationHref: '/tenders',
-      recordCount: tender ? 1 : 0,
-    });
-  }
+  for (let i = 0; i < stages.length; i++) {
+    const stageDef = stages[i];
+    const normName = normalizeStageName(stageDef.name);
+    
+    // For legacy support where stageId is strictly '01', '02', etc.
+    const legacyStageId = stageDef.id.startsWith('stg-') ? stageDef.id.replace('stg-', '') : stageDef.id;
+    const stageNumber = stageDef.order.toString().padStart(2, '0');
 
-  // STAGE 02: LOI / LOA
-  {
-    const hasLoi = !!loiLoa;
-    const isCompleted = loiLoa?.status === 'Accepted';
-    const s01Completed = stageResults[0].status === 'Completed';
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : hasLoi
-      ? 'In Progress'
-      : s01Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '02',
-      stageNumber: '02',
-      name: 'LOI / LOA',
-      adminGroup: 'ADMIN_A',
-      group: 'A',
-      status,
-      primaryReference: loiLoa?.loiNumber,
-      date: loiLoa?.date || loiLoa?.createdAt,
-      summary: loiLoa ? `LOI/LOA ${loiLoa.loiNumber} (${loiLoa.status})` : 'Letter of Intent / Award receipt',
-      navigationHref: '/loi-loa',
-      recordCount: loiLoa ? 1 : 0,
-    });
-  }
+    // Get previous stage results
+    const s01Completed = stageResults.find(s => normalizeStageName(s.name) === 'Tender')?.status === 'Completed';
+    const s02Completed = stageResults.find(s => normalizeStageName(s.name) === 'LOI / LOA')?.status === 'Completed';
+    const s03Completed = stageResults.find(s => normalizeStageName(s.name) === 'Acceptance')?.status === 'Completed';
+    const s04Completed = stageResults.find(s => normalizeStageName(s.name) === 'CPG + Agreement')?.status === 'Completed';
+    const s05Completed = stageResults.find(s => normalizeStageName(s.name) === 'GTP' || normalizeStageName(s.name) === 'GTP Approval')?.status === 'Completed';
+    const s06Active = ['Completed', 'In Progress'].includes(stageResults.find(s => normalizeStageName(s.name) === 'Purchase Order' || normalizeStageName(s.name) === 'PO')?.status || '');
+    const s07Active = ['Completed', 'In Progress'].includes(stageResults.find(s => normalizeStageName(s.name) === 'Inspection Call')?.status || '');
+    const s08Active = ['Completed', 'In Progress'].includes(stageResults.find(s => normalizeStageName(s.name) === 'Inspection Order')?.status || '');
+    const s09Completed = stageResults.find(s => normalizeStageName(s.name) === 'JIR / Inspection Report')?.status === 'Completed';
+    const s10Active = ['Completed', 'In Progress'].includes(stageResults.find(s => normalizeStageName(s.name) === 'DI / Dispatch Clearance')?.status || '');
+    const s11Active = ['Completed', 'In Progress'].includes(stageResults.find(s => normalizeStageName(s.name) === 'MICC')?.status || '');
+    const s12Active = ['Completed', 'In Progress'].includes(stageResults.find(s => normalizeStageName(s.name) === 'Progressive Bill')?.status || '');
 
-  // STAGE 03: Acceptance
-  {
-    const hasAcc = !!acceptance;
-    const isCompleted = acceptance?.status === 'Accepted';
-    const s02Completed = stageResults[1].status === 'Completed';
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : hasAcc
-      ? 'In Progress'
-      : s02Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '03',
-      stageNumber: '03',
-      name: 'Acceptance',
-      adminGroup: 'ADMIN_A',
-      group: 'A',
-      status,
-      primaryReference: acceptance?.acceptanceRef,
-      date: acceptance?.acceptanceDate || acceptance?.createdAt,
-      summary: acceptance ? `Acceptance ${acceptance.acceptanceRef} (${acceptance.status})` : 'Formal contract acceptance',
-      navigationHref: '/acceptance',
-      recordCount: acceptance ? 1 : 0,
-    });
-  }
-
-  // STAGE 04: CPG + Agreement
-  {
-    const hasCpgAgreement = !!(cpg || agreement);
-    const isCompleted =
-      (cpg?.status === 'Valid' || cpg?.status === 'Submitted') && agreement?.status === 'Executed';
-    const s03Completed = stageResults[2].status === 'Completed';
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : hasCpgAgreement
-      ? 'In Progress'
-      : s03Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '04',
-      stageNumber: '04',
-      name: 'CPG + Agreement',
-      adminGroup: 'ADMIN_A',
-      group: 'A',
-      status,
-      primaryReference: agreement?.agreementRef || cpg?.cpgRef,
-      date: agreement?.agreementDate || cpg?.cpgDate,
-      summary: agreement
-        ? `Agreement ${agreement.agreementRef} (CPG: ${cpg?.status || 'N/A'})`
-        : cpg
-        ? `CPG ${cpg.cpgRef} (Agreement Pending)`
-        : 'Performance guarantee & formal agreement',
-      navigationHref: '/cpg-agreement',
-      recordCount: (cpg ? 1 : 0) + (agreement ? 1 : 0),
-    });
-  }
-
-  // STAGE 05: GTP
-  {
-    const gtpCount = projectGtps.length;
-    const allApproved = gtpCount > 0 && projectGtps.every((g) => g.status === 'Approved');
-    const s04Completed = stageResults[3].status === 'Completed';
-    const status: ProjectControlStageStatus = allApproved
-      ? 'Completed'
-      : gtpCount > 0
-      ? 'In Progress'
-      : s04Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '05',
-      stageNumber: '05',
-      name: 'GTP Approval',
-      adminGroup: 'ADMIN_B',
-      group: 'B',
-      status,
-      primaryReference: projectGtps[0]?.gtpNumber,
-      date: projectGtps[0]?.submissionDate || projectGtps[0]?.createdAt,
-      summary:
-        gtpCount > 0
-          ? `${procSummary.approvedGtpCount} of ${gtpCount} GTP approved`
-          : 'Guaranteed Technical Particulars approval',
-      navigationHref: '/gtp',
-      recordCount: gtpCount,
-    });
-  }
-
-  // STAGE 06: PO
-  {
-    const poCount = procSummary.activePoCount;
-    const isCompleted = poCount > 0 && procSummary.remainingQuantity === 0;
-    const s05Completed = stageResults[4].status === 'Completed';
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : poCount > 0
-      ? 'In Progress'
-      : s05Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '06',
-      stageNumber: '06',
-      name: 'Purchase Order',
-      adminGroup: 'ADMIN_B',
-      group: 'B',
-      status,
-      primaryReference: projectPos[0]?.poNumber,
-      date: projectPos[0]?.poDate || projectPos[0]?.createdAt,
-      summary:
-        poCount > 0
-          ? `${poCount} active POs (${procSummary.totalOrderedQuantity} ordered, ${procSummary.remainingQuantity} remaining)`
-          : 'Vendor Purchase Order placement',
-      navigationHref: '/po',
-      recordCount: poCount,
-    });
-  }
-
-  // STAGE 07: Inspection Call
-  {
-    const callCount = inspSummary.callCount;
-    const s06Completed = stageResults[5].status === 'Completed' || stageResults[5].status === 'In Progress';
-    const isCompleted = callCount > 0 && projectCalls.every((c) => c.status === 'Completed');
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : callCount > 0
-      ? 'In Progress'
-      : s06Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '07',
-      stageNumber: '07',
-      name: 'Inspection Call',
-      adminGroup: 'ADMIN_B',
-      group: 'B',
-      status,
-      primaryReference: projectCalls[0]?.inspectionCallNumber,
-      date: projectCalls[0]?.requestDate || projectCalls[0]?.createdAt,
-      summary:
-        callCount > 0
-          ? `${callCount} inspection calls issued`
-          : 'Inspection call to client / TPIA',
-      navigationHref: '/inspection-call',
-      recordCount: callCount,
-    });
-  }
-
-  // STAGE 08: Inspection Order
-  {
-    const orderCount = inspSummary.orderCount;
-    const s07Completed = stageResults[6].status === 'Completed' || stageResults[6].status === 'In Progress';
-    const isCompleted = orderCount > 0 && projectOrders.every((o) => o.status === 'Completed');
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : orderCount > 0
-      ? 'In Progress'
-      : s07Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '08',
-      stageNumber: '08',
-      name: 'Inspection Order',
-      adminGroup: 'ADMIN_B',
-      group: 'B',
-      status,
-      primaryReference: projectOrders[0]?.inspectionOrderNumber,
-      date: projectOrders[0]?.orderDate || projectOrders[0]?.createdAt,
-      summary:
-        orderCount > 0
-          ? `${orderCount} inspection orders deputed`
-          : 'Deputation of inspection officer',
-      navigationHref: '/inspection-order',
-      recordCount: orderCount,
-    });
-  }
-
-  // STAGE 09: JIR / Inspection Report
-  {
-    const jirCount = inspSummary.jirCount;
-    const s08Completed = stageResults[7].status === 'Completed' || stageResults[7].status === 'In Progress';
-    const isCompleted = jirCount > 0 && inspSummary.balanceQuantity === 0 && inspSummary.acceptedQuantity > 0;
-    const status: ProjectControlStageStatus = isCompleted
-      ? 'Completed'
-      : jirCount > 0
-      ? 'In Progress'
-      : s08Completed
-      ? 'Not Started'
-      : 'Locked';
-    stageResults.push({
-      stageId: '09',
-      stageNumber: '09',
-      name: 'JIR / Inspection Report',
-      adminGroup: 'ADMIN_B',
-      group: 'B',
-      status,
-      primaryReference: projectJirs[0]?.jirNumber,
-      date: projectJirs[0]?.inspectionDate || projectJirs[0]?.createdAt,
-      summary:
-        jirCount > 0
-          ? `${inspSummary.acceptedQuantity} accepted, ${inspSummary.rejectedQuantity} rejected`
-          : 'Joint Inspection Report generation',
-      navigationHref: '/jir',
-      recordCount: jirCount,
-    });
-  }
-
-  // STAGE 10: DI / Dispatch Clearance
-  {
-    const diCount = dispSummary.activeDiCount;
-    const s09Completed = stageResults[8].status === 'Completed';
     let status: ProjectControlStageStatus = 'Not Started';
-    if (s09Completed && diCount === 0 && dispSummary.acceptedQuantity > 0) {
-      status = 'Attention Required'; // JIR accepted but not yet dispatched
-    } else if (diCount > 0 && dispSummary.remainingDispatchQuantity === 0) {
-      status = 'Completed';
-    } else if (diCount > 0) {
-      status = 'In Progress';
-    } else if (s09Completed) {
-      status = 'Not Started';
-    } else {
-      status = 'Locked';
-    }
-    stageResults.push({
-      stageId: '10',
-      stageNumber: '10',
-      name: 'DI / Dispatch Clearance',
-      adminGroup: 'ADMIN_C',
-      group: 'C',
-      status,
-      primaryReference: dispSummary.latestDiNumber,
-      date: dispSummary.latestDiDate,
-      summary:
-        diCount > 0
-          ? `${diCount} DIs (${dispSummary.dispatchedQuantity} dispatched, ${dispSummary.remainingDispatchQuantity} remaining)`
-          : dispSummary.acceptedQuantity > 0
-          ? `${dispSummary.acceptedQuantity} units awaiting dispatch`
-          : 'Dispatch Instruction from client',
-      navigationHref: '/di',
-      recordCount: diCount,
-    });
-  }
+    let primaryReference: string | undefined;
+    let date: string | undefined;
+    let summary: string = '';
+    let navigationHref: string = '';
+    let recordCount = 0;
 
-  // STAGE 11: MICC
-  {
-    const miccCount = miccSummary.activeMiccCount;
-    const s10Active = stageResults[9].status === 'Completed' || stageResults[9].status === 'In Progress';
-    let status: ProjectControlStageStatus = 'Not Started';
-    if (miccSummary.totalDispatchedQuantity > 0 && miccSummary.pendingVerificationQuantity === 0 && miccSummary.verifiedQuantity > 0) {
-      status = 'Completed';
-    } else if (miccCount > 0) {
-      status = 'In Progress';
-    } else if (miccSummary.totalDispatchedQuantity > 0) {
-      status = 'Attention Required'; // Material dispatched awaiting MICC
-    } else if (s10Active) {
-      status = 'Not Started';
+    // Evaluator logic mapped by standardized module names
+    if (normName === 'Tender') {
+      const hasTender = !!tender;
+      const isCompleted = tender?.status === 'Awarded' || !!loiLoa;
+      status = isCompleted ? 'Completed' : hasTender ? 'In Progress' : 'Not Started';
+      primaryReference = tender?.tenderNumber;
+      date = tender?.tenderDate || tender?.createdAt;
+      summary = tender ? `Tender ${tender.tenderNumber} (${tender.status})` : 'Tender preparation and submission';
+      navigationHref = '/tenders';
+      recordCount = tender ? 1 : 0;
+    } else if (normName === 'LOI / LOA') {
+      const hasLoi = !!loiLoa;
+      const isCompleted = loiLoa?.status === 'Accepted';
+      status = isCompleted ? 'Completed' : hasLoi ? 'In Progress' : s01Completed ? 'Not Started' : 'Locked';
+      primaryReference = loiLoa?.loiNumber;
+      date = loiLoa?.date || loiLoa?.createdAt;
+      summary = loiLoa ? `LOI/LOA ${loiLoa.loiNumber} (${loiLoa.status})` : 'Letter of Intent / Award receipt';
+      navigationHref = '/loi-loa';
+      recordCount = loiLoa ? 1 : 0;
+    } else if (normName === 'Acceptance') {
+      const hasAcc = !!acceptance;
+      const isCompleted = acceptance?.status === 'Accepted';
+      status = isCompleted ? 'Completed' : hasAcc ? 'In Progress' : s02Completed ? 'Not Started' : 'Locked';
+      primaryReference = acceptance?.acceptanceRef;
+      date = acceptance?.acceptanceDate || acceptance?.createdAt;
+      summary = acceptance ? `Acceptance ${acceptance.acceptanceRef} (${acceptance.status})` : 'Formal contract acceptance';
+      navigationHref = '/acceptance';
+      recordCount = acceptance ? 1 : 0;
+    } else if (normName === 'CPG + Agreement') {
+      const hasCpgAgreement = !!(cpg || agreement);
+      const isCompleted = (cpg?.status === 'Valid' || cpg?.status === 'Submitted') && agreement?.status === 'Executed';
+      status = isCompleted ? 'Completed' : hasCpgAgreement ? 'In Progress' : s03Completed ? 'Not Started' : 'Locked';
+      primaryReference = agreement?.agreementRef || cpg?.cpgRef;
+      date = agreement?.agreementDate || cpg?.cpgDate;
+      summary = agreement ? `Agreement ${agreement.agreementRef} (CPG: ${cpg?.status || 'N/A'})` : cpg ? `CPG ${cpg.cpgRef} (Agreement Pending)` : 'Performance guarantee & formal agreement';
+      navigationHref = '/cpg-agreement';
+      recordCount = (cpg ? 1 : 0) + (agreement ? 1 : 0);
+    } else if (normName === 'GTP' || normName === 'GTP Approval') {
+      const gtpCount = projectGtps.length;
+      const allApproved = gtpCount > 0 && projectGtps.every((g) => g.status === 'Approved');
+      status = allApproved ? 'Completed' : gtpCount > 0 ? 'In Progress' : s04Completed ? 'Not Started' : 'Locked';
+      primaryReference = projectGtps[0]?.gtpNumber;
+      date = projectGtps[0]?.submissionDate || projectGtps[0]?.createdAt;
+      summary = gtpCount > 0 ? `${procSummary.approvedGtpCount} of ${gtpCount} GTP approved` : 'Guaranteed Technical Particulars approval';
+      navigationHref = '/gtp';
+      recordCount = gtpCount;
+    } else if (normName === 'Purchase Order' || normName === 'PO') {
+      const poCount = procSummary.activePoCount;
+      const isCompleted = poCount > 0 && procSummary.remainingQuantity === 0;
+      status = isCompleted ? 'Completed' : poCount > 0 ? 'In Progress' : s05Completed ? 'Not Started' : 'Locked';
+      primaryReference = projectPos[0]?.poNumber;
+      date = projectPos[0]?.poDate || projectPos[0]?.createdAt;
+      summary = poCount > 0 ? `${poCount} active POs (${procSummary.totalOrderedQuantity} ordered, ${procSummary.remainingQuantity} remaining)` : 'Vendor Purchase Order placement';
+      navigationHref = '/po';
+      recordCount = poCount;
+    } else if (normName === 'Inspection Call') {
+      const callCount = inspSummary.callCount;
+      const isCompleted = callCount > 0 && projectCalls.every((c) => c.status === 'Completed');
+      status = isCompleted ? 'Completed' : callCount > 0 ? 'In Progress' : s06Active ? 'Not Started' : 'Locked';
+      primaryReference = projectCalls[0]?.inspectionCallNumber;
+      date = projectCalls[0]?.requestDate || projectCalls[0]?.createdAt;
+      summary = callCount > 0 ? `${callCount} inspection calls issued` : 'Inspection call to client / TPIA';
+      navigationHref = '/inspection-call';
+      recordCount = callCount;
+    } else if (normName === 'Inspection Order') {
+      const orderCount = inspSummary.orderCount;
+      const isCompleted = orderCount > 0 && projectOrders.every((o) => o.status === 'Completed');
+      status = isCompleted ? 'Completed' : orderCount > 0 ? 'In Progress' : s07Active ? 'Not Started' : 'Locked';
+      primaryReference = projectOrders[0]?.inspectionOrderNumber;
+      date = projectOrders[0]?.orderDate || projectOrders[0]?.createdAt;
+      summary = orderCount > 0 ? `${orderCount} inspection orders deputed` : 'Deputation of inspection officer';
+      navigationHref = '/inspection-order';
+      recordCount = orderCount;
+    } else if (normName === 'JIR / Inspection Report') {
+      const jirCount = inspSummary.jirCount;
+      const isCompleted = jirCount > 0 && inspSummary.balanceQuantity === 0 && inspSummary.acceptedQuantity > 0;
+      status = isCompleted ? 'Completed' : jirCount > 0 ? 'In Progress' : s08Active ? 'Not Started' : 'Locked';
+      primaryReference = projectJirs[0]?.jirNumber;
+      date = projectJirs[0]?.inspectionDate || projectJirs[0]?.createdAt;
+      summary = jirCount > 0 ? `${inspSummary.acceptedQuantity} accepted, ${inspSummary.rejectedQuantity} rejected` : 'Joint Inspection Report generation';
+      navigationHref = '/jir';
+      recordCount = jirCount;
+    } else if (normName === 'DI / Dispatch Clearance') {
+      const diCount = dispSummary.activeDiCount;
+      if (s09Completed && diCount === 0 && dispSummary.acceptedQuantity > 0) {
+        status = 'Attention Required';
+      } else if (diCount > 0 && dispSummary.remainingDispatchQuantity === 0) {
+        status = 'Completed';
+      } else if (diCount > 0) {
+        status = 'In Progress';
+      } else if (s09Completed) {
+        status = 'Not Started';
+      } else {
+        status = 'Locked';
+      }
+      primaryReference = dispSummary.latestDiNumber;
+      date = dispSummary.latestDiDate;
+      summary = diCount > 0 ? `${diCount} DIs (${dispSummary.dispatchedQuantity} dispatched, ${dispSummary.remainingDispatchQuantity} remaining)` : dispSummary.acceptedQuantity > 0 ? `${dispSummary.acceptedQuantity} units awaiting dispatch` : 'Dispatch Instruction from client';
+      navigationHref = '/di';
+      recordCount = diCount;
+    } else if (normName === 'MICC') {
+      const miccCount = miccSummary.activeMiccCount;
+      if (miccSummary.totalDispatchedQuantity > 0 && miccSummary.pendingVerificationQuantity === 0 && miccSummary.verifiedQuantity > 0) {
+        status = 'Completed';
+      } else if (miccCount > 0) {
+        status = 'In Progress';
+      } else if (miccSummary.totalDispatchedQuantity > 0) {
+        status = 'Attention Required';
+      } else if (s10Active) {
+        status = 'Not Started';
+      } else {
+        status = 'Locked';
+      }
+      primaryReference = projectMiccs[0]?.miccNumber;
+      date = projectMiccs[0]?.miccDate || projectMiccs[0]?.createdAt;
+      summary = miccCount > 0 ? `${miccSummary.verifiedQuantity} verified, ${miccSummary.pendingVerificationQuantity} pending` : miccSummary.totalDispatchedQuantity > 0 ? `${miccSummary.totalDispatchedQuantity} units awaiting site verification` : 'Material Inward & Clearance Certificate';
+      navigationHref = '/micc';
+      recordCount = miccCount;
+    } else if (normName === 'Progressive Bill') {
+      const pbCount = billSummary.progressiveBillsCount;
+      if (billSummary.isFinanciallyClosed) {
+        status = 'Completed';
+      } else if (pbCount > 0 && billSummary.remainingContractBalance === 0) {
+        status = 'Completed';
+      } else if (pbCount > 0) {
+        status = 'In Progress';
+      } else if (miccSummary.verifiedQuantity > 0) {
+        status = 'Attention Required';
+      } else if (s11Active) {
+        status = 'Not Started';
+      } else {
+        status = 'Locked';
+      }
+      primaryReference = projectPbs[0]?.billNumber;
+      date = projectPbs[0]?.billDate || projectPbs[0]?.createdAt;
+      summary = pbCount > 0 ? `${billSummary.approvedBillsCount} approved (₹${(billSummary.cumulativeApprovedBilling / 100000).toFixed(1)}L)` : 'Running Account (RA) progressive billing';
+      navigationHref = '/progressive-bill';
+      recordCount = pbCount;
+    } else if (normName === 'Final Bill') {
+      const hasFb = !!projectFbs.find((f) => f.status !== 'Rejected');
+      if (billSummary.isFinanciallyClosed) {
+        status = 'Completed';
+      } else if (projectFbs.some((f) => f.status === 'Rejected')) {
+        status = 'Attention Required';
+      } else if (hasFb) {
+        status = 'In Progress';
+      } else if (s12Active) {
+        status = 'Not Started';
+      } else {
+        status = 'Locked';
+      }
+      primaryReference = projectFbs[0]?.finalBillNumber;
+      date = projectFbs[0]?.billDate || projectFbs[0]?.createdAt;
+      summary = billSummary.isFinanciallyClosed ? 'Project financially closed & reconciled' : projectFbs[0] ? `Final Bill ${projectFbs[0].finalBillNumber} (${projectFbs[0].status})` : 'Final contract reconciliation and settlement';
+      navigationHref = '/final-bill';
+      recordCount = projectFbs.length;
     } else {
-      status = 'Locked';
-    }
-    stageResults.push({
-      stageId: '11',
-      stageNumber: '11',
-      name: 'MICC',
-      adminGroup: 'ADMIN_C',
-      group: 'C',
-      status,
-      primaryReference: projectMiccs[0]?.miccNumber,
-      date: projectMiccs[0]?.miccDate || projectMiccs[0]?.createdAt,
-      summary:
-        miccCount > 0
-          ? `${miccSummary.verifiedQuantity} verified, ${miccSummary.pendingVerificationQuantity} pending`
-          : miccSummary.totalDispatchedQuantity > 0
-          ? `${miccSummary.totalDispatchedQuantity} units awaiting site verification`
-          : 'Material Inward & Clearance Certificate',
-      navigationHref: '/micc',
-      recordCount: miccCount,
-    });
-  }
+      // Generic ProjectStage database-driven fallback for unknown custom stages
+      const ps = project.projectStages?.find(ps => ps.stageDefId === stageDef.id);
+      
+      let isLocked = false;
+      if (stageResults.length > 0) {
+        const prevStage = stageResults[stageResults.length - 1];
+        const prevStageDef = stages.find(s => s.id === prevStage.stageId);
+        
+        if (prevStage.status === 'Not Started' || prevStage.status === 'Locked') {
+           if (!prevStageDef?.isOptional) {
+              isLocked = true;
+           }
+        } else if (prevStage.status === 'In Progress' && !prevStageDef?.isParallel) {
+           isLocked = true;
+        }
+      }
 
-  // STAGE 12: Progressive Bill
-  {
-    const pbCount = billSummary.progressiveBillsCount;
-    const s11Active = stageResults[10].status === 'Completed' || stageResults[10].status === 'In Progress';
-    let status: ProjectControlStageStatus = 'Not Started';
-    if (billSummary.isFinanciallyClosed) {
-      status = 'Completed';
-    } else if (pbCount > 0 && billSummary.remainingContractBalance === 0) {
-      status = 'Completed';
-    } else if (pbCount > 0) {
-      status = 'In Progress';
-    } else if (miccSummary.verifiedQuantity > 0) {
-      status = 'Attention Required'; // Verified material ready for billing
-    } else if (s11Active) {
-      status = 'Not Started';
-    } else {
-      status = 'Locked';
+      status = ps ? (ps.status as ProjectControlStageStatus) : isLocked ? 'Locked' : 'Not Started';
+      summary = ps?.notes || `Dynamic Stage: ${stageDef.name}`;
+      navigationHref = `/stages/${stageDef.id}`;
+      recordCount = ps ? 1 : 0;
+      date = ps ? (ps as any).createdAt : undefined;
     }
-    stageResults.push({
-      stageId: '12',
-      stageNumber: '12',
-      name: 'Progressive Bill',
-      adminGroup: 'ADMIN_C',
-      group: 'C',
-      status,
-      primaryReference: projectPbs[0]?.billNumber,
-      date: projectPbs[0]?.billDate || projectPbs[0]?.createdAt,
-      summary:
-        pbCount > 0
-          ? `${billSummary.approvedBillsCount} approved (₹${(billSummary.cumulativeApprovedBilling / 100000).toFixed(1)}L)`
-          : 'Running Account (RA) progressive billing',
-      navigationHref: '/progressive-bill',
-      recordCount: pbCount,
-    });
-  }
 
-  // STAGE 13: Final Bill
-  {
-    const hasFb = !!projectFbs.find((f) => f.status !== 'Rejected');
-    const s12Active = stageResults[11].status === 'Completed' || stageResults[11].status === 'In Progress';
-    let status: ProjectControlStageStatus = 'Not Started';
-    if (billSummary.isFinanciallyClosed) {
-      status = 'Completed';
-    } else if (projectFbs.some((f) => f.status === 'Rejected')) {
-      status = 'Attention Required';
-    } else if (hasFb) {
-      status = 'In Progress';
-    } else if (s12Active) {
-      status = 'Not Started';
-    } else {
-      status = 'Locked';
-    }
     stageResults.push({
-      stageId: '13',
-      stageNumber: '13',
-      name: 'Final Bill',
-      adminGroup: 'ADMIN_C',
-      group: 'C',
+      stageId: legacyStageId,
+      stageNumber,
+      name: stageDef.name,
+      adminGroup: stageDef.adminGroup,
+      group: stageDef.group,
       status,
-      primaryReference: projectFbs[0]?.finalBillNumber,
-      date: projectFbs[0]?.billDate || projectFbs[0]?.createdAt,
-      summary: billSummary.isFinanciallyClosed
-        ? 'Project financially closed & reconciled'
-        : projectFbs[0]
-        ? `Final Bill ${projectFbs[0].finalBillNumber} (${projectFbs[0].status})`
-        : 'Final contract reconciliation and settlement',
-      navigationHref: '/final-bill',
-      recordCount: projectFbs.length,
+      primaryReference,
+      date,
+      summary,
+      navigationHref,
+      recordCount,
     });
   }
 
@@ -813,33 +644,36 @@ export function calculateCurrentStage(
   records: ProjectWorkflowRecords
 ): { stageNumber: string; stageName: string; stageStatus: ProjectControlStageStatus } {
   const stageStatuses = calculateStageStatuses(project, records);
+  if (stageStatuses.length === 0) {
+    return { stageNumber: '01', stageName: 'Setup', stageStatus: 'Not Started' };
+  }
 
-  // 1. If Stage 13 Final Bill is approved, project is Completed / Financially Closed
-  const stage13 = stageStatuses.find((s) => s.stageId === '13');
-  if (stage13 && stage13.status === 'Completed') {
+  // 1. If terminal stage is approved/completed, project is Completed
+  const terminalStage = stageStatuses[stageStatuses.length - 1];
+  if (terminalStage && terminalStage.status === 'Completed') {
     return {
-      stageNumber: '13',
-      stageName: 'Final Bill',
+      stageNumber: terminalStage.stageNumber,
+      stageName: terminalStage.name.replace(/^\d+\s*(?:-\s*)?/, '').trim(),
       stageStatus: 'Completed',
     };
   }
 
-  // 2. If Stage 13 Final Bill is active / in progress / attention
-  if (stage13 && (stage13.status === 'In Progress' || stage13.status === 'Attention Required')) {
+  // 2. If terminal stage is active / in progress / attention
+  if (terminalStage && (terminalStage.status === 'In Progress' || terminalStage.status === 'Attention Required')) {
     return {
-      stageNumber: '13',
-      stageName: 'Final Bill',
-      stageStatus: stage13.status,
+      stageNumber: terminalStage.stageNumber,
+      stageName: terminalStage.name.replace(/^\d+\s*(?:-\s*)?/, '').trim(),
+      stageStatus: terminalStage.status,
     };
   }
 
-  // 3. Scan from Stage 12 down to Stage 01 for the highest active/pending stage
+  // 3. Scan backwards for the highest active/pending stage
   for (let i = stageStatuses.length - 1; i >= 0; i--) {
     const s = stageStatuses[i];
     if (s.status === 'In Progress' || s.status === 'Attention Required') {
       return {
         stageNumber: s.stageNumber,
-        stageName: s.name,
+        stageName: s.name.replace(/^\d+\s*(?:-\s*)?/, '').trim(),
         stageStatus: s.status,
       };
     }
@@ -850,7 +684,7 @@ export function calculateCurrentStage(
     if (s.status === 'Not Started') {
       return {
         stageNumber: s.stageNumber,
-        stageName: s.name,
+        stageName: s.name.replace(/^\d+\s*(?:-\s*)?/, '').trim(),
         stageStatus: s.status,
       };
     }
@@ -858,9 +692,9 @@ export function calculateCurrentStage(
 
   // Fallback
   return {
-    stageNumber: '01',
-    stageName: 'Tender',
-    stageStatus: stageStatuses[0]?.status || 'Not Started',
+    stageNumber: stageStatuses[0].stageNumber,
+    stageName: stageStatuses[0].name.replace(/^\d+\s*(?:-\s*)?/, '').trim(),
+    stageStatus: stageStatuses[0].status || 'Not Started',
   };
 }
 

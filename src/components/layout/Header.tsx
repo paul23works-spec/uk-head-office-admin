@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Search, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Menu, Search, ChevronDown, ShieldCheck, UserCheck, LogOut } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
+import { useActiveDelegation } from '@/hooks/useActiveDelegation';
 import { useRouter } from 'next/navigation';
-import { LogOut } from 'lucide-react';
 import { NotificationsPopover } from '../common/NotificationsPopover';
 import { EnvironmentBadge } from '../common/Badge';
 
@@ -16,6 +16,7 @@ interface HeaderProps {
 export function Header({ onOpenMobileMenu }: HeaderProps) {
   const { setIsSearchOpen } = useProjects();
   const { user, logout } = useAuth();
+  const { coverages } = useActiveDelegation();
   const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -49,12 +50,19 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="hidden sm:flex items-center gap-2.5 text-xs text-slate-500 font-medium">
+        <div className="flex items-center gap-2.5 text-xs text-slate-500 font-medium">
+          <div className="w-8 h-8 rounded-md bg-white shadow-xs border border-slate-200 p-0.5 flex items-center justify-center shrink-0 lg:hidden">
+            <img
+              src="/images/uk-group-logo.png"
+              alt="UK GROUP"
+              className="w-full h-full object-contain pointer-events-none select-none"
+            />
+          </div>
           <span className="text-slate-900 font-semibold font-editorial text-sm">
-            UK Head Office
+            UK Enterprise
           </span>
-          <span>/</span>
-          <span className="text-slate-600">Office Administration System</span>
+          <span className="hidden sm:inline">/</span>
+          <span className="text-slate-600 hidden sm:inline">Office Administration System</span>
         </div>
       </div>
 
@@ -104,19 +112,33 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
             aria-label="User profile menu"
             aria-expanded={isProfileOpen}
           >
-            <div className="w-8 h-8 rounded-full bg-[#0A192F] text-amber-300 font-semibold text-xs flex items-center justify-center border border-amber-400/40 shadow-xs">
-              {user?.avatarInitials || '?'}
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-[#0A192F] text-amber-300 font-semibold text-xs flex items-center justify-center border border-amber-400/40 shadow-xs">
+                {user?.avatarInitials || '?'}
+              </div>
+              {coverages.length > 0 && (
+                <span
+                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-400 border-2 border-white rounded-full"
+                  title="Acting under temporary delegation"
+                />
+              )}
             </div>
             <div className="hidden xl:block leading-tight">
               <p className="text-xs font-semibold text-slate-900">{user?.name || 'Unknown'}</p>
-              <p className="text-[11px] text-slate-500">{user?.department || 'Unknown'}</p>
+              {coverages.length > 0 ? (
+                <p className="text-[10px] text-amber-600 font-semibold truncate">
+                  Acting for: {coverages.map((c) => c.grantor?.name || 'Grantor').join(', ')}
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-500">{user?.department || 'Unknown'}</p>
+              )}
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
           </button>
 
           {/* Profile Dropdown */}
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1">
+            <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1">
               <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100">
                 <p className="text-xs font-semibold text-slate-900">{user?.name || 'Unknown'}</p>
                 <p className="text-xs text-slate-500">{user?.department || 'Unknown'}</p>
@@ -128,6 +150,23 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
                     DEMO
                   </span>
                 </div>
+
+                {coverages.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-200/80">
+                    <div className="flex items-start gap-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded p-1.5">
+                      <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold text-[9px] uppercase tracking-wider bg-amber-200 text-amber-900 px-1 py-0.5 rounded mr-1">
+                          COVERING
+                        </span>
+                        <span>Acting on behalf of:</span>
+                        <div className="font-semibold text-slate-900">
+                          {coverages.map((c) => `${c.grantor?.name || 'Grantor'} (${c.grantorRole})`).join(', ')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-1 space-y-0.5 text-xs text-slate-600">

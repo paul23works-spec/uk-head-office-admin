@@ -16,11 +16,43 @@ export type StageGroupName =
 
 export type WorkflowStageStatus = 'Not Started' | 'In Progress' | 'Completed';
 
+export interface WorkflowStageDef {
+  id: string; // Internal UUID
+  name: string;
+  order: number;
+  isOptional: boolean;
+  isParallel: boolean;
+  adminGroup: AdminGroupRole;
+  group: StageGroupCode;
+  groupTitle: string;
+  description: string;
+  phase: string;
+}
+
+export interface WorkflowTemplate {
+  id: string;
+  name: string;
+  description: string;
+  stages: WorkflowStageDef[];
+}
+
+export interface ProjectStage {
+  id: string;
+  projectId: string;
+  stageDefId: string;
+  name: string;
+  status: WorkflowStageStatus;
+  startedAt?: string;
+  completedAt?: string;
+  assignedUser?: string;
+  notes?: string;
+}
+
 export interface WorkflowStageDefinition {
-  id: string; // '01' to '13'
+  id: string; // legacy string ID '01' to '13'
   code: string;
   name: string;
-  adminGroup: AdminGroupRole; // Internal responsibility: ADMIN A (01-04), ADMIN B (05-09), ADMIN C (10-13)
+  adminGroup: AdminGroupRole;
   group: StageGroupCode;
   groupTitle: string;
   description: string;
@@ -58,6 +90,11 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   workflow: ProjectWorkflowState[];
+  
+  // Platform-First additions
+  workflowTemplateId?: string;
+  workflowTemplate?: WorkflowTemplate;
+  projectStages?: ProjectStage[];
 }
 
 export type ActionPriority = 'High' | 'Medium' | 'Low';
@@ -587,7 +624,7 @@ export interface MiccRecord {
   materialDescription: string;
   quantity: number;
   unit: string;
-  fieldOffice: string; // e.g. "Bongaigaon Site Circle Office"
+  fieldOffice: string; // e.g. "Project Site Circle Office"
   verifiedBy?: string;
   verificationDate?: string;
   status: MiccStatus;

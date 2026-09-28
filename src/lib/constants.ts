@@ -1,4 +1,4 @@
-import { WorkflowStageDefinition, UserProfile } from '@/types';
+import { WorkflowStageDefinition, UserProfile, WorkflowTemplate } from '@/types';
 
 export const DEMO_USER_PROFILE: UserProfile = {
   name: 'Prastab Raaj',
@@ -6,6 +6,79 @@ export const DEMO_USER_PROFILE: UserProfile = {
   department: 'Office Administration & Contracts',
   environment: 'DEMO',
   avatarInitials: 'PR',
+};
+
+export const DEFAULT_WORKFLOW_TEMPLATE: WorkflowTemplate = {
+  id: 'template-turnkey-01',
+  name: 'Standard Turnkey Infrastructure Pipeline',
+  description: 'Full 13-stage continuous pipeline from Tender to Final Bill.',
+  stages: [
+    {
+      id: 'stg-01', name: '01 Tender', order: 1, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_A', group: 'A', groupTitle: 'A — ADMIN WORK DETAILS',
+      description: 'Tender documentation, bid submission, EMD processing, and qualification evaluation.', phase: 'Phase 2 Module'
+    },
+    {
+      id: 'stg-02', name: '02 LOI / LOA', order: 2, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_A', group: 'A', groupTitle: 'A — ADMIN WORK DETAILS',
+      description: 'Letter of Intent and Letter of Award verification, acknowledgement, and administrative logging.', phase: 'Phase 2 Module'
+    },
+    {
+      id: 'stg-03', name: '03 Acceptance', order: 3, isOptional: true, isParallel: false,
+      adminGroup: 'ADMIN_A', group: 'A', groupTitle: 'A — ADMIN WORK DETAILS',
+      description: 'Formal contract acceptance submission, executive countersignatures, and authority filing.', phase: 'Phase 2 Module'
+    },
+    {
+      id: 'stg-04', name: '04 CPG + Agreement', order: 4, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_A', group: 'A', groupTitle: 'A — ADMIN WORK DETAILS',
+      description: 'Contract Performance Guarantee submission, bank verification, stamp duty, and execution of formal contract agreement.', phase: 'Phase 2 Module'
+    },
+    {
+      id: 'stg-05', name: '05 GTP', order: 5, isOptional: false, isParallel: true,
+      adminGroup: 'ADMIN_B', group: 'B', groupTitle: 'B — ADMIN WORK DETAILS',
+      description: 'Guaranteed Technical Particulars approval, engineering drawing clearances, and client compliance confirmation.', phase: 'Phase 3 Module'
+    },
+    {
+      id: 'stg-06', name: '06 PO', order: 6, isOptional: false, isParallel: true,
+      adminGroup: 'ADMIN_B', group: 'B', groupTitle: 'B — ADMIN WORK DETAILS',
+      description: 'Purchase Orders issuance to manufacturing vendors, equipment schedules, and milestone tracking.', phase: 'Phase 3 Module'
+    },
+    {
+      id: 'stg-07', name: '07 Inspection Call', order: 7, isOptional: false, isParallel: true,
+      adminGroup: 'ADMIN_B', group: 'B', groupTitle: 'B — ADMIN WORK DETAILS',
+      description: 'Official factory inspection call to client quality engineers and third-party inspection agency.', phase: 'Phase 3 Module'
+    },
+    {
+      id: 'stg-08', name: '08 Inspection Order', order: 8, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_B', group: 'B', groupTitle: 'B — ADMIN WORK DETAILS',
+      description: 'Inspection authorization order issuance, deputation of inspecting officer, and schedule formalization.', phase: 'Phase 3 Module'
+    },
+    {
+      id: 'stg-09', name: '09 JIR / Inspection Report', order: 9, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_B', group: 'B', groupTitle: 'B — ADMIN WORK DETAILS',
+      description: 'Joint Inspection Report generation, routine test certificate validation, and quality sign-off.', phase: 'Phase 3 Module'
+    },
+    {
+      id: 'stg-10', name: '10 DI / Dispatch Clearance', order: 10, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_C', group: 'C', groupTitle: 'C — ADMIN',
+      description: 'Dispatch Instruction clearance authorization, transit insurance documentation, and gate pass processing.', phase: 'Phase 4 Module'
+    },
+    {
+      id: 'stg-11', name: '11 MICC', order: 11, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_C', group: 'C', groupTitle: 'C — ADMIN',
+      description: 'Material Inspection and Clearance Certificate issuance by nodal authority upon site delivery.', phase: 'Phase 4 Module'
+    },
+    {
+      id: 'stg-12', name: '12 Progressive Bill', order: 12, isOptional: false, isParallel: true,
+      adminGroup: 'ADMIN_C', group: 'C', groupTitle: 'C — ADMIN',
+      description: 'Progressive running account (RA) bill preparation, MB measurement verification, and statutory deductions.', phase: 'Phase 4 Module'
+    },
+    {
+      id: 'stg-13', name: '13 Final Bill', order: 13, isOptional: false, isParallel: false,
+      adminGroup: 'ADMIN_C', group: 'C', groupTitle: 'C — ADMIN',
+      description: 'Final project reconciliation bill, no-claim certificate, CPG release processing, and financial closure.', phase: 'Phase 4 Module'
+    },
+  ]
 };
 
 export const WORKFLOW_STAGES: WorkflowStageDefinition[] = [

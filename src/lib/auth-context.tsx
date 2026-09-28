@@ -52,6 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSessionId(newSessionId);
       localStorage.setItem('auth_user_role', role);
       localStorage.setItem('auth_session_id', newSessionId);
+      try {
+        sessionStorage.setItem('ukg_brand_intro_pending', 'true');
+      } catch (e) {
+        // Safe fallback if sessionStorage is unavailable
+      }
     }
   };
 
@@ -63,6 +68,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSessionId(null);
     localStorage.removeItem('auth_user_role');
     localStorage.removeItem('auth_session_id');
+    try {
+      sessionStorage.removeItem('ukg_brand_intro_pending');
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('delegation_notified_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => sessionStorage.removeItem(k));
+    } catch (e) {
+      // Safe fallback
+    }
   };
 
   return (

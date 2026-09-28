@@ -20,9 +20,9 @@ const ibmPlexSerif = IBM_Plex_Serif({
 });
 
 export const metadata: Metadata = {
-  title: 'UK HEAD OFFICE — Office Administration System',
+  title: 'UK ENTERPRISE — Office Administration System',
   description:
-    'Internal enterprise project administration & project control for UK Head Office power infrastructure operations.',
+    'Internal enterprise project administration & project control for UK Enterprise power infrastructure operations.',
 };
 
 export default function RootLayout({

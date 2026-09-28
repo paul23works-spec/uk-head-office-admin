@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { LoiLoaRecord } from '@/types';
 import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateLoiLoaModal } from '@/components/loi-loa/CreateLoiLoaModal';
 import { ViewLoiLoaModal } from '@/components/loi-loa/ViewLoiLoaModal';
 import { CreateAcceptanceModal } from '@/components/acceptance/CreateAcceptanceModal';
@@ -73,6 +74,7 @@ export default function LoiLoaPage() {
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Letter of Intent / Letter of Award (LOI / LOA)
             </h1>
+            <DelegatedStageIndicator stageId="02" />
             <DemoTag />
             <EnvironmentBadge phase="PHASE 2" />
           </div>

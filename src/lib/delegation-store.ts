@@ -37,6 +37,7 @@ function getDelegations(): Delegation[] {
 function saveDelegations(delegations: Delegation[]) {
   if (typeof window !== 'undefined') {
     localStorage.setItem(DELEGATION_STORAGE_KEY, JSON.stringify(delegations));
+    window.dispatchEvent(new CustomEvent('delegation-change'));
   }
 }
 
@@ -49,6 +50,7 @@ function getLeaves(): Leave[] {
 function saveLeaves(leaves: Leave[]) {
   if (typeof window !== 'undefined') {
     localStorage.setItem(LEAVE_STORAGE_KEY, JSON.stringify(leaves));
+    window.dispatchEvent(new CustomEvent('leave-change'));
   }
 }
 
@@ -93,6 +95,18 @@ export const delegationStore = {
     return getDelegations();
   },
 
+  getActiveDelegations(): Delegation[] {
+    const now = new Date();
+    return getDelegations().filter((d) => {
+      if (d.status !== 'ACTIVE') return false;
+      const start = new Date(d.startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(d.endDate);
+      end.setHours(23, 59, 59, 999);
+      return now >= start && now <= end;
+    });
+  },
+
   getActiveDelegationsForGrantee(granteeId: string): Delegation[] {
     const now = new Date();
     return getDelegations().filter((d) => {
@@ -100,7 +114,9 @@ export const delegationStore = {
       if (d.status !== 'ACTIVE') return false;
       
       const start = new Date(d.startDate);
+      start.setHours(0, 0, 0, 0);
       const end = new Date(d.endDate);
+      end.setHours(23, 59, 59, 999);
       return now >= start && now <= end;
     });
   },
