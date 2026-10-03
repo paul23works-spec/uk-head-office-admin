@@ -144,13 +144,13 @@ export class GmailService {
     throw error;
   }
 
-  public static async listMessages(employeeId: string, pageToken?: string, maxResults = 25) {
+  public static async listMessages(employeeId: string, pageToken?: string, maxResults = 25, labelId = 'INBOX') {
     try {
       const gmail = await this.getAuthenticatedGmailClient(employeeId);
       
       const res = await gmail.users.messages.list({
         userId: 'me',
-        labelIds: ['INBOX'],
+        labelIds: [labelId],
         maxResults,
         pageToken,
       });

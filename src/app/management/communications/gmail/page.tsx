@@ -40,6 +40,7 @@ export default function GmailWorkspace() {
   const [selectedMessage, setSelectedMessage] = useState<GmailMessage | null>(null);
   const [messageDetails, setMessageDetails] = useState<GmailMessageDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [currentLabel, setCurrentLabel] = useState('INBOX');
 
   const [showCompose, setShowCompose] = useState(false);
   const [composeTo, setComposeTo] = useState('');
@@ -54,11 +55,11 @@ export default function GmailWorkspace() {
   const editorRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const fetchMessages = useCallback(async (token?: string | null) => {
+  const fetchMessages = useCallback(async (token?: string | null, label = currentLabel) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/integrations/gmail/messages${token ? `?pageToken=${token}` : ''}`);
+      const res = await fetch(`/api/integrations/gmail/messages?label=${label}${token ? `&pageToken=${token}` : ''}`);
       const data = await res.json();
       
       if (!res.ok) {
@@ -76,12 +77,12 @@ export default function GmailWorkspace() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentLabel]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchMessages();
-  }, [fetchMessages]);
+    fetchMessages(null, currentLabel);
+  }, [fetchMessages, currentLabel]);
 
   const loadMessage = async (msg: GmailMessage) => {
     setSelectedMessage(msg);
@@ -321,18 +322,24 @@ export default function GmailWorkspace() {
             Compose
           </button>
           <nav className="space-y-1">
-            <a href="#" className="flex items-center gap-3 bg-muted px-3 py-2 rounded-lg text-sm font-medium">
+            <button 
+              onClick={() => { setSelectedMessage(null); setCurrentLabel('INBOX'); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentLabel === 'INBOX' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
+            >
               <Mail className="w-4 h-4" /> Inbox
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/50 cursor-not-allowed">
+            </button>
+            <button disabled className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/50 cursor-not-allowed opacity-75">
               <Star className="w-4 h-4" /> Starred
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/50 cursor-not-allowed">
-              <Archive className="w-4 h-4" /> Sent
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/50 cursor-not-allowed">
+            </button>
+            <button 
+              onClick={() => { setSelectedMessage(null); setCurrentLabel('SENT'); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentLabel === 'SENT' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
+            >
+              <Send className="w-4 h-4" /> Sent
+            </button>
+            <button disabled className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/50 cursor-not-allowed opacity-75">
               <Trash className="w-4 h-4" /> Trash
-            </a>
+            </button>
           </nav>
         </div>
 
@@ -396,6 +403,12 @@ export default function GmailWorkspace() {
                   <div className="flex flex-col gap-1 text-sm border-b pb-4">
                     <p><strong>From:</strong> {selectedMessage.from}</p>
                     <p><strong>To:</strong> {selectedMessage.to}</p>
+                    {messageDetails.payload.headers.find((h: any) => h.name.toLowerCase() === 'cc') && (
+                      <p><strong>CC:</strong> {messageDetails.payload.headers.find((h: any) => h.name.toLowerCase() === 'cc')?.value}</p>
+                    )}
+                    {messageDetails.payload.headers.find((h: any) => h.name.toLowerCase() === 'bcc') && (
+                      <p><strong>BCC:</strong> {messageDetails.payload.headers.find((h: any) => h.name.toLowerCase() === 'bcc')?.value}</p>
+                    )}
                     <p className="text-muted-foreground">{new Date(selectedMessage.date).toLocaleString()}</p>
                   </div>
                   
@@ -439,7 +452,9 @@ export default function GmailWorkspace() {
                       </button>
                       
                       <div className="w-1/4 min-w-0 truncate">
-                        {msg.from.split('<')[0].trim() || msg.from}
+                        {currentLabel === 'SENT' 
+                          ? `To: ${msg.to.split('<')[0].trim() || msg.to}`
+                          : (msg.from.split('<')[0].trim() || msg.from)}
                       </div>
                       
                       <div className="flex-1 min-w-0 truncate">
@@ -609,14 +624,21 @@ export default function GmailWorkspace() {
                   ref={fileInputRef}
                   className="hidden"
                   onChange={(e) => {
-                    if (e.target.files) {
-                      setComposeAttachments(prev => [...prev, ...Array.from(e.target.files!)]);
+                    const files = e.currentTarget.files;
+                    if (files && files.length > 0) {
+                      const newFiles = Array.from(files);
+                      console.log("Selected files:", newFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+                      setComposeAttachments(prev => [...prev, ...newFiles]);
                     }
-                    e.target.value = ''; // Reset for re-selection
+                    e.currentTarget.value = ''; // Reset for re-selection
                   }}
                 />
                 <button
-                  onClick={() => fileInputRef.current?.click()}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }}
                   disabled={isSending}
                   className="p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-900 rounded-md transition-colors"
                   title="Attach files"

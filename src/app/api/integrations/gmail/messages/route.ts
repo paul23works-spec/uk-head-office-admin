@@ -21,8 +21,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const pageToken = searchParams.get('pageToken') || undefined;
+    const label = searchParams.get('label') || 'INBOX';
 
-    const result = await GmailService.listMessages(employee.id, pageToken);
+    const result = await GmailService.listMessages(employee.id, pageToken, 25, label);
 
     return NextResponse.json(result);
   } catch (error: unknown) {
