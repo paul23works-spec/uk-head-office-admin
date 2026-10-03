@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, FileCheck, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { LoiLoaStatus, DocumentMetadata } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateLoiLoaModalProps {
   isOpen: boolean;
@@ -145,7 +144,7 @@ export function CreateLoiLoaModal({
                 <h2 id="create-loi-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   Stage 02 — Register LOI / LOA
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Letter of Intent / Letter of Award Administrative Processing

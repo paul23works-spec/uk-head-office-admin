@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, Cpu, CheckCircle2, History } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { GtpStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateGtpModalProps {
   isOpen: boolean;
@@ -230,7 +229,7 @@ export function CreateGtpModal({
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   STAGE 05
                 </span>
-                <DemoTag label="ENGINEERING" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 Guaranteed Technical Particulars &amp; drawings clearance for equipment approval.

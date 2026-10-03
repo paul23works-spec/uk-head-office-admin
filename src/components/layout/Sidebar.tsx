@@ -26,8 +26,8 @@ import {
   X,
   ListTree,
   UserCheck,
+  Network,
 } from 'lucide-react';
-import { EnvironmentBadge } from '../common/Badge';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage, checkBasePermission } from '@/lib/permissions';
 import { useActiveDelegation } from '@/hooks/useActiveDelegation';
@@ -123,7 +123,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           <div className="mt-4 flex items-center justify-between">
-            <EnvironmentBadge />
+            
             <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">
               v1.0-alpha
             </span>
@@ -296,6 +296,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <span>Reports &amp; Analytics</span>
                 </div>
               </Link>
+              <Link
+                href="/management/communications"
+                onClick={() => onClose()}
+                className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors ${
+                  pathname.startsWith('/management/communications')
+                    ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                    : 'text-slate-300 hover:bg-[#112444] hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Network className="w-3.5 h-3.5 shrink-0" />
+                  <span>Communications &amp; Integrations</span>
+                </div>
+              </Link>
               
               {user?.role === 'MASTER' && (
                 <>
@@ -351,9 +365,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <p className="text-xs font-semibold text-white truncate">{user?.name || 'Unknown'}</p>
                 <p className="text-[10px] text-slate-400 truncate">{user?.department || 'No Department'}</p>
               </div>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase">
-                DEMO
-              </span>
             </div>
 
             {coverages.length > 0 && (

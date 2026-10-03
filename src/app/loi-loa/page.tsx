@@ -13,7 +13,6 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { LoiLoaRecord } from '@/types';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateLoiLoaModal } from '@/components/loi-loa/CreateLoiLoaModal';
 import { ViewLoiLoaModal } from '@/components/loi-loa/ViewLoiLoaModal';
@@ -75,8 +74,8 @@ export default function LoiLoaPage() {
               Letter of Intent / Letter of Award (LOI / LOA)
             </h1>
             <DelegatedStageIndicator stageId="02" />
-            <DemoTag />
-            <EnvironmentBadge phase="PHASE 2" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Official contract awards, notification of awards (NOA), and formal order acknowledgment linked to Tender.

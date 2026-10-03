@@ -75,6 +75,9 @@ model Employee {
 
   actionItems ActionItem[]
 
+  gmailConnection    GmailConnection?
+  whatsAppConnection WhatsAppConnection?
+
   status    EntityStatus @default(ACTIVE)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -406,4 +409,32 @@ model IoTAlert {
   message   String
   severity  String
   timestamp DateTime  @default(now())
+}
+
+model GmailConnection {
+  id             String   @id @default(uuid())
+  employeeId     String   @unique
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  emailAddress   String
+  encryptedToken String // Refresh token encrypted
+  scopes         String?
+  status         String   @default("CONNECTED") // CONNECTED, DISCONNECTED, ERROR
+  historyId      String? // Last processed history ID for webhooks
+  connectedAt    DateTime @default(now())
+  lastUsedAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model WhatsAppConnection {
+  id                String   @id @default(uuid())
+  employeeId        String   @unique
+  employee          Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  phoneNumberId     String
+  businessAccountId String
+  status            String   @default("CONNECTED")
+  connectedAt       DateTime @default(now())
+  lastUsedAt        DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

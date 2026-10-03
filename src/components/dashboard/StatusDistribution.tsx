@@ -2,17 +2,17 @@
 
 import React from 'react';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 export function StatusDistribution() {
   const { stats } = useProjects();
-  const total = stats.total || 1;
+  const displayTotal = stats.total || 0;
+  const safeDivisor = stats.total || 1;
 
   const statuses = [
     {
       label: 'In Progress',
       count: stats.active,
-      percentage: Math.round((stats.active / total) * 100),
+      percentage: Math.round((stats.active / safeDivisor) * 100),
       color: 'bg-blue-600',
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-700',
@@ -21,7 +21,7 @@ export function StatusDistribution() {
     {
       label: 'Attention Required',
       count: stats.attentionRequired,
-      percentage: Math.round((stats.attentionRequired / total) * 100),
+      percentage: Math.round((stats.attentionRequired / safeDivisor) * 100),
       color: 'bg-amber-500',
       bgColor: 'bg-amber-50',
       textColor: 'text-amber-800',
@@ -30,7 +30,7 @@ export function StatusDistribution() {
     {
       label: 'Completed',
       count: stats.completed,
-      percentage: Math.round((stats.completed / total) * 100),
+      percentage: Math.round((stats.completed / safeDivisor) * 100),
       color: 'bg-emerald-600',
       bgColor: 'bg-emerald-50',
       textColor: 'text-emerald-800',
@@ -39,7 +39,7 @@ export function StatusDistribution() {
     {
       label: 'On Hold',
       count: stats.onHold,
-      percentage: Math.round((stats.onHold / total) * 100),
+      percentage: Math.round((stats.onHold / safeDivisor) * 100),
       color: 'bg-purple-600',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-700',
@@ -48,7 +48,7 @@ export function StatusDistribution() {
     {
       label: 'Not Started',
       count: stats.notStarted,
-      percentage: Math.round((stats.notStarted / total) * 100),
+      percentage: Math.round((stats.notStarted / safeDivisor) * 100),
       color: 'bg-slate-400',
       bgColor: 'bg-slate-50',
       textColor: 'text-slate-700',
@@ -64,14 +64,13 @@ export function StatusDistribution() {
             <h3 className="text-base font-bold text-slate-900 font-editorial">
               Project Status Distribution
             </h3>
-            <DemoTag />
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
             Active portfolio breakdown across operational lifecycle phases
           </p>
         </div>
         <div className="text-xs text-slate-500">
-          Total Tracked: <span className="font-semibold text-slate-900">{total} Projects</span>
+          Total Tracked: <span className="font-semibold text-slate-900">{displayTotal} Projects</span>
         </div>
       </div>
 

@@ -27,6 +27,7 @@ import {
   SlidersHorizontal,
   UserCheck,
   ArrowRight,
+  Network,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
@@ -37,7 +38,7 @@ import { KpiCard } from '@/components/dashboard/KpiCard';
 import { StatusDistribution } from '@/components/dashboard/StatusDistribution';
 import { PendingActionsTable } from '@/components/dashboard/PendingActionsTable';
 import { RecentProjectsTable } from '@/components/dashboard/RecentProjectsTable';
-import { EnvironmentBadge, DemoTag } from '@/components/common/Badge';
+
 
 
 const STAGE_NAMES: Record<number, string> = {
@@ -154,12 +155,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* RUNTIME DEBUG PANEL */}
-      <div className="bg-red-50 border-2 border-red-500 rounded p-4 font-mono text-[10px] sm:text-xs overflow-auto max-h-96">
-        <h2 className="text-red-700 font-bold uppercase mb-2">RUNTIME DIAGNOSTICS: useActiveDelegation</h2>
-        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-      </div>
-
       <div className="order-1 flex flex-col gap-8">
       {/* Top Welcome & Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
@@ -168,8 +163,6 @@ export default function DashboardPage() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-editorial">
               UK ENTERPRISE
             </h1>
-            <EnvironmentBadge />
-            <DemoTag />
           </div>
           <p className="text-sm font-medium text-slate-600 mt-1">
             Office Administration &amp; Project Control
@@ -181,6 +174,13 @@ export default function DashboardPage() {
 
         <div className="flex items-center gap-3">
           <Link
+            href="/management/communications"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+          >
+            <Network className="w-4 h-4 text-slate-500" />
+            <span>Communications &amp; Integrations</span>
+          </Link>
+          <Link
             href="/projects"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
@@ -190,16 +190,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Phase 5 Banner */}
-      <div className="rounded-lg bg-indigo-50/80 border border-indigo-200 p-3.5 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5" />
-        <div className="text-xs text-indigo-950">
-          <span className="font-bold uppercase tracking-wider text-[11px] text-indigo-800 mr-2">
-            Phase 5 Complete Project Control Active:
-          </span>
-          All 13 turnkey workflow stages (01 Tender through 13 Final Bill) are live and unified under real-time operational control, health scoring, pending actions, and cross-stage audits.
-        </div>
-      </div>
+      
 
       {/* Grantee Temporary Delegations */}
       {coverages.length > 0 && (

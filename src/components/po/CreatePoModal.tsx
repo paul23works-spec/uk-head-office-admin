@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, ShoppingCart, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { PoStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreatePoModalProps {
   isOpen: boolean;
@@ -173,7 +172,7 @@ export function CreatePoModal({
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   STAGE 06
                 </span>
-                <DemoTag label="PROCUREMENT" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 Issue official PO to manufacturing vendor against BOQ line items with over-order prevention.

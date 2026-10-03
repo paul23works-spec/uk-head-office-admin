@@ -13,7 +13,6 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { AcceptanceRecord } from '@/types';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateAcceptanceModal } from '@/components/acceptance/CreateAcceptanceModal';
 import { ViewAcceptanceModal } from '@/components/acceptance/ViewAcceptanceModal';
@@ -65,8 +64,8 @@ export default function AcceptancePage() {
               Acceptance Filing &amp; Verification
             </h1>
             <DelegatedStageIndicator stageId="03" />
-            <DemoTag />
-            <EnvironmentBadge phase="PHASE 2" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Formal unconditional contract acceptance submission, executive countersignatures, and authority filing linked to LOI / LOA.

@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { CpgRecord, CpgStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewCpgModalProps {
   cpg: CpgRecord | null;
@@ -76,7 +75,7 @@ export function ViewCpgModal({ cpg, isOpen, onClose }: ViewCpgModalProps) {
                 <h2 id="view-cpg-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   {cpg.cpgRef}
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Stage 04: Contract Performance Guarantee (Bank Guarantee)
@@ -337,9 +336,6 @@ export function ViewCpgModal({ cpg, isOpen, onClose }: ViewCpgModalProps) {
                         </div>
                       </div>
                     </div>
-                    <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-mono">
-                      DEMO ATTACHMENT
-                    </span>
                   </div>
                 ))}
               </div>

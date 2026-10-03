@@ -4,7 +4,6 @@ import React from 'react';
 import { X, Calculator, CheckCircle, XCircle, Clock, Building2, ShieldCheck } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { FinalBillRecord, FinalBillStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewFinalBillModalProps {
   isOpen: boolean;
@@ -65,7 +64,7 @@ export function ViewFinalBillModal({
                 >
                   {finalBill.status}
                 </span>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Stage 13: Project Final Bill Reconciliation & Settlement

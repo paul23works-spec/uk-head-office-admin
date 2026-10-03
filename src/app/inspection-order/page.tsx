@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateInspectionOrderModal } from '@/components/inspection-order/CreateInspectionOrderModal';
 import { ViewInspectionOrderModal } from '@/components/inspection-order/ViewInspectionOrderModal';
@@ -66,8 +65,8 @@ export default function InspectionOrderPage() {
               Inspection Order (IO) Administration
             </h1>
             <DelegatedStageIndicator stageId="08" />
-            <DemoTag label="STAGE 08 DATA" />
-            <EnvironmentBadge phase="PHASE 3" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Official inspection authorization orders issued by utility engineers or third-party inspection agency (TPIA).

@@ -6,7 +6,6 @@ import { ShieldAlert, ExternalLink, CheckCircle2, Clock } from 'lucide-react';
 import { Project, WorkflowStageDefinition, WorkflowStageStatus } from '@/types';
 import { WORKFLOW_STAGES } from '@/lib/constants';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 interface WorkflowPreviewProps {
   project: Project;
@@ -343,7 +342,7 @@ export function WorkflowPreview({ project }: WorkflowPreviewProps) {
               <h3 className="text-base font-bold text-slate-900 font-editorial">
                 Project Workflow Pipeline
               </h3>
-              <DemoTag />
+              
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
               Continuous 13-stage turnkey project administration pipeline (01 Tender to 13 Final Bill).

@@ -4,7 +4,6 @@ import React from 'react';
 import { X, ShoppingCart, BellRing } from 'lucide-react';
 import { PoRecord } from '@/types';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 interface ViewPoModalProps {
   isOpen: boolean;
@@ -36,7 +35,7 @@ export function ViewPoModal({ isOpen, onClose, po }: ViewPoModalProps) {
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   {po.status}
                 </span>
-                <DemoTag label="STAGE 06" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 {po.projectCode} — {po.projectName}

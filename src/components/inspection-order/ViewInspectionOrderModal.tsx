@@ -4,7 +4,6 @@ import React from 'react';
 import { X, ClipboardCheck, FileBadge } from 'lucide-react';
 import { InspectionOrderRecord } from '@/types';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 interface ViewInspectionOrderModalProps {
   isOpen: boolean;
@@ -36,7 +35,7 @@ export function ViewInspectionOrderModal({ isOpen, onClose, order }: ViewInspect
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   {order.status}
                 </span>
-                <DemoTag label="STAGE 08" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 {order.projectCode} — {order.projectName}

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { X, Plus, ListTree, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 interface CreateBoqModalProps {
   isOpen: boolean;
@@ -108,7 +107,7 @@ export function CreateBoqModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold font-editorial">Add BOQ Line Item</h3>
-                <DemoTag label="FOUNDATION DATA" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 Register Bill of Quantities item with rate and deterministic amount.

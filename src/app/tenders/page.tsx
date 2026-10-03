@@ -13,7 +13,6 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { TenderRecord } from '@/types';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateTenderModal } from '@/components/tenders/CreateTenderModal';
 import { ViewTenderModal } from '@/components/tenders/ViewTenderModal';
@@ -80,8 +79,8 @@ export default function TendersPage() {
               Tender Administration
             </h1>
             <DelegatedStageIndicator stageId="01" />
-            <DemoTag />
-            <EnvironmentBadge phase="PHASE 2" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Turnkey project bid records, NIT specification files, qualification tracking, and commercial submissions.

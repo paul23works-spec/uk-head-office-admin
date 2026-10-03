@@ -4,7 +4,6 @@ import React from 'react';
 import { X, ClipboardCheck, Calendar, MapPin, Building2, Package, ShieldCheck, XCircle, FileText } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { MiccRecord, MiccStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewMiccModalProps {
   isOpen: boolean;
@@ -54,7 +53,7 @@ export function ViewMiccModal({ isOpen, onClose, micc }: ViewMiccModalProps) {
                 >
                   {micc.status}
                 </span>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Stage 11: Material Inspection and Clearance Certificate

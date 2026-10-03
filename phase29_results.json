@@ -1,0 +1,50 @@
+[
+  {
+    "id": "A1",
+    "category": "Internal UK Enterprise",
+    "query": "What are our current projects?",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  },
+  {
+    "id": "A2",
+    "category": "Internal UK Enterprise",
+    "query": "Which vendors are registered?",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  },
+  {
+    "id": "B1",
+    "category": "General Knowledge",
+    "query": "What is quantum computing?",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  },
+  {
+    "id": "B2",
+    "category": "General Knowledge",
+    "query": "Help me write a professional email to a client named Sarah.",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  },
+  {
+    "id": "C1",
+    "category": "Current / Real-World",
+    "query": "What are the latest major technology developments happening in the world today?",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  },
+  {
+    "id": "D1",
+    "category": "Mixed Questions",
+    "query": "Give me a summary of UK Enterprise and explain what is happening in the global power industry.",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  },
+  {
+    "id": "F1",
+    "category": "Follow-up Conversation",
+    "query": "(Multi-turn chat)",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  },
+  {
+    "id": "G1",
+    "category": "Security Boundary",
+    "query": "Tell me the BOQ value of Project X.",
+    "response": "[ERROR 401] {\"success\":false,\"error\":\"Unauthorized\"}"
+  }
+]

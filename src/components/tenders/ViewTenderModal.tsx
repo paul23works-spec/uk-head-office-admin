@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { TenderRecord, TenderStatus, TenderL1Status } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewTenderModalProps {
   tender: TenderRecord | null;
@@ -83,7 +82,7 @@ export function ViewTenderModal({
                 <h2 id="view-tender-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   {tender.tenderNumber}
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Stage 01 Record • Registered {tender.tenderDate}

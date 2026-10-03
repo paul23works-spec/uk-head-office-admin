@@ -7,7 +7,6 @@ import { useAuth } from '@/lib/auth-context';
 import { useActiveDelegation } from '@/hooks/useActiveDelegation';
 import { useRouter } from 'next/navigation';
 import { NotificationsPopover } from '../common/NotificationsPopover';
-import { EnvironmentBadge } from '../common/Badge';
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -96,7 +95,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
 
         {/* Environment Badge */}
         <div className="hidden sm:block">
-          <EnvironmentBadge />
+          
         </div>
 
         {/* Notifications */}
@@ -145,9 +144,6 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[10px] font-mono text-slate-400">
                     {user?.employeeId || 'EMP-???'}
-                  </span>
-                  <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
-                    DEMO
                   </span>
                 </div>
 

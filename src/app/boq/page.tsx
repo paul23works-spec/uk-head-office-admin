@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateBoqModal } from '@/components/boq/CreateBoqModal';
 import { ViewBoqModal } from '@/components/boq/ViewBoqModal';
@@ -65,8 +64,8 @@ export default function BoqPage() {
               Bill of Quantities (BOQ) Master
             </h1>
             <DelegatedStageIndicator stageId="BOQ" />
-            <DemoTag label="B ADMIN DATA" />
-            <EnvironmentBadge phase="PHASE 3" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Contract bill of quantities, item rates, vendor assignments, and downstream balance tracking.

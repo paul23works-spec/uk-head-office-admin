@@ -5,7 +5,6 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { FinalBillRecord, FinalBillStatus } from '@/types';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateFinalBillModal } from '@/components/final-bill/CreateFinalBillModal';
 import { ViewFinalBillModal } from '@/components/final-bill/ViewFinalBillModal';
@@ -71,8 +70,8 @@ export default function FinalBillPage() {
               Stage 13
             </span>
             <DelegatedStageIndicator stageId="13" />
-            <DemoTag label="STAGE 13 DATA" />
-            <EnvironmentBadge phase="PHASE 4" />
+            
+            
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Final Bill Reconciliation & Settlement

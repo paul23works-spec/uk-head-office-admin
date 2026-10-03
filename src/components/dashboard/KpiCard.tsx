@@ -1,6 +1,5 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
-import { DemoTag } from '../common/Badge';
 
 interface KpiCardProps {
   title: string;
@@ -43,7 +42,7 @@ export function KpiCard({
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               {title}
             </span>
-            <DemoTag />
+            
           </div>
           <div className="text-3xl font-bold tracking-tight text-slate-900 font-editorial">
             {value}

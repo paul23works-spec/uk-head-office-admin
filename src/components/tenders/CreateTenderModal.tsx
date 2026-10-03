@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, FileSpreadsheet, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { TenderStatus, TenderL1Status, DocumentMetadata } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateTenderModalProps {
   isOpen: boolean;
@@ -156,7 +155,7 @@ export function CreateTenderModal({
                 <h2 id="create-tender-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   Stage 01 — Register Tender
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Turnkey Tender Documentation &amp; Bid Identification

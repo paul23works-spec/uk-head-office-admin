@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { AgreementRecord, AgreementStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewAgreementModalProps {
   agreement: AgreementRecord | null;
@@ -71,7 +70,7 @@ export function ViewAgreementModal({ agreement, isOpen, onClose }: ViewAgreement
                 <h2 id="view-agreement-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   {agreement.agreementRef}
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Stage 04: Contract Agreement Execution
@@ -293,9 +292,6 @@ export function ViewAgreementModal({ agreement, isOpen, onClose }: ViewAgreement
                         </div>
                       </div>
                     </div>
-                    <span className="text-[10px] bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded font-mono">
-                      DEMO ATTACHMENT
-                    </span>
                   </div>
                 ))}
               </div>

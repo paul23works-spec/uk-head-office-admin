@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, BellRing, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { InspectionCallStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateInspectionCallModalProps {
   isOpen: boolean;
@@ -133,7 +132,7 @@ export function CreateInspectionCallModal({
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   STAGE 07
                 </span>
-                <DemoTag label="QUALITY CONTROL" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 Official factory inspection call to client quality engineers &amp; third-party inspection agency.

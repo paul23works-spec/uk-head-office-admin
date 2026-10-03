@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Calendar, MapPin } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
-import { StatusBadge, DemoTag } from '../common/Badge';
+import { StatusBadge } from '../common/Badge';
 
 export function RecentProjectsTable() {
   const { projects } = useProjects();
@@ -19,7 +19,7 @@ export function RecentProjectsTable() {
             <h3 className="text-base font-bold text-slate-900 font-editorial">
               Recent Projects
             </h3>
-            <DemoTag />
+            
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
             Overview of recently updated administrative records and contracts

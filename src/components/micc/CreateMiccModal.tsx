@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, ClipboardCheck, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { MiccStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateMiccModalProps {
   isOpen: boolean;
@@ -161,7 +160,7 @@ export function CreateMiccModal({
                 <h2 className="text-lg font-bold text-white tracking-wide">
                   Stage 11: Issue Material Inward & Clearance (MICC)
                 </h2>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Verify receipt of dispatched consignment at site before progressive billing

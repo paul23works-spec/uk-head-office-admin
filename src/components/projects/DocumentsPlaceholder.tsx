@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { FileText, Lock, ShieldAlert, CheckCircle2, AlertCircle, UploadCloud } from 'lucide-react';
-import { DemoTag } from '../common/Badge';
 
 interface DocumentsPlaceholderProps {
   projectId: string;
@@ -128,7 +127,7 @@ export function DocumentsPlaceholder({ projectId }: DocumentsPlaceholderProps) {
             <h3 className="text-base font-bold text-slate-900 font-editorial">
               Project Documents &amp; Records
             </h3>
-            <DemoTag />
+            
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
             Administrative filing repository for NIT, LOA, CPG, and technical submittals

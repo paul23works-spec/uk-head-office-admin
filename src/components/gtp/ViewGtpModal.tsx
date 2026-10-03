@@ -4,7 +4,6 @@ import React from 'react';
 import { X, Cpu, History, FileText, CheckCircle2 } from 'lucide-react';
 import { GtpRecord } from '@/types';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 interface ViewGtpModalProps {
   isOpen: boolean;
@@ -39,7 +38,7 @@ export function ViewGtpModal({ isOpen, onClose, gtp }: ViewGtpModalProps) {
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   {gtp.revision}
                 </span>
-                <DemoTag label="STAGE 05" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 {gtp.projectCode} — {gtp.projectName}

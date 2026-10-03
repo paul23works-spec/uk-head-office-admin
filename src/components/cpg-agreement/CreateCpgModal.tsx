@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, ShieldCheck, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { CpgStatus, DocumentMetadata } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateCpgModalProps {
   isOpen: boolean;
@@ -147,7 +146,7 @@ export function CreateCpgModal({
                 <h2 id="create-cpg-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   Stage 04A — Register CPG (Bank Guarantee)
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Contract Performance Guarantee Submission &amp; SFMS Verification

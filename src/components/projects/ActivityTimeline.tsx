@@ -3,7 +3,6 @@
 import React from 'react';
 import { Clock, User, Activity as ActivityIcon } from 'lucide-react';
 import { Activity } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ActivityTimelineProps {
   activities: Activity[];
@@ -67,14 +66,14 @@ export function ActivityTimeline({ activities, projectId }: ActivityTimelineProp
             <h3 className="text-base font-bold text-slate-900 font-editorial">
               Audit &amp; Activity Timeline
             </h3>
-            <DemoTag />
+            
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
             Chronological audit trail of project modifications and administrative actions
           </p>
         </div>
         <span className="text-[11px] font-mono text-slate-400">
-          Environment: <span className="font-bold text-amber-700">DEMO</span>
+          Internal Activity
         </span>
       </div>
 
@@ -110,9 +109,6 @@ export function ActivityTimeline({ activities, projectId }: ActivityTimelineProp
                   <User className="w-3 h-3 text-slate-400" />
                   <span>{act.user}</span>
                 </div>
-                <span className="text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
-                  DEMO RECORD
-                </span>
               </div>
             </div>
           </div>

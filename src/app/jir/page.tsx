@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateJirModal } from '@/components/jir/CreateJirModal';
 import { ViewJirModal } from '@/components/jir/ViewJirModal';
@@ -66,8 +65,8 @@ export default function JirPage() {
               Joint Inspection Report (JIR) / Quality Sign-Off
             </h1>
             <DelegatedStageIndicator stageId="09" />
-            <DemoTag label="STAGE 09 DATA" />
-            <EnvironmentBadge phase="PHASE 3" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Official Joint Inspection Reports, test certificate validation, and quality clearance for Stage 10 DI.

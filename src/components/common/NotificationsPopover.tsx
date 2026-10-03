@@ -54,9 +54,7 @@ export function NotificationsPopover() {
                 {unreadNotificationCount} New
               </span>
             </div>
-            <span className="text-[10px] uppercase font-semibold text-amber-800 bg-amber-100/70 px-1.5 py-0.5 rounded">
-              Demo Feed
-            </span>
+            {/* hidden demo marker */}
           </div>
 
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">

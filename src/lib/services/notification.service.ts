@@ -1,5 +1,6 @@
 import { prisma } from '../db';
 import { NotificationChannel } from '@prisma/client';
+import { WhatsAppService } from './whatsapp.service';
 
 export interface NotificationPayload {
   userId: string;
@@ -94,28 +95,17 @@ export class NotificationEngine {
         include: { employee: true }
       });
       
-      // We assume user contact info could be stored on the user or employee model in a real scenario
-      // For now, logging using employeeId as placeholder
-
-      const log = await prisma.communicationLog.create({
-        data: {
-          channel: NotificationChannel.WHATSAPP,
-          direction: 'OUTBOUND',
-          from: 'UK_ENTERPRISE_SYSTEM',
-          to: user?.employee?.name || payload.userId,
-          body: `*${payload.title}*\n${payload.message}`,
-          status: process.env.WHATSAPP_TOKEN ? 'SENT' : 'DRAFT',
-          projectId: payload.projectId,
-          documentId: payload.documentId,
-        }
-      });
-
-      if (process.env.WHATSAPP_TOKEN) {
-        // Real implementation would use fetch to WhatsApp Graph API
-        console.log(`[Notification Engine] Real WA dispatched to ${payload.userId}`);
-      } else {
-        console.log(`[Notification Engine] Logged DRAFT WhatsApp to ${payload.userId}`);
-      }
+      const toName = user?.employee?.name || payload.userId;
+      const message = `*${payload.title}*\n${payload.message}`;
+      
+      // Real WhatsApp message using WhatsAppService
+      await WhatsAppService.sendMessage(
+        toName, // Ideally this should be a phone number 
+        message, 
+        payload.userId, 
+        payload.projectId, 
+        payload.documentId
+      );
     } catch (error) {
       console.error('[Notification Engine] Failed to send WhatsApp Notification:', error);
     }

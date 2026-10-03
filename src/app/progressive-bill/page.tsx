@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateProgressiveBillModal } from '@/components/progressive-bill/CreateProgressiveBillModal';
 import { ViewProgressiveBillModal } from '@/components/progressive-bill/ViewProgressiveBillModal';
@@ -94,8 +93,8 @@ export default function ProgressiveBillPage() {
               Progressive Billing (RA Bills) / Interim Invoices
             </h1>
             <DelegatedStageIndicator stageId="12" />
-            <DemoTag label="STAGE 12 DATA" />
-            <EnvironmentBadge phase="PHASE 4" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Running Account (RA) interim billing certified against verified MICCs with strict claimed vs. approved separation.

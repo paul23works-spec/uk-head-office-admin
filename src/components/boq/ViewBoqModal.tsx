@@ -4,7 +4,6 @@ import React from 'react';
 import { X, ListTree, ShoppingCart, Cpu } from 'lucide-react';
 import { BoqItem } from '@/types';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 interface ViewBoqModalProps {
   isOpen: boolean;
@@ -44,7 +43,7 @@ export function ViewBoqModal({ isOpen, onClose, boqItem }: ViewBoqModalProps) {
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   {boqItem.category}
                 </span>
-                <DemoTag label="FOUNDATION" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 {boqItem.projectCode} — {boqItem.projectName}

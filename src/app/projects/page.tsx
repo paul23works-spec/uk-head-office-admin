@@ -5,7 +5,6 @@ import { Search, Plus } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { ProjectTable } from '@/components/projects/ProjectTable';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
-import { DemoTag } from '@/components/common/Badge';
 
 export default function ProjectsPage() {
   const { projects } = useProjects();
@@ -61,7 +60,7 @@ export default function ProjectsPage() {
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-editorial">
               Projects Directory
             </h1>
-            <DemoTag />
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Central register of turnkey infrastructure, substation construction, and power delivery contracts

@@ -4,7 +4,6 @@ import React, { useState, useMemo } from 'react';
 import { X, Plus, Receipt, AlertCircle, CheckCircle2, ShieldAlert, Trash2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { ProgressiveBillStatus, ProgressiveBillLineItem } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateProgressiveBillModalProps {
   isOpen: boolean;
@@ -251,7 +250,7 @@ export function CreateProgressiveBillModal({
                 <h2 className="text-lg font-bold text-white tracking-wide">
                   Stage 12: Generate Progressive Bill (RA Bill)
                 </h2>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Assemble verified site MICC line items into a certified interim progress invoice

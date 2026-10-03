@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { LoiLoaRecord, LoiLoaStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewLoiLoaModalProps {
   loi: LoiLoaRecord | null;
@@ -77,7 +76,7 @@ export function ViewLoiLoaModal({
                 <h2 id="view-loi-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   {loi.loiNumber}
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Stage 02 Record • Dated {loi.date}

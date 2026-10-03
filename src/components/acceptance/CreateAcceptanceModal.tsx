@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, FileSignature, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { AcceptanceStatus, DocumentMetadata } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateAcceptanceModalProps {
   isOpen: boolean;
@@ -141,7 +140,7 @@ export function CreateAcceptanceModal({
                 <h2 id="create-acceptance-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   Stage 03 — Record Acceptance
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Formal Contract Acceptance Submission &amp; Acknowledgement

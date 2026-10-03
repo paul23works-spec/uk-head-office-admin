@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateMiccModal } from '@/components/micc/CreateMiccModal';
 import { ViewMiccModal } from '@/components/micc/ViewMiccModal';
@@ -83,8 +82,8 @@ export default function MiccPage() {
               Material Inward &amp; Clearance Certificate (MICC)
             </h1>
             <DelegatedStageIndicator stageId="11" />
-            <DemoTag label="STAGE 11 DATA" />
-            <EnvironmentBadge phase="PHASE 4" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Site-level inward inspection and verification of materials delivered under DI for Progressive Billing clearance.

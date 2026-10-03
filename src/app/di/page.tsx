@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateDiModal } from '@/components/di/CreateDiModal';
 import { ViewDiModal } from '@/components/di/ViewDiModal';
@@ -85,8 +84,8 @@ export default function DiPage() {
               Dispatch Instruction (DI) / Factory Clearance
             </h1>
             <DelegatedStageIndicator stageId="10" />
-            <DemoTag label="STAGE 10 DATA" />
-            <EnvironmentBadge phase="PHASE 4" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Authorize transport clearance for JIR-accepted materials with multi-DI aggregation &amp; destination tracking.

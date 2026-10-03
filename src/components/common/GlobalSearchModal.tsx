@@ -102,7 +102,7 @@ export function GlobalSearchModal() {
               {query ? `Search Results (${filteredProjects.length})` : 'Recent Projects'}
             </span>
             <span className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-normal border border-amber-200">
-              Demo Database
+              Production Database
             </span>
           </div>
 

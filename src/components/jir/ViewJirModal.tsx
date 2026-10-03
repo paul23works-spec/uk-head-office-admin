@@ -3,7 +3,6 @@
 import React from 'react';
 import { X, FileBadge, ShieldCheck } from 'lucide-react';
 import { JirRecord } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewJirModalProps {
   isOpen: boolean;
@@ -35,7 +34,7 @@ export function ViewJirModal({ isOpen, onClose, jir }: ViewJirModalProps) {
                 >
                   {jir.status}
                 </span>
-                <DemoTag label="STAGE 09" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 {jir.projectCode} — {jir.projectName}

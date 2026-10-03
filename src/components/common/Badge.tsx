@@ -86,22 +86,3 @@ export function PriorityBadge({ priority }: { priority: ActionPriority }) {
       );
   }
 }
-
-export function DemoTag({ label, text }: { label?: string; text?: string }) {
-  const display = text || label || 'DEMO DATA';
-  return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] tracking-wider uppercase font-semibold bg-amber-100/70 text-amber-900 border border-amber-300">
-      <span className="w-1 h-1 rounded-full bg-amber-700"></span>
-      {display}
-    </span>
-  );
-}
-
-export function EnvironmentBadge({ phase = 'PHASE 3' }: { phase?: string }) {
-  return (
-    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0A192F] text-amber-400 text-xs font-semibold tracking-wide border border-amber-500/40 shadow-xs">
-      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-      <span>DEMO / {phase}</span>
-    </div>
-  );
-}

@@ -4,7 +4,6 @@ import React from 'react';
 import { X, Receipt, CheckCircle, XCircle, Clock, Building2, Layers } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { ProgressiveBillRecord, ProgressiveBillStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewProgressiveBillModalProps {
   isOpen: boolean;
@@ -65,7 +64,7 @@ export function ViewProgressiveBillModal({
                 >
                   {bill.status}
                 </span>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Stage 12: Progressive Billing Record & Certification

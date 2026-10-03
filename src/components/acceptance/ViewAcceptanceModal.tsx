@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { AcceptanceRecord, AcceptanceStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewAcceptanceModalProps {
   acceptance: AcceptanceRecord | null;
@@ -75,7 +74,7 @@ export function ViewAcceptanceModal({
                 <h2 id="view-acceptance-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   {acceptance.acceptanceRef}
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Stage 03 Record • Submitted {acceptance.acceptanceDate}

@@ -4,7 +4,6 @@ import React from 'react';
 import { X, BellRing, ClipboardCheck, MapPin, Calendar } from 'lucide-react';
 import { InspectionCallRecord } from '@/types';
 import { useProjects } from '@/lib/project-context';
-import { DemoTag } from '../common/Badge';
 
 interface ViewInspectionCallModalProps {
   isOpen: boolean;
@@ -36,7 +35,7 @@ export function ViewInspectionCallModal({ isOpen, onClose, call }: ViewInspectio
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   {call.status}
                 </span>
-                <DemoTag label="STAGE 07" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 {call.projectCode} — {call.projectName}

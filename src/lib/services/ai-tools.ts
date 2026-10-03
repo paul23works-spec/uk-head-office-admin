@@ -1,43 +1,68 @@
 import { prisma } from '../db';
 import { SessionUser } from '../auth-server';
 import { checkBasePermission } from '../permissions-server';
+import { getAnalyticsMetrics, AnalyticsFilters } from '../analytics-engine';
 
 export class AITools {
-  static async getProjects(user: SessionUser) {
-    // All authenticated users can list active projects, but only basic details.
-    return prisma.project.findMany({
-      select: {
-        id: true,
-        code: true,
-        name: true,
-        client: true,
-        status: true,
-        startDate: true,
-        expectedCompletion: true,
-      }
+  private static async verifyProjectAccess(user: SessionUser, projectId: string): Promise<boolean> {
+    if (user.role === 'MASTER') return true;
+    
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: { employees: true }
     });
+    
+    if (!project) return false;
+    
+    if (project.employees.length === 0) return true;
+    return project.employees.some(e => e.employeeId === user.employeeId);
+  }
+
+  static async getProjects(user: SessionUser) {
+    const allProjects = await prisma.project.findMany({
+      include: { employees: true }
+    });
+    
+    const scoped = user.role === 'MASTER' 
+      ? allProjects 
+      : allProjects.filter(p => p.employees.length === 0 || p.employees.some(e => e.employeeId === user.employeeId));
+      
+    return scoped.map(p => ({
+      id: p.id,
+      code: p.code,
+      name: p.name,
+      client: p.client,
+      status: p.status,
+      startDate: p.startDate,
+      expectedCompletion: p.expectedCompletion
+    }));
   }
 
   static async getProjectSummary(user: SessionUser, projectId: string) {
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
     const project = await prisma.project.findUnique({
       where: { id: projectId },
-      include: {
-        stages: true,
-      }
+      include: { stages: true }
     });
-    if (!project) throw new Error('Project not found');
-    return project;
+    return project || { error: 'Project not found' };
   }
 
   static async getProjectStages(user: SessionUser, projectId: string) {
-    const stages = await prisma.projectStage.findMany({
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
+    return prisma.projectStage.findMany({
       where: { projectId },
       orderBy: { stageId: 'asc' }
     });
-    return stages;
   }
 
   static async getDocuments(user: SessionUser, projectId: string, documentType?: string) {
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
     const whereClause: any = { projectId };
     if (documentType) whereClause.documentType = documentType;
     
@@ -56,6 +81,13 @@ export class AITools {
   }
 
   static async getDocument(user: SessionUser, documentId: string) {
+    const doc = await prisma.document.findUnique({ where: { id: documentId } });
+    if (!doc || !doc.projectId) return { error: "I don't have access to that document." };
+    
+    if (!(await this.verifyProjectAccess(user, doc.projectId))) {
+      return { error: "I don't have access to that document." };
+    }
+    
     return prisma.document.findUnique({
       where: { id: documentId },
       select: {
@@ -64,14 +96,16 @@ export class AITools {
         filename: true,
         status: true,
         processingStatus: true,
-        extractedData: true, // Metadata only, not raw storage credentials
+        extractedData: true,
         referenceNo: true,
       }
     });
   }
 
   static async searchDocuments(user: SessionUser, projectId: string, query: string) {
-    // Basic Prisma filtering for filename or ref number
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
     return prisma.document.findMany({
       where: {
         projectId,
@@ -116,6 +150,9 @@ export class AITools {
   }
 
   static async getActionItems(user: SessionUser, projectId: string) {
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
     return prisma.actionItem.findMany({
       where: { projectId },
       include: {
@@ -125,6 +162,9 @@ export class AITools {
   }
 
   static async getOverdueActions(user: SessionUser, projectId: string) {
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
     return prisma.actionItem.findMany({
       where: {
         projectId,
@@ -137,8 +177,36 @@ export class AITools {
     });
   }
 
+  static async getAllOverdueActions(user: SessionUser) {
+    let projectIds: string[] = [];
+    
+    if (user.role === 'MASTER') {
+      const all = await prisma.project.findMany({ select: { id: true } });
+      projectIds = all.map(p => p.id);
+    } else {
+      const allProjects = await prisma.project.findMany({ include: { employees: true } });
+      const scoped = allProjects.filter(p => p.employees.length === 0 || p.employees.some(e => e.employeeId === user.employeeId));
+      projectIds = scoped.map(p => p.id);
+    }
+    
+    return prisma.actionItem.findMany({
+      where: {
+        projectId: { in: projectIds },
+        dueDate: { lt: new Date() },
+        status: { not: 'COMPLETED' }
+      },
+      include: {
+        assignedTo: { select: { name: true, roleId: true } }
+      },
+      take: 50
+    });
+  }
+
   static async getBOQSummary(user: SessionUser, projectId: string) {
-    // RBAC Validation: Only MASTER or ADMIN_B can view financial data
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
+    
     if (user.role !== 'MASTER' && user.role !== 'ADMIN_B') {
       return { error: 'Unauthorized: You do not have permission to view financial BOQ summaries.' };
     }
@@ -171,6 +239,9 @@ export class AITools {
   }
 
   static async getCommunicationHistory(user: SessionUser, projectId: string) {
+    if (!(await this.verifyProjectAccess(user, projectId))) {
+      return { error: "I don't have access to that project." };
+    }
     return prisma.communicationLog.findMany({
       where: { projectId },
       orderBy: { createdAt: 'desc' },
@@ -185,5 +256,15 @@ export class AITools {
         createdAt: true,
       }
     });
+  }
+
+  static async getAnalyticsSummary(user: SessionUser, filters?: AnalyticsFilters) {
+    const data = await getAnalyticsMetrics(filters);
+    
+    if (user.role !== 'MASTER' && user.role !== 'ADMIN_B') {
+      delete (data as any).boq;
+    }
+    
+    return data;
   }
 }

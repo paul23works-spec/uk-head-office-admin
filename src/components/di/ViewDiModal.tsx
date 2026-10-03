@@ -4,7 +4,6 @@ import React from 'react';
 import { X, Truck, Calendar, MapPin, FileCheck, Building2, Package, ShieldCheck, Ban } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { DiRecord, DiStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface ViewDiModalProps {
   isOpen: boolean;
@@ -56,7 +55,7 @@ export function ViewDiModal({ isOpen, onClose, di }: ViewDiModalProps) {
                 >
                   {di.status}
                 </span>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Stage 10: Dispatch Instruction & Clearance Certificate

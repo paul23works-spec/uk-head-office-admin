@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreatePoModal } from '@/components/po/CreatePoModal';
 import { ViewPoModal } from '@/components/po/ViewPoModal';
@@ -69,8 +68,8 @@ export default function PoPage() {
               Purchase Order (PO) Administration
             </h1>
             <DelegatedStageIndicator stageId="06" />
-            <DemoTag label="STAGE 06 DATA" />
-            <EnvironmentBadge phase="PHASE 3" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Manufacturing purchase orders issued to equipment vendors, line-item quantity allocations, and value tracking.

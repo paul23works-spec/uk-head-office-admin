@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateInspectionCallModal } from '@/components/inspection-call/CreateInspectionCallModal';
 import { ViewInspectionCallModal } from '@/components/inspection-call/ViewInspectionCallModal';
@@ -68,8 +67,8 @@ export default function InspectionCallPage() {
               Inspection Call Administration
             </h1>
             <DelegatedStageIndicator stageId="07" />
-            <DemoTag label="STAGE 07 DATA" />
-            <EnvironmentBadge phase="PHASE 3" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Factory inspection call notices issued to client quality engineers &amp; third-party inspection authorities.

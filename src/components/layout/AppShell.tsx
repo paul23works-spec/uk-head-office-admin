@@ -102,10 +102,7 @@ export function AppShell({ children }: AppShellProps) {
             <span>Office Administration System (Phase 6.2 — Activity Tracking)</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
-            <span className="bg-amber-50 text-amber-800 font-semibold px-2 py-0.5 rounded border border-amber-200">
-              DEMO ENVIRONMENT
-            </span>
-            <span>No Production Database Connected</span>
+            {/* hidden demo marker */}
           </div>
         </footer>
       </div>

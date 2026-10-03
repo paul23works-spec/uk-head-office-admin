@@ -14,7 +14,6 @@ import {
 import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateGtpModal } from '@/components/gtp/CreateGtpModal';
 import { ViewGtpModal } from '@/components/gtp/ViewGtpModal';
@@ -73,8 +72,8 @@ export default function GtpPage() {
               Guaranteed Technical Particulars (GTP) Approval
             </h1>
             <DelegatedStageIndicator stageId="05" />
-            <DemoTag label="STAGE 05 DATA" />
-            <EnvironmentBadge phase="PHASE 3" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Equipment specification clearances, drawing approvals, and revision management per turnkey BOQ item.

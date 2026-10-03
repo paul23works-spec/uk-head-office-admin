@@ -5,7 +5,6 @@ import { X, Plus, Calculator, AlertCircle, CheckCircle2, ShieldAlert } from 'luc
 import { useProjects } from '@/lib/project-context';
 import { FinalBillStatus } from '@/types';
 import { calculateFinalBill, parseContractValue } from '@/lib/c-admin-engine';
-import { DemoTag } from '../common/Badge';
 
 interface CreateFinalBillModalProps {
   isOpen: boolean;
@@ -167,7 +166,7 @@ export function CreateFinalBillModal({
                 <h2 className="text-lg font-bold text-white tracking-wide">
                   Stage 13: Project Final Bill Reconciliation
                 </h2>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Deterministic final contract settlement and accounting reconciliation

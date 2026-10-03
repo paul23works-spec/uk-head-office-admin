@@ -21,7 +21,6 @@ import { useProjects } from '@/lib/project-context';
 import { useAuth } from '@/lib/auth-context';
 import { canEditStage } from '@/lib/permissions';
 import { CpgRecord, AgreementRecord } from '@/types';
-import { DemoTag, EnvironmentBadge } from '@/components/common/Badge';
 import { DelegatedStageIndicator } from '@/components/common/DelegatedStageIndicator';
 import { CreateCpgModal } from '@/components/cpg-agreement/CreateCpgModal';
 import { CreateAgreementModal } from '@/components/cpg-agreement/CreateAgreementModal';
@@ -116,8 +115,8 @@ export default function CpgAgreementPage() {
               CPG &amp; Contract Agreement Management
             </h1>
             <DelegatedStageIndicator stageId="04" />
-            <DemoTag />
-            <EnvironmentBadge phase="PHASE 2" />
+            
+            
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Unified administration of Contract Performance Guarantees (Bank Guarantees) and bilateral Contract Agreement executions.

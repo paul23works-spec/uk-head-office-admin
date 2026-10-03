@@ -20,7 +20,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
-import { StatusBadge, DemoTag, EnvironmentBadge } from '@/components/common/Badge';
+import { StatusBadge } from '@/components/common/Badge';
 import { WorkflowPreview } from '@/components/projects/WorkflowPreview';
 import { ActivityTimeline } from '@/components/projects/ActivityTimeline';
 import { DocumentsPlaceholder } from '@/components/projects/DocumentsPlaceholder';
@@ -143,8 +143,8 @@ export default function ProjectDetailPage() {
             <Search className="w-3.5 h-3.5 text-slate-400" />
             <span>Search Records</span>
           </button>
-          <EnvironmentBadge phase="PHASE 5" />
-          <DemoTag text="DEMO / PHASE 5" />
+          
+          
         </div>
       </div>
 

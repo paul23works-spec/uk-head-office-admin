@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, ScrollText, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { AgreementStatus, DocumentMetadata } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateAgreementModalProps {
   isOpen: boolean;
@@ -140,7 +139,7 @@ export function CreateAgreementModal({
                 <h2 id="create-agr-title" className="text-base font-bold font-editorial tracking-tight text-white">
                   Register Contract Agreement
                 </h2>
-                <DemoTag />
+                
               </div>
               <p className="text-xs text-slate-300">
                 Stage 04: Contract Agreement Execution

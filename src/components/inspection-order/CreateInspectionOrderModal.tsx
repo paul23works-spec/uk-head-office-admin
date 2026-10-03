@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, ClipboardCheck, CheckCircle2 } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { InspectionOrderStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateInspectionOrderModalProps {
   isOpen: boolean;
@@ -131,7 +130,7 @@ export function CreateInspectionOrderModal({
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/30">
                   STAGE 08
                 </span>
-                <DemoTag label="QUALITY ASSURANCE" />
+                
               </div>
               <p className="text-xs text-slate-400">
                 Official authorization order &amp; inspector deputation linked to valid Inspection Call.

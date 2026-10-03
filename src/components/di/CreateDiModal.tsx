@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { X, Plus, Truck, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
 import { DiStatus } from '@/types';
-import { DemoTag } from '../common/Badge';
 
 interface CreateDiModalProps {
   isOpen: boolean;
@@ -167,7 +166,7 @@ export function CreateDiModal({
                 <h2 className="text-lg font-bold text-white tracking-wide">
                   Stage 10: Issue Dispatch Instruction (DI)
                 </h2>
-                <DemoTag text="DEMO / PHASE 4" />
+                
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Authorize factory clearance and road transit for accepted JIR materials

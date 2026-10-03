@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); async function main() { try { await prisma.gmailConnection.count(); console.log('SCHEMA VALIDATED / DATABASE MIGRATION APPLIED'); } catch(e) { console.log('DATABASE MIGRATION NOT APPLIED'); } finally { await prisma.$disconnect(); } } main();

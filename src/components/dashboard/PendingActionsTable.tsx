@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Clock, ArrowUpRight } from 'lucide-react';
 import { useProjects } from '@/lib/project-context';
-import { PriorityBadge, DemoTag } from '../common/Badge';
+import { PriorityBadge } from '../common/Badge';
 
 export function PendingActionsTable() {
   const { pendingActions } = useProjects();
@@ -17,14 +17,14 @@ export function PendingActionsTable() {
             <h3 className="text-base font-bold text-slate-900 font-editorial">
               Pending Actions
             </h3>
-            <DemoTag />
+            
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
             Administrative items requiring verification, approval, or follow-up
           </p>
         </div>
         <span className="text-xs font-medium text-slate-500">
-          Showing <span className="font-semibold text-slate-900">{pendingActions.length}</span> demo entries
+          Showing <span className="font-semibold text-slate-900">{pendingActions.length}</span> entries
         </span>
       </div>
 

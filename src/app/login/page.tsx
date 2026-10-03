@@ -16,12 +16,31 @@ export default function LoginPage() {
     }
   }, [user, isLoading, router]);
 
-  const handleLogin = (role: AppRole) => {
+  const handleLogin = async (role: AppRole) => {
     try {
       sessionStorage.setItem('ukg_brand_intro_pending', 'true');
     } catch (e) {
       // Safe fallback
     }
+
+    const selectedUser = USERS.find((u) => u.role === role);
+    if (selectedUser) {
+      try {
+        await fetch('/api/auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            employeeId: selectedUser.employeeId,
+            password: 'password',
+          }),
+        });
+      } catch (error) {
+        console.error('Failed to establish server session:', error);
+      }
+    }
+
     login(role);
     router.push('/');
   };
