@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerUser } from '@/lib/auth-server';
 import prisma from '@/lib/db';
 import { GmailService } from '@/lib/services/gmail.service';
+import crypto from 'crypto';
 
 export async function GET() {
   try {
@@ -33,10 +34,23 @@ export async function GET() {
       );
     }
 
-    // Pass the Employee.id UUID through OAuth state.
-    const authUrl = GmailService.getAuthUrl(employee.id);
+    // Generate secure state: bind to employee ID and use a cryptographically random nonce
+    const nonce = crypto.randomBytes(32).toString('hex');
+    const stateString = `${employee.id}:${nonce}`;
 
-    return NextResponse.redirect(authUrl);
+    const authUrl = GmailService.getAuthUrl(stateString);
+    const response = NextResponse.redirect(authUrl);
+
+    // Set short-lived secure cookie for CSRF protection
+    response.cookies.set('oauth_state', stateString, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 10, // 10 minutes
+      sameSite: 'lax',
+      path: '/'
+    });
+
+    return response;
   } catch (error) {
     console.error('Error generating Gmail auth URL:', error);
 

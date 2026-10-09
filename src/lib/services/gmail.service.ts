@@ -11,7 +11,7 @@ export class GmailService {
     );
   }
 
-  public static getAuthUrl(employeeId: string) {
+  public static getAuthUrl(stateString: string) {
     const oauth2Client = this.getOAuthClient();
     const scopes = [
       'https://www.googleapis.com/auth/gmail.readonly',
@@ -23,7 +23,7 @@ export class GmailService {
       access_type: 'offline',
       prompt: 'consent',
       scope: scopes,
-      state: employeeId,
+      state: stateString,
     });
   }
 
@@ -147,6 +147,8 @@ export class GmailService {
   public static async listMessages(employeeId: string, pageToken?: string, maxResults = 25, labelId = 'INBOX') {
     try {
       const gmail = await this.getAuthenticatedGmailClient(employeeId);
+      const connection = await prisma.gmailConnection.findUnique({ where: { employeeId } });
+      const emailAddress = connection?.emailAddress || '';
       
       const res = await gmail.users.messages.list({
         userId: 'me',
@@ -159,7 +161,7 @@ export class GmailService {
       const nextPageToken = res.data.nextPageToken || null;
 
       if (messages.length === 0) {
-        return { messages: [], nextPageToken: null };
+        return { messages: [], nextPageToken: null, emailAddress };
       }
 
       // Fetch details (metadata only) for each message
@@ -193,6 +195,7 @@ export class GmailService {
       return {
         messages: detailedMessages,
         nextPageToken,
+        emailAddress,
       };
     } catch (error: unknown) {
       this.handleError(error as Error);
@@ -249,6 +252,49 @@ export class GmailService {
     }
   }
 
+  public static async untrashMessage(employeeId: string, messageId: string) {
+    try {
+      const gmail = await this.getAuthenticatedGmailClient(employeeId);
+      
+      const res = await gmail.users.messages.untrash({
+        userId: 'me',
+        id: messageId,
+      });
+
+      return res.data;
+    } catch (error: unknown) {
+      this.handleError(error as Error);
+    }
+  }
+
+  public static async deleteMessage(employeeId: string, messageId: string) {
+    try {
+      const gmail = await this.getAuthenticatedGmailClient(employeeId);
+      
+      const res = await gmail.users.messages.delete({
+        userId: 'me',
+        id: messageId,
+      });
+
+      return res.data;
+    } catch (error: unknown) {
+      this.handleError(error as Error);
+    }
+  }
+
+  public static validateEmailHeader(val: string, fieldName: string) {
+    if (!val) return '';
+    if (/[\r\n]/.test(val)) throw new Error(`Invalid ${fieldName}: contains newline characters`);
+    const emails = val.split(',').map(e => e.trim()).filter(Boolean);
+    for (const email of emails) {
+      const addressPart = email.includes('<') ? email.match(/<([^>]+)>/)?.[1] : email;
+      if (!addressPart || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addressPart)) {
+        throw new Error(`Invalid email address format in ${fieldName}: ${email}`);
+      }
+    }
+    return val;
+  }
+
   public static async sendMessage(
     employeeId: string, 
     to: string, 
@@ -257,40 +303,114 @@ export class GmailService {
     subject: string, 
     textBody: string,
     htmlBody: string = '',
-    attachments: Array<{ filename: string; mimeType: string; data: Buffer }> = []
+    attachments: Array<{ filename: string; mimeType: string; data: Buffer }> = [],
+    options: { threadId?: string; inReplyTo?: string; references?: string; forwardedMessageId?: string; } = {}
   ) {
     try {
       const gmail = await this.getAuthenticatedGmailClient(employeeId);
       
-      const chunkBase64 = (str: string) => str.match(/.{1,76}/g)?.join('\r\n') || '';
+      const chunkBase64 = (str: string) => {
+        const chunks = [];
+        for (let i = 0; i < str.length; i += 76) {
+          chunks.push(str.slice(i, i + 76));
+        }
+        return chunks.join('\r\n');
+      };
+
+      const safeTo = this.validateEmailHeader(to, 'to');
+      const safeCc = this.validateEmailHeader(cc, 'cc');
+      const safeBcc = this.validateEmailHeader(bcc, 'bcc');
       
       const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+      
+      let finalAttachments = [...attachments];
+      if (options.forwardedMessageId) {
+        const originalMsg = await gmail.users.messages.get({
+          userId: 'me',
+          id: options.forwardedMessageId,
+          format: 'full',
+        });
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const findAttachments = (parts: any[]) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let found: any[] = [];
+          for (const part of parts) {
+            if (part.filename && part.body?.attachmentId) {
+              found.push({
+                filename: part.filename,
+                mimeType: part.mimeType || 'application/octet-stream',
+                attachmentId: part.body.attachmentId
+              });
+            }
+            if (part.parts) {
+              found = found.concat(findAttachments(part.parts));
+            }
+          }
+          return found;
+        };
+
+        if (originalMsg.data.payload?.parts) {
+          const originalAtts = findAttachments(originalMsg.data.payload.parts);
+          console.log('Found attachments to forward:', originalAtts);
+          for (const att of originalAtts) {
+            const attData = await gmail.users.messages.attachments.get({
+              userId: 'me',
+              messageId: options.forwardedMessageId,
+              id: att.attachmentId
+            });
+            if (attData.data.data) {
+              const buffer = Buffer.from(attData.data.data.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+              finalAttachments.push({
+                filename: att.filename,
+                mimeType: att.mimeType,
+                data: buffer
+              });
+            }
+          }
+        } else {
+          console.log('Original message has no parts in payload.');
+        }
+      }
+
+      const totalSize = finalAttachments.reduce((sum, att) => sum + att.data.length, 0);
+      if (totalSize > 25 * 1024 * 1024) {
+        throw new Error('Total attachment size exceeds 25MB limit.');
+      }
       
       const boundary = '----=_NextPart_' + Date.now().toString(16);
       const altBoundary = '----=_AltPart_' + Date.now().toString(16);
       
       const messageParts = [];
-      messageParts.push(`To: ${to}`);
-      if (cc) messageParts.push(`Cc: ${cc}`);
-      if (bcc) messageParts.push(`Bcc: ${bcc}`);
+      if (safeTo) messageParts.push(`To: ${safeTo}`);
+      if (safeCc) messageParts.push(`Cc: ${safeCc}`);
+      if (safeBcc) messageParts.push(`Bcc: ${safeBcc}`);
       messageParts.push(`Subject: ${utf8Subject}`);
+      
+      const sanitizeHeader = (val: string) => val.replace(/[\r\n]/g, '').trim();
+      if (options.inReplyTo) {
+        messageParts.push(`In-Reply-To: ${sanitizeHeader(options.inReplyTo)}`);
+      }
+      if (options.references) {
+        const refs = sanitizeHeader(options.references);
+        const foldedRefs = refs.replace(/(.{1,76})(?:\s|$)/g, '$1\r\n ').trimEnd();
+        messageParts.push(`References: ${foldedRefs}`);
+      }
+
       messageParts.push('MIME-Version: 1.0');
       messageParts.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
       messageParts.push('');
       
-      // Alternative part (text + html)
       messageParts.push(`--${boundary}`);
       messageParts.push(`Content-Type: multipart/alternative; boundary="${altBoundary}"`);
       messageParts.push('');
       
-      // Text body
       messageParts.push(`--${altBoundary}`);
       messageParts.push('Content-Type: text/plain; charset="UTF-8"');
       messageParts.push('Content-Transfer-Encoding: base64');
       messageParts.push('');
       messageParts.push(chunkBase64(Buffer.from(textBody).toString('base64')));
       
-      // HTML body
       if (htmlBody) {
         messageParts.push(`--${altBoundary}`);
         messageParts.push('Content-Type: text/html; charset="UTF-8"');
@@ -301,8 +421,7 @@ export class GmailService {
       
       messageParts.push(`--${altBoundary}--`);
       
-      // Attachments
-      for (const att of attachments) {
+      for (const att of finalAttachments) {
         messageParts.push(`--${boundary}`);
         messageParts.push(`Content-Type: ${att.mimeType}; name="${att.filename}"`);
         messageParts.push(`Content-Disposition: attachment; filename="${att.filename}"`);
@@ -321,11 +440,15 @@ export class GmailService {
         .replace(/\//g, '_')
         .replace(/=+$/, '');
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const requestBody: any = { raw };
+      if (options.threadId) {
+        requestBody.threadId = sanitizeHeader(options.threadId);
+      }
+      
       const res = await gmail.users.messages.send({
         userId: 'me',
-        requestBody: {
-          raw: raw
-        }
+        requestBody: requestBody
       });
 
       await AuditService.log(
@@ -333,7 +456,7 @@ export class GmailService {
         'CREATE',
         'System',
         employeeId,
-        { integration: 'Gmail', action: 'EMAIL_SENT', to, cc, bcc, messageId: res.data.id }
+        { integration: 'Gmail', action: 'EMAIL_SENT', to, cc, bcc, messageId: res.data.id, threadId: res.data.threadId }
       );
 
       return res.data;

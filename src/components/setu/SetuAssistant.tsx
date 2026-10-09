@@ -1,29 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import {
   type SetuState,
   STATE_DURATIONS,
   NEXT_STATE,
   SESSION_KEY,
+  stateToClassName,
 } from './setu-animation';
-import { SetuCharacter } from './SetuCharacter';
-import { SetuGreeting } from './SetuGreeting';
 import styles from './setu.module.css';
 
 interface SetuAssistantProps {
-  /** Called when the user clicks Setu to open the chat. */
   onOpenChat: () => void;
-  /** Whether the chat panel is currently open. */
   isChatOpen: boolean;
-  /** Full name of the authenticated user. */
   userName: string;
 }
 
-/**
- * Determine initial state on mount — checks sessionStorage and reduced motion.
- * Called as the initializer for useState to avoid setState-in-effect lint warning.
- */
 function getInitialState(): SetuState {
   if (typeof window === 'undefined') return 'HIDDEN';
 
@@ -42,30 +35,14 @@ function getInitialState(): SetuState {
     return 'IDLE';
   }
 
-  return 'HIDDEN'; // will be advanced to ENTERING via effect
+  return 'HIDDEN';
 }
 
-/**
- * SetuAssistant — Main orchestrator for the UK Setu character experience.
- *
- * Manages the state machine lifecycle:
- *   HIDDEN → ENTERING → STOPPING → NAMASKAR → GREETING → IDLE
- *                                                          ↕
- *                                               OPENING_CHAT ↔ CHAT_OPEN
- *                                                          ↕
- *                                                    CLOSING_CHAT
- *
- * The entrance + greeting sequence plays once per browser session
- * (tracked via sessionStorage).
- */
 export function SetuAssistant({ onOpenChat, isChatOpen, userName }: SetuAssistantProps) {
   const [state, setState] = useState<SetuState>(getInitialState);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevChatOpen = useRef(isChatOpen);
 
-  const firstName = userName?.split(' ')[0] || 'there';
-
-  // ── Clear any pending timer ──
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
       clearTimeout(timerRef.current);
@@ -73,82 +50,33 @@ export function SetuAssistant({ onOpenChat, isChatOpen, userName }: SetuAssistan
     }
   }, []);
 
-  // ── Schedule the next auto-transition for a state ──
-  const scheduleNext = useCallback(
-    (currentState: SetuState) => {
-      const duration = STATE_DURATIONS[currentState];
-      const next = NEXT_STATE[currentState];
+  const advanceTo = useCallback(
+    (newState: SetuState) => {
+      clearTimer();
+      setState(newState);
+      
+      const duration = STATE_DURATIONS[newState];
+      const next = NEXT_STATE[newState];
 
       if (duration && next) {
         timerRef.current = setTimeout(() => {
-          // When greeting finishes, mark session as greeted
-          if (currentState === 'GREETING') {
-            try {
-              sessionStorage.setItem(SESSION_KEY, 'true');
-            } catch {
-              // sessionStorage unavailable — graceful fallback
-            }
+          if (newState === 'POST_GREETING_PAUSE' || newState === 'COLLAPSING') {
+            try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch { /* ignore */ }
           }
-          setState(next);
-          // Schedule the transition for the new state too
-          clearTimer();
-          const nextDuration = STATE_DURATIONS[next];
-          const nextNext = NEXT_STATE[next];
-          if (nextDuration && nextNext) {
-            timerRef.current = setTimeout(() => {
-              if (next === 'GREETING') {
-                try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch { /* */ }
-              }
-              setState(nextNext);
-            }, nextDuration);
-          }
+          advanceTo(next);
         }, duration);
       }
     },
     [clearTimer]
   );
 
-  // ── Advance state and schedule its auto-transition ──
-  const advanceTo = useCallback(
-    (newState: SetuState) => {
-      clearTimer();
-      setState(newState);
-      scheduleNext(newState);
-    },
-    [clearTimer, scheduleNext]
-  );
-
-  // ── If initial state was HIDDEN, kick off the entrance ──
   useEffect(() => {
-    // Only run on mount for HIDDEN → ENTERING.
-    // Other initial states (IDLE) don't need the entrance.
     if (state !== 'HIDDEN') return;
 
     const raf1 = requestAnimationFrame(() => {
       const raf2 = requestAnimationFrame(() => {
-        // Start the entrance chain: ENTERING → STOPPING → NAMASKAR → GREETING → IDLE
-        setState('ENTERING');
-
-        // Schedule the full chain via nested timeouts
-        const t1 = setTimeout(() => {
-          setState('STOPPING');
-          const t2 = setTimeout(() => {
-            setState('NAMASKAR');
-            const t3 = setTimeout(() => {
-              setState('GREETING');
-              const t4 = setTimeout(() => {
-                try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch { /* */ }
-                setState('IDLE');
-              }, STATE_DURATIONS.GREETING!);
-              timerRef.current = t4;
-            }, STATE_DURATIONS.NAMASKAR!);
-            timerRef.current = t3;
-          }, STATE_DURATIONS.STOPPING!);
-          timerRef.current = t2;
-        }, STATE_DURATIONS.ENTERING!);
-        timerRef.current = t1;
+        setState('VIDEO_GREETING');
       });
-
       return () => cancelAnimationFrame(raf2);
     });
 
@@ -156,60 +84,83 @@ export function SetuAssistant({ onOpenChat, isChatOpen, userName }: SetuAssistan
       cancelAnimationFrame(raf1);
       clearTimer();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Sync with external chat open/close ──
   useEffect(() => {
     const wasOpen = prevChatOpen.current;
     prevChatOpen.current = isChatOpen;
 
-    if (isChatOpen && !wasOpen) {
+    if (!wasOpen && isChatOpen) {
       advanceTo('OPENING_CHAT');
-    } else if (!isChatOpen && wasOpen) {
+    } else if (wasOpen && !isChatOpen) {
       advanceTo('CLOSING_CHAT');
     }
   }, [isChatOpen, advanceTo]);
 
-  // ── Cleanup on unmount ──
   useEffect(() => {
     return () => clearTimer();
   }, [clearTimer]);
 
-  // ── Click handler ──
   const handleClick = useCallback(() => {
-    if (
-      state === 'IDLE' ||
-      state === 'GREETING' ||
-      state === 'STOPPING' ||
-      state === 'NAMASKAR'
-    ) {
-      // If the greeting is still playing, mark it as seen
-      if (state === 'GREETING' || state === 'NAMASKAR') {
-        try {
-          sessionStorage.setItem(SESSION_KEY, 'true');
-        } catch {
-          // ignore
-        }
+    if (state === 'IDLE' || state === 'VIDEO_GREETING' || state === 'POST_GREETING_PAUSE' || state === 'COLLAPSING') {
+      if (state !== 'IDLE') {
+        try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch { /* ignore */ }
       }
       clearTimer();
       onOpenChat();
     }
   }, [state, onOpenChat, clearTimer]);
 
-  // Don't render when chat is fully open
+  const handleVideoEnded = useCallback(() => {
+    if (state === 'VIDEO_GREETING') {
+      advanceTo('POST_GREETING_PAUSE');
+    }
+  }, [state, advanceTo]);
+
   if (state === 'CHAT_OPEN') return null;
 
-  const showGreeting = state === 'GREETING';
+  const showStartupVisual = state === 'VIDEO_GREETING' || state === 'POST_GREETING_PAUSE' || state === 'COLLAPSING';
+  const showIdleButton = state === 'IDLE' || state === 'CLOSING_CHAT' || state === 'OPENING_CHAT' || state === 'COLLAPSING';
 
   return (
-    <div className={styles.setuWrapper}>
-      <SetuGreeting
-        firstName={firstName}
-        visible={showGreeting}
+    <>
+      {showStartupVisual && (
+        <div className={`${styles.startupVisualContainer} ${styles[stateToClassName(state)] || ''}`}>
+          <video
+            src="/setu/WhatsApp Video 2026-10-08 at 11.23.06 AM.mp4"
+            className={styles.startupVideo}
+            autoPlay
+            playsInline
+            muted={false}
+            onEnded={handleVideoEnded}
+            onClick={handleClick}
+            style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+          />
+        </div>
+      )}
+
+      {/* The interactive idle icon layer */}
+      <button
+        className={`${styles.idleButton} ${showIdleButton ? styles.idleVisible : styles.idleHidden} ${styles[stateToClassName(state)] || ''}`}
         onClick={handleClick}
-      />
-      <SetuCharacter state={state} onClick={handleClick} />
-    </div>
+        aria-label="Open UK Enterprise AI Assistant"
+        tabIndex={0}
+      >
+        <div className={styles.idleIconWrapper}>
+          <Image
+            src="/images/setu/setu-character.png"
+            alt="SETU"
+            width={100}
+            height={150}
+            className={styles.idleIconImage}
+            priority
+            draggable={false}
+          />
+        </div>
+        {(state === 'IDLE' || state === 'VIDEO_GREETING' || state === 'POST_GREETING_PAUSE') && (
+          <div className={styles.statusDot} />
+        )}
+      </button>
+    </>
   );
 }

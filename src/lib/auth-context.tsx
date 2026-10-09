@@ -20,23 +20,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedRole = localStorage.getItem('auth_user_role');
-      const storedSession = localStorage.getItem('auth_session_id');
-      if (storedRole) {
-        const found = USERS.find((u) => u.role === storedRole);
-        if (found) {
-          setUser(found);
-          if (storedSession) {
-            setSessionId(storedSession);
+    async function verifySession() {
+      try {
+        const storedRole = localStorage.getItem('auth_user_role');
+        const storedSession = localStorage.getItem('auth_session_id');
+        
+        if (storedRole) {
+          const res = await fetch('/api/auth');
+          if (res.ok) {
+            const found = USERS.find((u) => u.role === storedRole);
+            if (found) {
+              setUser(found);
+              if (storedSession) {
+                setSessionId(storedSession);
+              }
+            }
+          } else {
+            // Server session is missing or expired, clear stale client state
+            localStorage.removeItem('auth_user_role');
+            localStorage.removeItem('auth_session_id');
+            setUser(null);
+            setSessionId(null);
           }
         }
+      } catch (err) {
+        console.warn('Failed to verify auth session');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.warn('Failed to read auth from localStorage');
-    } finally {
-      setIsLoading(false);
     }
+    
+    verifySession();
   }, []);
 
   const login = (role: AppRole) => {
@@ -61,6 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    // End server session
+    fetch('/api/auth', { method: 'DELETE' }).catch(console.error);
+
     if (sessionId) {
       sessionStore.endSession(sessionId);
     }

@@ -15,14 +15,19 @@ export interface SessionUser {
 }
 
 export async function getServerUser(): Promise<SessionUser | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth_session')?.value;
+
+  if (!token) {
+    console.log('[getServerUser] No token found in cookies');
+    return null;
+  }
+
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('auth_session')?.value;
-
-    if (!token) return null;
-
     const { payload } = await jwtVerify(token, secretKey);
     const employeeId = payload.employeeId as string;
+    
+    console.log('[getServerUser] Verified token for employeeId:', employeeId);
 
     if (!employeeId) return null;
 
@@ -38,7 +43,10 @@ export async function getServerUser(): Promise<SessionUser | null> {
       }
     });
 
-    if (!user || user.status !== 'ACTIVE') return null;
+    if (!user || user.status !== 'ACTIVE') {
+      console.log('[getServerUser] User not found or inactive for employeeId:', employeeId);
+      return null;
+    }
 
     return {
       id: user.id,

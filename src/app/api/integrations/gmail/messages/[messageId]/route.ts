@@ -65,6 +65,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       result = await GmailService.modifyMessage(employee.id, resolvedParams.messageId, [], ['INBOX']);
     } else if (action === 'trash') {
       result = await GmailService.trashMessage(employee.id, resolvedParams.messageId);
+    } else if (action === 'untrash' || action === 'restore') {
+      result = await GmailService.untrashMessage(employee.id, resolvedParams.messageId);
+    } else if (action === 'delete_permanently') {
+      result = await GmailService.deleteMessage(employee.id, resolvedParams.messageId);
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

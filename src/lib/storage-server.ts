@@ -116,3 +116,20 @@ export async function deleteFromStorage(storageKey: string) {
     throw new Error(`Failed to delete from storage: ${error.message}`);
   }
 }
+
+/**
+ * Download a document from Supabase Storage
+ */
+export async function downloadFromStorage(storageKey: string): Promise<Buffer> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.storage
+    .from(BUCKET_NAME)
+    .download(storageKey);
+
+  if (error) {
+    throw new Error(`Failed to download from storage: ${error.message}`);
+  }
+
+  const arrayBuffer = await data.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}

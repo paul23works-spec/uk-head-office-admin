@@ -272,8 +272,8 @@ export function ChatWidget() {
               </div>
             </div>
             <div>
-              <h4 className="text-gray-900 font-semibold text-lg mb-2">Namaskar, {user.name.split(' ')[0]}!</h4>
-              <p className="text-[14px] text-gray-500 max-w-[280px] mx-auto leading-relaxed">I&apos;m Setu, your UK Enterprise AI Assistant.<br/>I can help you understand your projects, documents, action items, organizations and other information available in the UK Enterprise system.</p>
+              <h4 className="text-gray-900 font-semibold text-lg mb-2">Nomoskar! 👋</h4>
+              <p className="text-[14px] text-gray-500 max-w-[280px] mx-auto leading-relaxed">Moi SETU — UK Enterprise-or AI Assistant.<br/>Aji moi apunalukok ki dhorone help koribo paru?</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg mt-4 px-2">
               {suggestedPrompts.map((prompt, i) => (

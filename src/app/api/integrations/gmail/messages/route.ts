@@ -23,7 +23,32 @@ export async function GET(request: NextRequest) {
     const pageToken = searchParams.get('pageToken') || undefined;
     const label = searchParams.get('label') || 'INBOX';
 
-    const result = await GmailService.listMessages(employee.id, pageToken, 25, label);
+    let result;
+    if (label === 'DRAFTS') {
+      const dbDrafts = await prisma.draft.findMany({
+        where: { employeeId: employee.id },
+        orderBy: { updatedAt: 'desc' },
+        take: 25,
+      });
+      result = {
+        messages: dbDrafts.map((d: any) => ({
+          id: d.id, // This is a draft ID
+          draft: { id: d.id }, // So handleOpenDraft can access msg.draft.id or msg.id
+          threadId: d.threadId || '',
+          snippet: (d.textBody || d.htmlBody || '').replace(/<[^>]+>/g, '').substring(0, 100),
+          labelIds: ['DRAFTS'],
+          from: '',
+          to: d.to || '',
+          subject: d.subject || '',
+          date: d.updatedAt.toISOString(),
+          isUnread: false,
+          isStarred: false,
+        })),
+        nextPageToken: null,
+      };
+    } else {
+      result = await GmailService.listMessages(employee.id, pageToken, 25, label);
+    }
 
     return NextResponse.json(result);
   } catch (error: unknown) {

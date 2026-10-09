@@ -4,7 +4,7 @@ import './globals.css';
 import { ProjectProvider } from '@/lib/project-context';
 import { AppShell } from '@/components/layout/AppShell';
 import { AuthProvider } from '@/lib/auth-context';
-import { ChatWidget } from '@/components/ai/ChatWidget';
+// import { ChatWidget } from '@/components/ai/ChatWidget'; // TEMPORARY SETU REMOVAL
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
@@ -41,7 +41,7 @@ export default function RootLayout({
           <ProjectProvider>
             <AppShell>{children}</AppShell>
           </ProjectProvider>
-          <ChatWidget />
+          {/* <ChatWidget /> TEMPORARY SETU REMOVAL */}
         </AuthProvider>
       </body>
     </html>

@@ -42,3 +42,8 @@ next-env.d.ts
 
 # Private project documents
 /private-data/
+/scratch/
+/test-results/
+/playwright-report/
+/adversarial_qa_output/
+*_REPORT.md

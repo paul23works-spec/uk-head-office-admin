@@ -77,6 +77,8 @@ model Employee {
 
   gmailConnection    GmailConnection?
   whatsAppConnection WhatsAppConnection?
+  scheduledEmails    ScheduledEmail[]
+  drafts             Draft[]
 
   status    EntityStatus @default(ACTIVE)
   createdAt DateTime     @default(now())
@@ -437,4 +439,85 @@ model WhatsAppConnection {
   lastUsedAt        DateTime @default(now())
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+enum ScheduledEmailStatus {
+  SCHEDULED
+  PROCESSING
+  SENT
+  FAILED
+  CANCELLED
+  DELIVERY_UNKNOWN
+}
+
+model ScheduledEmail {
+  id          String               @id @default(uuid())
+  employeeId  String
+  employee    Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  to          String
+  cc          String?
+  bcc         String?
+  subject     String
+  textBody    String
+  htmlBody    String?
+  attachments Json? // Store attachment metadata { filename, mimeType, storageKey }
+  scheduledAt DateTime
+  status      ScheduledEmailStatus @default(SCHEDULED)
+  sentAt      DateTime?
+  error       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, scheduledAt])
+}
+
+enum DraftStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  DELETED
+}
+
+model Draft {
+  id                 String       @id @default(uuid())
+  employeeId         String
+  employee           Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  gmailDraftId       String?      @unique
+  status             DraftStatus  @default(DRAFT)
+  revision           Int          @default(0)
+  to                 String
+  cc                 String?
+  bcc                String?
+  subject            String
+  htmlBody           String?
+  textBody           String?
+  
+  // Phase 7 threading metadata
+  threadId           String?
+  inReplyTo          String?
+  references         String?
+  isReplyAll         Boolean      @default(false)
+  forwardedMessageId String?
+  
+  attachments        DraftAttachment[]
+  
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([employeeId])
+  @@index([employeeId, status])
+  @@index([employeeId, updatedAt])
+}
+
+model DraftAttachment {
+  id          String   @id @default(uuid())
+  draftId     String
+  draft       Draft    @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  filename    String
+  mimeType    String
+  size        Int
+  storageKey  String
+  
+  createdAt   DateTime @default(now())
 }

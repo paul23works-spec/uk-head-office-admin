@@ -7,10 +7,9 @@
 
 export type SetuState =
   | 'HIDDEN'
-  | 'ENTERING'
-  | 'STOPPING'
-  | 'NAMASKAR'
-  | 'GREETING'
+  | 'VIDEO_GREETING'
+  | 'POST_GREETING_PAUSE'
+  | 'COLLAPSING'
   | 'IDLE'
   | 'OPENING_CHAT'
   | 'CHAT_OPEN'
@@ -18,20 +17,16 @@ export type SetuState =
 
 /** Duration (ms) for each animated state before transitioning to the next. */
 export const STATE_DURATIONS: Partial<Record<SetuState, number>> = {
-  ENTERING: 2400,
-  STOPPING: 600,
-  NAMASKAR: 1600,
-  GREETING: 5000,
+  POST_GREETING_PAUSE: 1200,
+  COLLAPSING: 2000,
   OPENING_CHAT: 400,
   CLOSING_CHAT: 500,
 };
 
 /** The automatic next state after a timed state completes. */
 export const NEXT_STATE: Partial<Record<SetuState, SetuState>> = {
-  ENTERING: 'STOPPING',
-  STOPPING: 'NAMASKAR',
-  NAMASKAR: 'GREETING',
-  GREETING: 'IDLE',
+  POST_GREETING_PAUSE: 'COLLAPSING',
+  COLLAPSING: 'IDLE',
   CLOSING_CHAT: 'IDLE',
   OPENING_CHAT: 'CHAT_OPEN',
 };
@@ -43,10 +38,9 @@ export const SESSION_KEY = 'uk_setu_greeted_session';
 export function stateToClassName(state: SetuState): string {
   const map: Record<SetuState, string> = {
     HIDDEN: 'stateHidden',
-    ENTERING: 'stateEntering',
-    STOPPING: 'stateStopping',
-    NAMASKAR: 'stateNamaskar',
-    GREETING: 'stateGreeting',
+    VIDEO_GREETING: 'stateVideoGreeting',
+    POST_GREETING_PAUSE: 'statePostGreetingPause',
+    COLLAPSING: 'stateCollapsing',
     IDLE: 'stateIdle',
     OPENING_CHAT: 'stateOpeningChat',
     CHAT_OPEN: 'stateChatOpen',

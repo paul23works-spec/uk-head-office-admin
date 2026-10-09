@@ -26,7 +26,7 @@ export default function LoginPage() {
     const selectedUser = USERS.find((u) => u.role === role);
     if (selectedUser) {
       try {
-        await fetch('/api/auth', {
+        const res = await fetch('/api/auth', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -36,8 +36,14 @@ export default function LoginPage() {
             password: 'password',
           }),
         });
+
+        if (!res.ok) {
+          console.error('Failed to establish server session (status: ' + res.status + ')');
+          return;
+        }
       } catch (error) {
-        console.error('Failed to establish server session:', error);
+        console.error('Network error during login:', error);
+        return;
       }
     }
 

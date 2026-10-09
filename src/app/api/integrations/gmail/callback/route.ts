@@ -47,20 +47,26 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // OAuth state must match the Employee.id UUID
-    // that was placed into the authorization request.
-    if (state !== employee.id) {
-      return NextResponse.json(
-        { error: 'Invalid state' },
-        { status: 400 }
-      );
+    const storedState = req.cookies.get('oauth_state')?.value;
+    
+    if (!storedState || storedState !== state) {
+      const response = NextResponse.json({ error: 'Invalid or expired state' }, { status: 400 });
+      response.cookies.delete('oauth_state');
+      return response;
+    }
+
+    const [stateEmployeeId, nonce] = state.split(':');
+    if (stateEmployeeId !== employee.id) {
+      const response = NextResponse.json({ error: 'State bound to different employee' }, { status: 403 });
+      response.cookies.delete('oauth_state');
+      return response;
     }
 
     await GmailService.handleCallback(code, employee.id);
 
-    return NextResponse.redirect(
-      new URL('/management/communications', req.url)
-    );
+    const response = NextResponse.redirect(new URL('/management/communications', req.url));
+    response.cookies.delete('oauth_state');
+    return response;
   } catch (error) {
     console.error('Error handling Gmail callback:', error);
 

@@ -1,354 +1,159 @@
 /* ============================================================
-   UK Setu Character — Animation Module Styles
-   ============================================================
-   State-driven CSS animations for the Setu AI Assistant.
-   Uses a single master character image with CSS transforms
-   to create believable idle/entrance/Namaskar motion.
+   UK Setu Character — Corrected Layers
    ============================================================ */
 
-/* ── Outer wrapper (fixed overlay) ── */
-.setuWrapper {
+/* ── STARTUP VISUAL LAYER (Pointer events NONE) ── */
+.startupVisualContainer {
   position: fixed;
-  z-index: 60;
   bottom: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  pointer-events: none;
-  padding: 0 16px 8px 0;
-}
-
-@media (min-width: 640px) {
-  .setuWrapper {
-    padding: 0 24px 12px 0;
-  }
-}
-
-/* ── Character container ── */
-.characterContainer {
-  pointer-events: auto;
-  position: relative;
-  cursor: pointer;
-  outline: none;
-  border: none;
-  background: none;
-  padding: 0;
+  right: 24px;
+  z-index: 50;
+  pointer-events: none; /* MUST NOT INTERCEPT CLICKS */
   display: flex;
   flex-direction: column;
   align-items: center;
+  transform-origin: bottom center;
 }
 
-.characterContainer:focus-visible {
-  outline: 3px solid rgba(59, 130, 246, 0.6);
-  outline-offset: 4px;
-  border-radius: 12px;
-}
-
-/* ── Character image (the pivot element for all body animation) ── */
-.characterImage {
+.startupVideo {
   display: block;
   width: auto;
   height: 260px;
   object-fit: contain;
-  transform-origin: bottom center;
   will-change: transform, opacity;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
-  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              opacity 0.5s ease;
+  /* Blend pure white background into light UI without a halo */
+  mix-blend-mode: multiply;
 }
 
 @media (min-width: 640px) {
-  .characterImage {
-    height: 320px;
-  }
+  .startupVideo { height: 320px; }
 }
-
 @media (min-width: 1024px) {
-  .characterImage {
-    height: 360px;
-  }
+  .startupVideo { height: 360px; }
 }
 
-/* ── Mobile compact mode ── */
-@media (max-width: 480px) {
-  .characterImage {
-    height: 180px;
-  }
-}
-
-/* ============================================================
-   STATE: HIDDEN
-   ============================================================ */
-.stateHidden .characterImage {
+/* state animations for video */
+.stateHidden .startupVideo {
   opacity: 0;
   transform: translateX(120px) scale(0.9);
-  transition: none;
 }
 
-/* ============================================================
-   STATE: ENTERING
-   Character emerges from the right edge.
-   Uses clip-path reveal + subtle vertical bob to suggest
-   walking into view (NOT a fake translateX "walk").
-   ============================================================ */
-.stateEntering .characterImage {
-  animation: setu-enter 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.stateVideoGreeting .startupVideo {
+  animation: startup-enter 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes setu-enter {
-  0% {
-    opacity: 0;
-    transform: translateX(100px) scale(0.92);
-    clip-path: inset(0 0 0 60%);
-  }
-  15% {
-    opacity: 1;
-  }
-  /* Subtle vertical bobbing to suggest steps */
-  25% {
-    transform: translateX(60px) translateY(-3px) scale(0.95);
-    clip-path: inset(0 0 0 30%);
-  }
-  40% {
-    transform: translateX(35px) translateY(0px) scale(0.97);
-    clip-path: inset(0 0 0 10%);
-  }
-  55% {
-    transform: translateX(18px) translateY(-2px) scale(0.98);
-    clip-path: inset(0 0 0 0%);
-  }
-  70% {
-    transform: translateX(8px) translateY(0px) scale(0.99);
-  }
-  85% {
-    transform: translateX(2px) translateY(-1px) scale(1);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) translateY(0) scale(1);
-    clip-path: inset(0 0 0 0%);
-  }
-}
-
-/* ============================================================
-   STATE: STOPPING
-   Settle into standing — subtle deceleration bounce.
-   ============================================================ */
-.stateStopping .characterImage {
-  animation: setu-settle 0.6s ease-out forwards;
-}
-
-@keyframes setu-settle {
-  0% {
-    transform: translateY(0) scaleY(1);
-  }
-  40% {
-    transform: translateY(2px) scaleY(0.985);
-  }
-  70% {
-    transform: translateY(-1px) scaleY(1.005);
-  }
-  100% {
-    transform: translateY(0) scaleY(1);
-  }
-}
-
-/* ============================================================
-   STATE: NAMASKAR
-   Forward bow — character leans forward slightly from the waist.
-   Since the hands are already clasped in the source image,
-   the bow visually completes a recognizable Namaskar gesture.
-   ============================================================ */
-.stateNamaskar .characterImage {
-  animation: setu-namaskar 1.6s ease-in-out forwards;
-}
-
-@keyframes setu-namaskar {
-  0% {
-    transform: rotate(0deg) translateY(0);
-  }
-  /* Lean forward = bow */
-  25% {
-    transform: rotate(4.5deg) translateY(4px);
-  }
-  /* Hold the bow */
-  55% {
-    transform: rotate(4.5deg) translateY(4px);
-  }
-  /* Return to upright */
-  80% {
-    transform: rotate(1deg) translateY(1px);
-  }
-  100% {
-    transform: rotate(0deg) translateY(0);
-  }
-}
-
-/* ============================================================
-   STATE: GREETING
-   Gentle presence — very subtle sway while speech bubble shows.
-   ============================================================ */
-.stateGreeting .characterImage {
-  animation: setu-gentle-sway 3s ease-in-out infinite;
-}
-
-@keyframes setu-gentle-sway {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-2px) rotate(0.3deg);
-  }
-}
-
-/* ============================================================
-   STATE: IDLE
-   Extremely subtle breathing + micro-movements.
-   The character should feel alive but calm.
-   ============================================================ */
-.stateIdle .characterImage {
-  animation: setu-idle-breathe 5s ease-in-out infinite;
-}
-
-@keyframes setu-idle-breathe {
-  0%, 100% {
-    transform: translateY(0) scaleY(1);
-  }
-  40% {
-    transform: translateY(-1.5px) scaleY(1.003);
-  }
-  60% {
-    transform: translateY(-1px) scaleY(1.002);
-  }
-}
-
-/* ============================================================
-   STATE: OPENING_CHAT / CHAT_OPEN
-   Scale down and fade — Setu "steps into" the chat.
-   ============================================================ */
-.stateOpeningChat .characterImage,
-.stateChatOpen .characterImage {
-  transform: scale(0.7) translateY(20px);
-  opacity: 0;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 1, 1),
-              opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.stateOpeningChat,
-.stateChatOpen {
-  pointer-events: none !important;
-}
-
-/* ============================================================
-   STATE: CLOSING_CHAT
-   Return from chat — Setu reappears.
-   ============================================================ */
-.stateClosingChat .characterImage {
-  animation: setu-reappear 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes setu-reappear {
-  0% {
-    transform: scale(0.7) translateY(20px);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-/* ============================================================
-   HOVER EFFECT
-   Subtle lift on hover (idle/greeting states only).
-   ============================================================ */
-.stateIdle .characterContainer:hover .characterImage,
-.stateGreeting .characterContainer:hover .characterImage {
-  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.12));
-  transform: translateY(-4px) scale(1.01);
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* ============================================================
-   SPEECH BUBBLE
-   ============================================================ */
-.speechBubble {
-  position: relative;
-  max-width: 280px;
-  margin-bottom: 16px;
-  margin-right: 8px;
-  padding: 16px 18px;
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
-              0 2px 8px rgba(0, 0, 0, 0.04);
-  pointer-events: auto;
-  cursor: pointer;
-  transform-origin: bottom right;
-  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.speechBubbleHidden {
-  opacity: 0;
-  transform: scale(0.92) translateY(8px);
-  pointer-events: none;
-}
-
-.speechBubbleVisible {
+.statePostGreetingPause .startupVideo {
   opacity: 1;
-  transform: scale(1) translateY(0);
+  transform: translateY(0) scale(1);
 }
 
-/* Tail/arrow */
-.speechBubble::after {
-  content: '';
+.stateCollapsing .startupVideo {
+  animation: startup-collapse 2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes startup-enter {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes startup-collapse {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    /* Translate towards the button at right: 24px, bottom: 24px */
+    transform: scale(0.15) translateY(120px) translateX(60px);
+  }
+}
+
+/* ── IDLE BUTTON LAYER (Interactive) ── */
+.idleButton {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 60;
+  padding: 0;
+  overflow: visible; /* to allow status dot to overflow */
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.4s;
+}
+
+.idleButton:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.idleButton:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 4px;
+}
+
+.idleIconWrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background: #f9fafb; /* matches ui slightly, acts as matte */
+}
+
+/* Position the full-body image so the face is in the circle */
+.idleIconImage {
+  width: 140%;
+  height: auto;
   position: absolute;
-  bottom: -7px;
-  right: 32px;
-  width: 14px;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.97);
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  transform: rotate(45deg);
+  top: 5%;
+  left: -20%;
+  object-fit: cover;
 }
 
-.greetingPrimary {
-  color: #1a202c;
-  font-size: 14px;
-  line-height: 1.6;
-  font-weight: 500;
-  margin: 0 0 6px 0;
+.idleHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.8);
 }
 
-.greetingAssamese {
-  color: #4a5568;
-  font-size: 13px;
-  line-height: 1.5;
-  font-weight: 500;
-  margin: 0;
+.idleVisible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
 }
 
-.greetingHint {
-  color: #a0aec0;
-  font-size: 11px;
-  margin: 8px 0 0 0;
-  font-weight: 400;
+/* Closing/Opening chat transitions */
+.stateOpeningChat.idleButton,
+.stateChatOpen.idleButton {
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
 }
 
-/* ============================================================
-   STATUS INDICATOR (green dot)
-   ============================================================ */
+.stateClosingChat.idleButton {
+  animation: button-reappear 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes button-reappear {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Status indicator (green dot) */
 .statusDot {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 10px;
-  height: 10px;
+  top: 0px;
+  right: 0px;
+  width: 12px;
+  height: 12px;
   background: #22c55e;
   border-radius: 50%;
   border: 2px solid white;
@@ -356,38 +161,18 @@
   z-index: 10;
 }
 
-/* ============================================================
-   REDUCED MOTION — Skip all complex animations
-   ============================================================ */
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  .stateEntering .characterImage {
+  .stateVideoGreeting .startupVideo,
+  .stateCollapsing .startupVideo {
     animation: none;
     opacity: 1;
     transform: none;
-    clip-path: none;
   }
 
-  .stateStopping .characterImage,
-  .stateNamaskar .characterImage,
-  .stateGreeting .characterImage,
-  .stateIdle .characterImage,
-  .stateClosingChat .characterImage {
+  .stateClosingChat.idleButton {
     animation: none;
-    transform: none;
     opacity: 1;
+    transform: none;
   }
-
-  .speechBubble {
-    transition: opacity 0.3s ease;
-  }
-}
-
-/* ============================================================
-   CHAT AVATAR (small Setu in chat header/messages)
-   ============================================================ */
-.chatAvatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
 }

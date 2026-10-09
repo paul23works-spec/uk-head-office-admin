@@ -73,3 +73,26 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const { getServerUser } = await import('@/lib/auth-server');
+    const user = await getServerUser();
+    if (user) {
+      return NextResponse.json({ success: true, user });
+    }
+    return NextResponse.json({ success: false }, { status: 401 });
+  } catch (error) {
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete('auth_session');
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
+}
