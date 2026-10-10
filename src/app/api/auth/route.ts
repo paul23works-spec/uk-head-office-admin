@@ -88,9 +88,45 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error: any) {
+    let safeDiagnosticInfo = 'Unclassified initialization error';
+    let safeErrorName = 'UnknownError';
+    let safeErrorCode: string | undefined = undefined;
+
+    try {
+      if (error && typeof error === 'object') {
+        const extractedName = error.name;
+        if (typeof extractedName === 'string') safeErrorName = extractedName;
+
+        const extractedCode = error.code;
+        if (typeof extractedCode === 'string') safeErrorCode = extractedCode;
+
+        const extractedMessage = error.message;
+        if (typeof extractedMessage === 'string') {
+          const rawMsg = extractedMessage.toLowerCase();
+          if (rawMsg.includes('prepared statement')) {
+            safeDiagnosticInfo = 'Prepared-statement-related error; inspect connection-pooler configuration';
+          } else if (rawMsg.includes('timeout') || rawMsg.includes('timed out')) {
+            safeDiagnosticInfo = 'Connection timeout indicated';
+          } else if (rawMsg.includes('authentication failed') || rawMsg.includes('password authentication')) {
+            safeDiagnosticInfo = 'Database authentication failure indicated';
+          } else if (rawMsg.includes("can't reach database server") || rawMsg.includes('econnrefused')) {
+            safeDiagnosticInfo = 'Unreachable host or port closed indicated';
+          } else if (rawMsg.includes('enotfound') || rawMsg.includes('getaddrinfo')) {
+            safeDiagnosticInfo = 'DNS resolution failure indicated';
+          }
+        }
+      }
+    } catch (extractionError) {
+      // Fallback safely if error properties throw on access
+      safeErrorName = 'UnknownError';
+      safeErrorCode = undefined;
+      safeDiagnosticInfo = 'Unclassified initialization error (extraction failed)';
+    }
+
     console.error(`[Auth Diagnostics] Failed at stage: ${diagnosticStage}`, {
-      errorName: error?.name,
-      errorCode: error?.code, // Captured if it's a PrismaClientKnownRequestError
+      errorName: safeErrorName,
+      errorCode: safeErrorCode,
+      safeDiagnosticInfo
     });
 
     let isDebug = false;
@@ -118,9 +154,9 @@ export async function POST(request: Request) {
         success: false, 
         error: 'Internal Server Error',
         ...(isDebug && { 
-          diagnosticStage, 
-          errorName: error?.name, 
-          errorCode: error?.code 
+          diagnosticStage,
+          errorName: safeErrorName,
+          errorCode: safeErrorCode
         })
       },
       { status: 500 }
