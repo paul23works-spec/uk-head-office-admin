@@ -4,10 +4,12 @@ import { cookies } from 'next/headers';
 import prisma from '@/lib/db';
 
 export async function POST(request: Request) {
+  let diagnosticStage = 'request_parsing';
   try {
     const body = await request.json();
     const { employeeId, password } = body;
 
+    diagnosticStage = 'credential_validation';
     if (!employeeId || !password) {
       return NextResponse.json(
         { success: false, error: 'Missing credentials' },
@@ -15,6 +17,7 @@ export async function POST(request: Request) {
       );
     }
 
+    diagnosticStage = 'database_user_lookup';
     // Server-side auth check
     const user = await prisma.user.findFirst({
       where: { 
@@ -22,19 +25,26 @@ export async function POST(request: Request) {
       },
     });
 
+    diagnosticStage = 'credential_check';
     // In a real system, use bcrypt.compare(password, user.passwordHash)
     // For this migration phase, we simulate success if user exists and password is 'password'
     if (!user || password !== 'password' || user.status !== 'ACTIVE') {
-      // Create an audit log for failed login attempt (fire and forget)
-      prisma.auditLog.create({
-        data: {
-          actorId: employeeId,
-          action: 'LOGIN_FAILED',
-          entityType: 'User',
-          entityId: employeeId,
-          metadata: { ip: request.headers.get('x-forwarded-for') || 'unknown' }
-        }
-      }).catch(console.error);
+      diagnosticStage = 'audit_log_failed_login';
+      try {
+        // Create an audit log for failed login attempt safely
+        await prisma.auditLog.create({
+          data: {
+            actorId: employeeId,
+            action: 'LOGIN_FAILED',
+            entityType: 'User',
+            entityId: employeeId,
+            metadata: { ip: request.headers.get('x-forwarded-for') || 'unknown' }
+          }
+        });
+      } catch (auditError) {
+        // Fail safely without masking the primary authentication result
+        console.error('[Auth Diagnostics] Failed to write audit log');
+      }
 
       return NextResponse.json(
         { success: false, error: 'Invalid credentials' },
@@ -42,8 +52,10 @@ export async function POST(request: Request) {
       );
     }
 
+    diagnosticStage = 'session_creation';
     const token = await createSession(user.employeeId);
     
+    diagnosticStage = 'cookie_response_creation';
     const response = NextResponse.json({ success: true });
     response.cookies.set('auth_session', token, {
       httpOnly: true,
@@ -53,19 +65,32 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24, // 24 hours
     });
 
+    diagnosticStage = 'audit_log_successful_login';
     // Audit log for successful login
-    await prisma.auditLog.create({
-      data: {
+    try {
+      await prisma.auditLog.create({
+        data: {
+          actorId: employeeId,
+          action: 'LOGIN_SUCCESS',
+          entityType: 'User',
+          entityId: user.id,
+        }
+      });
+    } catch (auditError: any) {
+      // Fallback audit log to console to preserve mandatory audit policy without failing auth
+      console.error('[Auth Diagnostics] CRITICAL: Audit log write failed for successful login', {
         actorId: employeeId,
-        action: 'LOGIN_SUCCESS',
-        entityType: 'User',
-        entityId: user.id,
-      }
-    });
+        errorName: auditError?.name,
+        errorCode: auditError?.code,
+      });
+    }
 
     return response;
-  } catch (error) {
-    console.error('Login error:', error);
+  } catch (error: any) {
+    console.error(`[Auth Diagnostics] Failed at stage: ${diagnosticStage}`, {
+      errorName: error?.name,
+      errorCode: error?.code, // Captured if it's a PrismaClientKnownRequestError
+    });
     return NextResponse.json(
       { success: false, error: 'Internal Server Error' },
       { status: 500 }
