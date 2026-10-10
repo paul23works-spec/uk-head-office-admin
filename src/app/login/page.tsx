@@ -1,14 +1,15 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { USERS, AppRole } from '@/lib/permissions';
+import { User, AppRole, USERS } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
-import { User, Lock } from 'lucide-react';
-import { useEffect } from 'react';
+import { User as UserIcon, Lock } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const { user, login, isLoading } = useAuth();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && !isLoading) {
@@ -17,6 +18,7 @@ export default function LoginPage() {
   }, [user, isLoading, router]);
 
   const handleLogin = async (role: AppRole) => {
+    setError(null);
     try {
       sessionStorage.setItem('ukg_brand_intro_pending', 'true');
     } catch (e) {
@@ -38,11 +40,18 @@ export default function LoginPage() {
         });
 
         if (!res.ok) {
-          console.error('Failed to establish server session (status: ' + res.status + ')');
+          let safeMsg = 'An unexpected error occurred.';
+          if (res.status === 401) safeMsg = 'Invalid credentials. Please try again.';
+          if (res.status === 400) safeMsg = 'Missing credentials.';
+          if (res.status === 500) safeMsg = 'Internal Server Error.';
+
+          setError(`Authentication failed: ${safeMsg}`);
+          console.error(`Failed to establish server session (Status: ${res.status})`);
           return;
         }
-      } catch (error) {
-        console.error('Network error during login:', error);
+      } catch (err) {
+        setError('Network error connecting to the server.');
+        console.error('Network error during login:', err);
         return;
       }
     }
@@ -78,6 +87,13 @@ export default function LoginPage() {
             <span>Select Simulated Role</span>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-md border border-red-100 flex items-start gap-2">
+              <span className="font-semibold">Error:</span>
+              <span className="flex-1">{error}</span>
+            </div>
+          )}
+
           <div className="space-y-3">
             {USERS.map((u) => (
               <button
@@ -94,7 +110,7 @@ export default function LoginPage() {
                     <div className="text-xs text-slate-500">{u.department} &bull; {u.role}</div>
                   </div>
                 </div>
-                <User className="w-4 h-4 text-slate-400" />
+                <UserIcon className="w-4 h-4 text-slate-400" />
               </button>
             ))}
           </div>

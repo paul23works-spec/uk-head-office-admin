@@ -2,9 +2,14 @@ import { cookies } from 'next/headers';
 import { jwtVerify, SignJWT } from 'jose';
 import prisma from '@/lib/db';
 
-const secretKey = new TextEncoder().encode(
-  process.env.AUTH_SECRET || 'super_secret_key_change_me_in_production'
-);
+function getSecretKey(): Uint8Array {
+  if (process.env.NODE_ENV === 'production' && !process.env.AUTH_SECRET) {
+    throw new Error('AUTH_SECRET environment variable is missing in production.');
+  }
+  return new TextEncoder().encode(
+    process.env.AUTH_SECRET || 'super_secret_key_change_me_in_production'
+  );
+}
 
 export interface SessionUser {
   id: string;
@@ -15,6 +20,7 @@ export interface SessionUser {
 }
 
 export async function getServerUser(): Promise<SessionUser | null> {
+  const secretKey = getSecretKey();
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_session')?.value;
 
@@ -62,6 +68,7 @@ export async function getServerUser(): Promise<SessionUser | null> {
 }
 
 export async function createSession(employeeId: string): Promise<string> {
+  const secretKey = getSecretKey();
   const token = await new SignJWT({ employeeId })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()

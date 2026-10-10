@@ -44,9 +44,8 @@ export async function POST(request: Request) {
 
     const token = await createSession(user.employeeId);
     
-    // Set HTTP-only, secure cookie
-    const cookieStore = await cookies();
-    cookieStore.set('auth_session', token, {
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('auth_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -64,7 +63,7 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json({ success: true });
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
@@ -89,9 +88,9 @@ export async function GET() {
 
 export async function DELETE() {
   try {
-    const cookieStore = await cookies();
-    cookieStore.delete('auth_session');
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.cookies.delete('auth_session');
+    return response;
   } catch (error) {
     return NextResponse.json({ success: false }, { status: 500 });
   }
