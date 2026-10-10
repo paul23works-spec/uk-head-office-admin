@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSession } from '@/lib/auth-server';
 import { cookies } from 'next/headers';
+import { timingSafeEqual } from 'node:crypto';
 import prisma from '@/lib/db';
 
 export async function POST(request: Request) {
@@ -104,8 +105,7 @@ export async function POST(request: Request) {
         
         // timingSafeEqual requires buffers of the exact same length
         if (envBuf.length === reqBuf.length) {
-          const crypto = require('crypto');
-          isDebug = crypto.timingSafeEqual(envBuf, reqBuf);
+          isDebug = timingSafeEqual(envBuf, reqBuf);
         }
       }
     } catch (safeError) {
