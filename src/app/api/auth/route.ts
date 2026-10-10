@@ -91,8 +91,38 @@ export async function POST(request: Request) {
       errorName: error?.name,
       errorCode: error?.code, // Captured if it's a PrismaClientKnownRequestError
     });
+
+    let isDebug = false;
+    try {
+      const envSecret = process.env.DIAGNOSTIC_SECRET;
+      const reqSecret = request.headers.get('x-diagnostic-secret');
+      
+      // Fail closed: secret must exist, match length requirements, and be provided
+      if (envSecret && reqSecret && envSecret.length >= 32) {
+        const envBuf = Buffer.from(envSecret, 'utf8');
+        const reqBuf = Buffer.from(reqSecret, 'utf8');
+        
+        // timingSafeEqual requires buffers of the exact same length
+        if (envBuf.length === reqBuf.length) {
+          const crypto = require('crypto');
+          isDebug = crypto.timingSafeEqual(envBuf, reqBuf);
+        }
+      }
+    } catch (safeError) {
+      // Fail closed on any parsing or buffer exception
+      isDebug = false;
+    }
+
     return NextResponse.json(
-      { success: false, error: 'Internal Server Error' },
+      { 
+        success: false, 
+        error: 'Internal Server Error',
+        ...(isDebug && { 
+          diagnosticStage, 
+          errorName: error?.name, 
+          errorCode: error?.code 
+        })
+      },
       { status: 500 }
     );
   }
