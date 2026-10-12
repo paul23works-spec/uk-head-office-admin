@@ -4,10 +4,33 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AppRole, USERS } from './permissions';
 import { sessionStore } from './session-store';
 
+export function toClientUser(serverUser: {
+  id: string;
+  employeeId: string;
+  name: string;
+  role: string;
+  department: string | null;
+  needsPasswordChange?: boolean;
+}): User {
+  const initials = serverUser.name
+    ? serverUser.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+    : 'UK';
+  return {
+    id: serverUser.id,
+    name: serverUser.name,
+    role: serverUser.role as AppRole,
+    avatarInitials: initials,
+    employeeId: serverUser.employeeId,
+    department: serverUser.department || 'Operations',
+    needsPasswordChange: !!serverUser.needsPasswordChange,
+  };
+}
+
 interface AuthContextType {
   user: User | null;
   sessionId: string | null;
-  login: (role: AppRole) => void;
+  setAuthenticatedUser: (user: User) => void;
+  login: (roleOrUser?: AppRole | User) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -22,60 +45,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function verifySession() {
       try {
-        const storedRole = localStorage.getItem('auth_user_role');
-        const storedSession = localStorage.getItem('auth_session_id');
-        
-        if (storedRole) {
-          const res = await fetch('/api/auth');
-          if (res.ok) {
-            const found = USERS.find((u) => u.role === storedRole);
-            if (found) {
-              setUser(found);
-              if (storedSession) {
-                setSessionId(storedSession);
-              }
-            }
+        const res = await fetch('/api/auth');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            const clientUser = toClientUser(data.user);
+            setUser(clientUser);
+            setSessionId(clientUser.employeeId);
           } else {
-            // Server session is missing or expired, clear stale client state
-            localStorage.removeItem('auth_user_role');
-            localStorage.removeItem('auth_session_id');
             setUser(null);
             setSessionId(null);
           }
+        } else {
+          setUser(null);
+          setSessionId(null);
         }
       } catch (err) {
-        console.warn('Failed to verify auth session');
+        setUser(null);
+        setSessionId(null);
       } finally {
         setIsLoading(false);
       }
     }
-    
+
     verifySession();
   }, []);
 
-  const login = (role: AppRole) => {
-    const found = USERS.find((u) => u.role === role);
+  const setAuthenticatedUser = (clientUser: User) => {
+    const newSessionId = sessionStore.createSession(
+      clientUser.employeeId,
+      clientUser.name,
+      clientUser.department,
+      clientUser.role
+    );
+    setUser(clientUser);
+    setSessionId(newSessionId);
+    try {
+      sessionStorage.setItem('ukg_brand_intro_pending', 'true');
+    } catch (e) {
+      // Safe fallback if sessionStorage is unavailable
+    }
+  };
+
+  const login = (roleOrUser?: AppRole | User) => {
+    if (!roleOrUser) return;
+    if (typeof roleOrUser === 'object') {
+      setAuthenticatedUser(roleOrUser);
+      return;
+    }
+    // Fallback lookup from known roles for legacy callers
+    const found = USERS.find((u) => u.role === roleOrUser);
     if (found) {
-      const newSessionId = sessionStore.createSession(
-        found.employeeId,
-        found.name,
-        found.department,
-        found.role
-      );
-      setUser(found);
-      setSessionId(newSessionId);
-      localStorage.setItem('auth_user_role', role);
-      localStorage.setItem('auth_session_id', newSessionId);
-      try {
-        sessionStorage.setItem('ukg_brand_intro_pending', 'true');
-      } catch (e) {
-        // Safe fallback if sessionStorage is unavailable
-      }
+      setAuthenticatedUser(found);
     }
   };
 
   const logout = () => {
-    // End server session
+    // End server session via HTTP-only cookie deletion
     fetch('/api/auth', { method: 'DELETE' }).catch(console.error);
 
     if (sessionId) {
@@ -83,9 +109,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     setSessionId(null);
-    localStorage.removeItem('auth_user_role');
-    localStorage.removeItem('auth_session_id');
     try {
+      localStorage.removeItem('auth_user_role');
+      localStorage.removeItem('auth_session_id');
       sessionStorage.removeItem('ukg_brand_intro_pending');
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
@@ -101,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, sessionId, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, sessionId, setAuthenticatedUser, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

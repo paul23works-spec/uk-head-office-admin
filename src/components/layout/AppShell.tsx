@@ -57,13 +57,13 @@ export function AppShell({ children }: AppShellProps) {
   }, [user, pathname]);
 
   useEffect(() => {
-    if (!isLoading && !user && pathname !== '/login') {
+    if (!isLoading && (!user || user.needsPasswordChange) && pathname !== '/login') {
       router.push('/login');
     }
   }, [user, isLoading, pathname, router]);
 
   useEffect(() => {
-    if (user && sessionId && pathname !== '/login') {
+    if (user && sessionId && pathname !== '/login' && !user.needsPasswordChange) {
       sessionStore.updateSessionActivity(sessionId, formatStageName(pathname));
     }
   }, [pathname, user, sessionId]);
@@ -74,7 +74,7 @@ export function AppShell({ children }: AppShellProps) {
     return <>{children}</>;
   }
 
-  if (!user) return null;
+  if (!user || user.needsPasswordChange) return null;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-slate-900">

@@ -9,6 +9,7 @@ export interface User {
   avatarInitials: string;
   employeeId: string;
   department: string;
+  needsPasswordChange?: boolean;
 }
 
 export const USERS: User[] = [

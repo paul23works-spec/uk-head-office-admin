@@ -1,50 +1,56 @@
 import { NextResponse } from 'next/server';
 import { createSession } from '@/lib/auth-server';
-import { cookies } from 'next/headers';
 import { timingSafeEqual } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
 
+const LEGACY_DEFAULT_PASSWORD = 'password';
+const BCRYPT_COST_FACTOR = 12;
+
 export async function POST(request: Request) {
-  let diagnosticStage = 'request_parsing';
   try {
     const body = await request.json();
-    const { employeeId, password } = body;
+    const identifier = (body.identifier || body.employeeId || '').trim();
+    const password = body.password;
 
-    diagnosticStage = 'credential_validation';
-    if (!employeeId || !password) {
+    if (!identifier || !password || typeof password !== 'string') {
       return NextResponse.json(
         { success: false, error: 'Missing credentials' },
         { status: 400 }
       );
     }
 
-    diagnosticStage = 'database_user_lookup';
-    // Server-side auth check
-    const user = await prisma.user.findFirst({
-      where: { 
-        employee: { employeeId } 
+    // Server-side lookup by Employee ID or Email
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { employee: { employeeId: { equals: identifier, mode: 'insensitive' } } },
+          { email: { equals: identifier.toLowerCase(), mode: 'insensitive' } },
+        ],
+      },
+      include: {
+        employee: {
+          include: {
+            role: true,
+            department: true,
+          },
+        },
       },
     });
 
-    diagnosticStage = 'credential_check';
-    // In a real system, use bcrypt.compare(password, user.passwordHash)
-    // For this migration phase, we simulate success if user exists and password is 'password'
-    if (!user || password !== 'password' || user.status !== 'ACTIVE') {
-      diagnosticStage = 'audit_log_failed_login';
+    if (!user || user.status !== 'ACTIVE') {
       try {
-        // Create an audit log for failed login attempt safely
         await prisma.auditLog.create({
           data: {
-            actorId: employeeId,
+            actorId: identifier,
             action: 'LOGIN_FAILED',
             entityType: 'User',
-            entityId: employeeId,
-            metadata: { ip: request.headers.get('x-forwarded-for') || 'unknown' }
-          }
+            entityId: identifier,
+            metadata: { ip: request.headers.get('x-forwarded-for') || 'unknown', reason: 'unknown_or_inactive_user' },
+          },
         });
-      } catch (auditError) {
-        // Fail safely without masking the primary authentication result
-        console.error('[Auth Diagnostics] Failed to write audit log');
+      } catch (auditErr) {
+        // Fail silently without blocking auth response
       }
 
       return NextResponse.json(
@@ -53,11 +59,129 @@ export async function POST(request: Request) {
       );
     }
 
-    diagnosticStage = 'session_creation';
-    const token = await createSession(user.employeeId);
-    
-    diagnosticStage = 'cookie_response_creation';
-    const response = NextResponse.json({ success: true });
+    let isPasswordValid = false;
+    let isLegacyUpgrade = false;
+
+    // Check if passwordHash is an existing bcrypt hash
+    const isBcryptHash = user.passwordHash.startsWith('$2a$') || user.passwordHash.startsWith('$2b$');
+
+    if (isBcryptHash) {
+      try {
+        isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      } catch (compareErr) {
+        isPasswordValid = false;
+      }
+    } else if (user.passwordHash === LEGACY_DEFAULT_PASSWORD) {
+      // Explicitly identified legacy seed credential: timing-safe comparison
+      const expectedBuf = Buffer.from(LEGACY_DEFAULT_PASSWORD, 'utf8');
+      const actualBuf = Buffer.from(password, 'utf8');
+
+      if (expectedBuf.length === actualBuf.length) {
+        isPasswordValid = timingSafeEqual(expectedBuf, actualBuf);
+      }
+
+      if (isPasswordValid) {
+        isLegacyUpgrade = true;
+        try {
+          // Immediately hash with bcrypt cost factor 12
+          const newHash = await bcrypt.hash(password, BCRYPT_COST_FACTOR);
+          // Atomic update using optimistic check to prevent concurrent race conditions
+          const updateResult = await prisma.user.updateMany({
+            where: {
+              id: user.id,
+              passwordHash: LEGACY_DEFAULT_PASSWORD,
+            },
+            data: {
+              passwordHash: newHash,
+            },
+          });
+
+          if (updateResult.count === 0) {
+            // Concurrent race: re-read the fresh user from DB and re-verify before issuing any session
+            const freshUser = await prisma.user.findUnique({
+              where: { id: user.id },
+              include: {
+                employee: {
+                  include: {
+                    role: true,
+                    department: true,
+                  },
+                },
+              },
+            });
+
+            if (!freshUser || freshUser.status !== 'ACTIVE') {
+              return NextResponse.json(
+                { success: false, error: 'Invalid credentials' },
+                { status: 401 }
+              );
+            }
+
+            let freshValid = false;
+            if (freshUser.passwordHash.startsWith('$2a$') || freshUser.passwordHash.startsWith('$2b$')) {
+              freshValid = await bcrypt.compare(password, freshUser.passwordHash);
+            }
+            if (!freshValid) {
+              return NextResponse.json(
+                { success: false, error: 'Invalid credentials' },
+                { status: 401 }
+              );
+            }
+            user = freshUser;
+          }
+        } catch (upgradeErr) {
+          console.error('[Auth] Failed to persist upgraded password hash');
+        }
+      }
+    } else {
+      // Unrecognized non-bcrypt hash: reject to prevent arbitrary plaintext acceptance
+      isPasswordValid = false;
+    }
+
+    if (!isPasswordValid) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            actorId: user.employee.employeeId,
+            action: 'LOGIN_FAILED',
+            entityType: 'User',
+            entityId: user.id,
+            metadata: { ip: request.headers.get('x-forwarded-for') || 'unknown', reason: 'invalid_password' },
+          },
+        });
+      } catch (auditErr) {
+        // Fail silently without blocking auth response
+      }
+
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials' },
+        { status: 401 }
+      );
+    }
+
+    // Require password change if authenticated via legacy shared password
+    const requiresPasswordChange = isLegacyUpgrade || user.passwordHash === LEGACY_DEFAULT_PASSWORD;
+
+    // Issue signed JWT session cookie with restricted state if password change is required
+    const token = await createSession(user.employeeId, {
+      needsPasswordChange: requiresPasswordChange,
+    });
+
+    const safeUser = {
+      id: user.id,
+      employeeId: user.employee.employeeId,
+      name: user.employee.name,
+      role: user.employee.role.name,
+      department: user.employee.department?.name || null,
+      needsPasswordChange: requiresPasswordChange,
+    };
+
+    const response = NextResponse.json({
+      success: true,
+      user: safeUser,
+      needsPasswordChange: requiresPasswordChange,
+    });
+
     response.cookies.set('auth_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -66,99 +190,24 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24, // 24 hours
     });
 
-    diagnosticStage = 'audit_log_successful_login';
-    // Audit log for successful login
     try {
       await prisma.auditLog.create({
         data: {
-          actorId: employeeId,
+          actorId: user.employee.employeeId,
           action: 'LOGIN_SUCCESS',
           entityType: 'User',
           entityId: user.id,
-        }
+        },
       });
-    } catch (auditError: any) {
-      // Fallback audit log to console to preserve mandatory audit policy without failing auth
-      console.error('[Auth Diagnostics] CRITICAL: Audit log write failed for successful login', {
-        actorId: employeeId,
-        errorName: auditError?.name,
-        errorCode: auditError?.code,
-      });
+    } catch (auditErr) {
+      // Safe fallback
     }
 
     return response;
   } catch (error: any) {
-    let safeDiagnosticInfo = 'Unclassified initialization error';
-    let safeErrorName = 'UnknownError';
-    let safeErrorCode: string | undefined = undefined;
-
-    try {
-      if (error && typeof error === 'object') {
-        const extractedName = error.name;
-        if (typeof extractedName === 'string') safeErrorName = extractedName;
-
-        const extractedCode = error.code;
-        if (typeof extractedCode === 'string') safeErrorCode = extractedCode;
-
-        const extractedMessage = error.message;
-        if (typeof extractedMessage === 'string') {
-          const rawMsg = extractedMessage.toLowerCase();
-          if (rawMsg.includes('prepared statement')) {
-            safeDiagnosticInfo = 'Prepared-statement-related error; inspect connection-pooler configuration';
-          } else if (rawMsg.includes('timeout') || rawMsg.includes('timed out')) {
-            safeDiagnosticInfo = 'Connection timeout indicated';
-          } else if (rawMsg.includes('authentication failed') || rawMsg.includes('password authentication')) {
-            safeDiagnosticInfo = 'Database authentication failure indicated';
-          } else if (rawMsg.includes("can't reach database server") || rawMsg.includes('econnrefused')) {
-            safeDiagnosticInfo = 'Unreachable host or port closed indicated';
-          } else if (rawMsg.includes('enotfound') || rawMsg.includes('getaddrinfo')) {
-            safeDiagnosticInfo = 'DNS resolution failure indicated';
-          }
-        }
-      }
-    } catch (extractionError) {
-      // Fallback safely if error properties throw on access
-      safeErrorName = 'UnknownError';
-      safeErrorCode = undefined;
-      safeDiagnosticInfo = 'Unclassified initialization error (extraction failed)';
-    }
-
-    console.error(`[Auth Diagnostics] Failed at stage: ${diagnosticStage}`, {
-      errorName: safeErrorName,
-      errorCode: safeErrorCode,
-      safeDiagnosticInfo
-    });
-
-    let isDebug = false;
-    try {
-      const envSecret = process.env.DIAGNOSTIC_SECRET;
-      const reqSecret = request.headers.get('x-diagnostic-secret');
-      
-      // Fail closed: secret must exist, match length requirements, and be provided
-      if (envSecret && reqSecret && envSecret.length >= 32) {
-        const envBuf = Buffer.from(envSecret, 'utf8');
-        const reqBuf = Buffer.from(reqSecret, 'utf8');
-        
-        // timingSafeEqual requires buffers of the exact same length
-        if (envBuf.length === reqBuf.length) {
-          isDebug = timingSafeEqual(envBuf, reqBuf);
-        }
-      }
-    } catch (safeError) {
-      // Fail closed on any parsing or buffer exception
-      isDebug = false;
-    }
-
+    console.error('[Auth] Internal error during authentication');
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Internal Server Error',
-        ...(isDebug && { 
-          diagnosticStage,
-          errorName: safeErrorName,
-          errorCode: safeErrorCode
-        })
-      },
+      { success: false, error: 'Internal Server Error' },
       { status: 500 }
     );
   }
@@ -167,7 +216,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const { getServerUser } = await import('@/lib/auth-server');
-    const user = await getServerUser();
+    const user = await getServerUser({ allowPasswordChangeSession: true });
     if (user) {
       return NextResponse.json({ success: true, user });
     }

@@ -17,23 +17,25 @@ export interface SessionUser {
   name: string;
   role: string;
   department: string | null;
+  needsPasswordChange?: boolean;
 }
 
-export async function getServerUser(): Promise<SessionUser | null> {
-  const secretKey = getSecretKey();
+export async function getServerUser(options?: {
+  allowPasswordChangeSession?: boolean;
+}): Promise<SessionUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_session')?.value;
 
   if (!token) {
-    console.log('[getServerUser] No token found in cookies');
     return null;
   }
+
+  const secretKey = getSecretKey();
 
   try {
     const { payload } = await jwtVerify(token, secretKey);
     const employeeId = payload.employeeId as string;
-    
-    console.log('[getServerUser] Verified token for employeeId:', employeeId);
+    const tokenNeedsPasswordChange = !!payload.needsPasswordChange;
 
     if (!employeeId) return null;
 
@@ -44,13 +46,19 @@ export async function getServerUser(): Promise<SessionUser | null> {
           include: {
             role: true,
             department: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!user || user.status !== 'ACTIVE') {
-      console.log('[getServerUser] User not found or inactive for employeeId:', employeeId);
+      return null;
+    }
+
+    const needsPasswordChange = tokenNeedsPasswordChange || user.passwordHash === 'password';
+
+    // Restrict access: sessions flagged for password change cannot access normal APIs or pages
+    if (needsPasswordChange && !options?.allowPasswordChangeSession) {
       return null;
     }
 
@@ -60,20 +68,26 @@ export async function getServerUser(): Promise<SessionUser | null> {
       name: user.employee.name,
       role: user.employee.role.name,
       department: user.employee.department?.name || null,
+      needsPasswordChange,
     };
   } catch (error) {
-    console.error('Session verification failed:', error);
     return null;
   }
 }
 
-export async function createSession(employeeId: string): Promise<string> {
+export async function createSession(
+  employeeId: string,
+  options?: { needsPasswordChange?: boolean }
+): Promise<string> {
   const secretKey = getSecretKey();
-  const token = await new SignJWT({ employeeId })
+  const token = await new SignJWT({
+    employeeId,
+    needsPasswordChange: !!options?.needsPasswordChange,
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('24h')
     .sign(secretKey);
-  
+
   return token;
 }
