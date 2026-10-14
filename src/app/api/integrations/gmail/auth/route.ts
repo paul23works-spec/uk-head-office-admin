@@ -52,7 +52,16 @@ export async function GET() {
 
     return response;
   } catch (error) {
-    console.error('Error generating Gmail auth URL:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Sanitized server-side error logging (never logs tokens, secrets, or sensitive URLs)
+    console.error('[GmailAuth] Error generating Gmail auth URL:', errorMessage);
+
+    if (errorMessage.startsWith('GMAIL_CONFIG_ERROR')) {
+      return NextResponse.json(
+        { error: 'Gmail integration is not configured properly on the server. Please check application settings.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { error: 'Internal server error' },

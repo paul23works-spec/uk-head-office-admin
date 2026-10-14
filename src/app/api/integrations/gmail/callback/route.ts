@@ -68,13 +68,16 @@ export async function GET(req: NextRequest) {
     response.cookies.delete('oauth_state');
     return response;
   } catch (error) {
-    console.error('Error handling Gmail callback:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[GmailCallback] Error handling Gmail callback:', errorMessage);
 
-    return NextResponse.redirect(
+    const errorResponse = NextResponse.redirect(
       new URL(
         '/management/communications?error=gmail_auth_failed',
         req.url
       )
     );
+    errorResponse.cookies.delete('oauth_state');
+    return errorResponse;
   }
 }

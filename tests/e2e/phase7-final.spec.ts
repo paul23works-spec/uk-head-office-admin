@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import prisma from '../../src/lib/db';
 import { google } from 'googleapis';
+import { GmailService } from '../../src/lib/services/gmail.service';
 
 test.describe('Phase 7 Final Two-Point Verification', () => {
   test('Verify Forward Attachment and Reply All Isolation', async ({ page, request }) => {
@@ -89,7 +90,7 @@ test.describe('Phase 7 Final Two-Point Verification', () => {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GMAIL_CLIENT_ID,
       process.env.GMAIL_CLIENT_SECRET,
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/gmail/callback`
+      GmailService.getRedirectUri()
     );
     oauth2Client.setCredentials({ refresh_token: connection!.encryptedToken });
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });

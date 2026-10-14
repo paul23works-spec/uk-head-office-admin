@@ -3,15 +3,93 @@ import prisma from '@/lib/db';
 import { AuditService } from '@/lib/services/audit.service';
 
 export class GmailService {
+  /**
+   * Resolves the application base URL for OAuth callbacks and server-side redirects.
+   * Priority order:
+   * 1. APP_URL (documented convention in .env.example)
+   * 2. NEXT_PUBLIC_APP_URL (client/local environment convention)
+   *
+   * Validates:
+   * - Must be defined and non-empty
+   * - Must be a valid parseable absolute URL
+   * - Protocol must be http: or https:
+   * - In production, protocol must be https: (unless localhost/loopback)
+   */
+  public static getAppBaseUrl(): string {
+    const raw = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL;
+    if (!raw || typeof raw !== 'string' || !raw.trim()) {
+      throw new Error(
+        'GMAIL_CONFIG_ERROR: Application base URL is not configured. Set APP_URL or NEXT_PUBLIC_APP_URL in server environment variables.'
+      );
+    }
+
+    const trimmed = raw.trim().replace(/\/+$/, '');
+    let parsed: URL;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      throw new Error(`GMAIL_CONFIG_ERROR: Application base URL is malformed: "${trimmed}"`);
+    }
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error(`GMAIL_CONFIG_ERROR: Invalid base URL protocol "${parsed.protocol}". Must be http: or https:.`);
+    }
+
+    if (process.env.NODE_ENV === 'production' && parsed.protocol !== 'https:') {
+      const isLoopback = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+      if (!isLoopback) {
+        throw new Error(`GMAIL_CONFIG_ERROR: Production application URL must use HTTPS. Received: "${parsed.protocol}//${parsed.host}"`);
+      }
+    }
+
+    return parsed.origin;
+  }
+
+  /**
+   * Resolves and validates the exact callback URI for Google OAuth.
+   * Expected in production: https://www.ukgrp.co/api/integrations/gmail/callback
+   */
+  public static getRedirectUri(): string {
+    const baseUrl = this.getAppBaseUrl();
+    const callbackPath = '/api/integrations/gmail/callback';
+    const redirectUri = `${baseUrl}${callbackPath}`;
+
+    const parsed = new URL(redirectUri);
+    if (!parsed.protocol || !parsed.host || parsed.pathname !== callbackPath) {
+      throw new Error('GMAIL_CONFIG_ERROR: Failed to construct a valid OAuth callback URI.');
+    }
+
+    return redirectUri;
+  }
+
+  /**
+   * Constructs the Google OAuth2 client with validated credentials and redirect URI.
+   */
   private static getOAuthClient() {
+    const clientId = process.env.GMAIL_CLIENT_ID?.trim();
+    const clientSecret = process.env.GMAIL_CLIENT_SECRET?.trim();
+
+    if (!clientId) {
+      throw new Error('GMAIL_CONFIG_ERROR: GMAIL_CLIENT_ID is not configured.');
+    }
+    if (!clientSecret) {
+      throw new Error('GMAIL_CONFIG_ERROR: GMAIL_CLIENT_SECRET is not configured.');
+    }
+
+    const redirectUri = this.getRedirectUri();
+
     return new google.auth.OAuth2(
-      process.env.GMAIL_CLIENT_ID,
-      process.env.GMAIL_CLIENT_SECRET,
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/gmail/callback`
+      clientId,
+      clientSecret,
+      redirectUri
     );
   }
 
   public static getAuthUrl(stateString: string) {
+    if (!stateString || typeof stateString !== 'string' || !stateString.trim()) {
+      throw new Error('GMAIL_AUTH_ERROR: State parameter is required for OAuth URL generation.');
+    }
+
     const oauth2Client = this.getOAuthClient();
     const scopes = [
       'https://www.googleapis.com/auth/gmail.readonly',
@@ -19,12 +97,47 @@ export class GmailService {
       'https://www.googleapis.com/auth/gmail.modify',
     ];
 
-    return oauth2Client.generateAuthUrl({
+    const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
       scope: scopes,
       state: stateString,
     });
+
+    // Validate that the generated URL contains a non-empty, valid redirect_uri
+    const parsedAuthUrl = new URL(authUrl);
+    const redirectUriParam = parsedAuthUrl.searchParams.get('redirect_uri');
+    const expectedRedirectUri = this.getRedirectUri();
+
+    if (!redirectUriParam || redirectUriParam.trim() === '') {
+      throw new Error('GMAIL_AUTH_ERROR: Google OAuth URL generation failed: missing redirect_uri.');
+    }
+
+    if (redirectUriParam !== expectedRedirectUri) {
+      throw new Error('GMAIL_AUTH_ERROR: Google OAuth URL generation failed: redirect_uri mismatch.');
+    }
+
+    return authUrl;
+  }
+
+  /**
+   * Resolves which refresh token should be persisted:
+   * 1. Uses the newly issued refresh token if Google returned one.
+   * 2. Preserves the existing encrypted token if Google omitted it during re-authorization.
+   * 3. Throws GMAIL_AUTH_ERROR if neither is available (e.g. first-time connection where Google omitted refresh_token),
+   *    preventing any connection from being created or updated with an empty or unusable token.
+   */
+  public static resolveRefreshTokenToSave(
+    newRefreshToken: string | null | undefined,
+    existingEncryptedToken: string | null | undefined
+  ): string {
+    const candidate = newRefreshToken?.trim() || existingEncryptedToken?.trim() || '';
+    if (!candidate) {
+      throw new Error(
+        'GMAIL_AUTH_ERROR: Google did not return a refresh token and no existing connection was found. Please re-authenticate to grant offline permissions.'
+      );
+    }
+    return candidate;
   }
 
   public static async handleCallback(code: string, employeeId: string) {
@@ -45,7 +158,10 @@ export class GmailService {
       where: { employeeId },
     });
 
-    const refreshTokenToSave = tokens.refresh_token || existingConnection?.encryptedToken || '';
+    const refreshTokenToSave = this.resolveRefreshTokenToSave(
+      tokens.refresh_token,
+      existingConnection?.encryptedToken
+    );
     
     console.log(`[GmailService Diagnostics] handleCallback: employeeId=${employeeId}, hasNewRefreshToken=${!!tokens.refresh_token}, hasExistingToken=${!!existingConnection?.encryptedToken}`);
 
