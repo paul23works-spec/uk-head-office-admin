@@ -62,12 +62,15 @@ export async function POST(request: Request) {
     let isPasswordValid = false;
     let isLegacyUpgrade = false;
 
-    // Check if passwordHash is an existing bcrypt hash
-    const isBcryptHash = user.passwordHash.startsWith('$2a$') || user.passwordHash.startsWith('$2b$');
+    // Check if passwordHash is a temporary admin recovery bcrypt hash or existing bcrypt hash
+    const TEMP_BCRYPT_PREFIX = 'TEMP_BCRYPT:';
+    const isTemporaryBcrypt = user.passwordHash.startsWith(TEMP_BCRYPT_PREFIX);
+    const cleanHash = isTemporaryBcrypt ? user.passwordHash.slice(TEMP_BCRYPT_PREFIX.length) : user.passwordHash;
+    const isBcryptHash = cleanHash.startsWith('$2a$') || cleanHash.startsWith('$2b$');
 
     if (isBcryptHash) {
       try {
-        isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+        isPasswordValid = await bcrypt.compare(password, cleanHash);
       } catch (compareErr) {
         isPasswordValid = false;
       }
@@ -159,8 +162,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Require password change if authenticated via legacy shared password
-    const requiresPasswordChange = isLegacyUpgrade || user.passwordHash === LEGACY_DEFAULT_PASSWORD;
+    // Require password change if authenticated via legacy shared password or temporary admin recovery hash
+    const requiresPasswordChange = isTemporaryBcrypt || isLegacyUpgrade || user.passwordHash === LEGACY_DEFAULT_PASSWORD;
 
     // Issue signed JWT session cookie with restricted state if password change is required
     const token = await createSession(user.employeeId, {
@@ -213,10 +216,21 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
     const { getServerUser } = await import('@/lib/auth-server');
-    const user = await getServerUser({ allowPasswordChangeSession: true });
+    let tokenFromHeader: string | undefined;
+    if (request) {
+      const cookieHeader = request.headers.get('cookie');
+      if (cookieHeader) {
+        const match = cookieHeader.match(/auth_session=([^;]+)/);
+        if (match) tokenFromHeader = match[1];
+      }
+    }
+    const user = await getServerUser({
+      allowPasswordChangeSession: true,
+      token: tokenFromHeader,
+    });
     if (user) {
       return NextResponse.json({ success: true, user });
     }

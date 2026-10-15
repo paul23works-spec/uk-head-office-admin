@@ -22,9 +22,17 @@ export interface SessionUser {
 
 export async function getServerUser(options?: {
   allowPasswordChangeSession?: boolean;
+  token?: string;
 }): Promise<SessionUser | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('auth_session')?.value;
+  let token = options?.token;
+  if (!token) {
+    try {
+      const cookieStore = await cookies();
+      token = cookieStore.get('auth_session')?.value;
+    } catch {
+      return null;
+    }
+  }
 
   if (!token) {
     return null;
@@ -39,8 +47,13 @@ export async function getServerUser(options?: {
 
     if (!employeeId) return null;
 
-    const user = await prisma.user.findUnique({
-      where: { employeeId },
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { employeeId },
+          { employee: { employeeId } },
+        ],
+      },
       include: {
         employee: {
           include: {
@@ -55,7 +68,8 @@ export async function getServerUser(options?: {
       return null;
     }
 
-    const needsPasswordChange = tokenNeedsPasswordChange || user.passwordHash === 'password';
+    const isTemporaryHash = user.passwordHash.startsWith('TEMP_BCRYPT:') || user.passwordHash === 'password';
+    const needsPasswordChange = tokenNeedsPasswordChange || isTemporaryHash;
 
     // Restrict access: sessions flagged for password change cannot access normal APIs or pages
     if (needsPasswordChange && !options?.allowPasswordChangeSession) {

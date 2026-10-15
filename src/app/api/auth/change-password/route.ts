@@ -45,8 +45,19 @@ export function validatePasswordStrength(password: string, currentPassword?: str
 
 export async function POST(request: Request) {
   try {
+    // Read auth token from cookies or request cookie header
+    let tokenFromHeader: string | undefined;
+    const cookieHeader = request.headers.get('cookie');
+    if (cookieHeader) {
+      const match = cookieHeader.match(/auth_session=([^;]+)/);
+      if (match) tokenFromHeader = match[1];
+    }
+
     // Only allow authenticated users (including those in restricted needsPasswordChange state)
-    const sessionUser = await getServerUser({ allowPasswordChangeSession: true });
+    const sessionUser = await getServerUser({
+      allowPasswordChangeSession: true,
+      token: tokenFromHeader,
+    });
 
     if (!sessionUser) {
       return NextResponse.json(
@@ -95,11 +106,14 @@ export async function POST(request: Request) {
     }
 
     let isCurrentValid = false;
-    const isBcryptHash = dbUser.passwordHash.startsWith('$2a$') || dbUser.passwordHash.startsWith('$2b$');
+    const TEMP_BCRYPT_PREFIX = 'TEMP_BCRYPT:';
+    const isTemporaryBcrypt = dbUser.passwordHash.startsWith(TEMP_BCRYPT_PREFIX);
+    const cleanHash = isTemporaryBcrypt ? dbUser.passwordHash.slice(TEMP_BCRYPT_PREFIX.length) : dbUser.passwordHash;
+    const isBcryptHash = cleanHash.startsWith('$2a$') || cleanHash.startsWith('$2b$');
 
     if (isBcryptHash) {
       try {
-        isCurrentValid = await bcrypt.compare(currentPassword, dbUser.passwordHash);
+        isCurrentValid = await bcrypt.compare(currentPassword, cleanHash);
       } catch (err) {
         isCurrentValid = false;
       }
@@ -154,7 +168,7 @@ export async function POST(request: Request) {
     }
 
     // Issue updated session with full access (needsPasswordChange: false)
-    const token = await createSession(dbUser.employee.employeeId, {
+    const token = await createSession(dbUser.employeeId, {
       needsPasswordChange: false,
     });
 
